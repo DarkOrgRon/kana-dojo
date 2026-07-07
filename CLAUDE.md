@@ -8,6 +8,13 @@ einzigen Datei `index.html`, kein Build und kein Server nötig.
 Das alte Projekt im übergeordneten Ordner bleibt unberührt; diese App nutzt einen
 eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
+## Erweiterung v5 (07.07.2026)
+- **4 Charaktere:** Geisha 🎎 (Fächer-Wirbel) und Sumo 🍙 (Stampf-Schockwelle) ergänzen Ninja und Samurai – alle 4 aus dem ursprünglichen Konzept damit umgesetzt. 4 neue Badges (Weg/Meister je Charakter) → 68 gesamt.
+- **Soundeffekte:** per Web Audio API im Code erzeugt (keine Audiodateien). Töne bei richtig/falsch, Badge-Freischaltung und Kombo-Meilenstein. 🔊/🔇-Schalter im Header, Einstellung wird gespeichert.
+- **Lern-Verlauf:** Balkendiagramm der letzten 14 Tage im Fortschritt-Tab (Balkenhöhe = Antworten, Farbe = Trefferquote grün/gold/rot). Daten in `S.history` pro Tag, maximal 60 Tage aufbewahrt.
+- Service-Worker-Cache auf `kana-dojo-v3` erhöht.
+- Backup vor Erweiterung: `index_v5_2026-07-07_pre-erweiterung.html` (lokal, nicht im Repo)
+
 ## Neu gegenüber v3 (07.07.2026)
 - **Charakterauswahl beim ersten Start:** Ninja 🥷 oder Samurai ⚔️ als animierte
   Pixel-Art-Sprites (per Canvas Pixel für Pixel gezeichnet, keine Bilddateien).
