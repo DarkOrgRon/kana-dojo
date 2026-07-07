@@ -29,6 +29,21 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 `index.html` doppelklicken – oder im übergeordneten Ordner
 `npx http-server -p 4173` und dann `http://localhost:4173/kana-dojo-v4/` öffnen.
 
+## Online-Version & GitHub (seit 07.07.2026)
+- **Live-URL:** https://darkorgron.github.io/kana-dojo/
+- **GitHub-Repo:** https://github.com/DarkOrgRon/kana-dojo (öffentlich, Account DarkOrgRon)
+- Hosting über GitHub Pages (Branch `main`, Root-Verzeichnis)
+- **Updates veröffentlichen:** Änderungen in diesem Ordner machen, dann
+  `git add -A`, `git commit -m "Beschreibung"`, `git push` – nach 1–2 Minuten ist die Live-Seite aktuell.
+  Achtung: Nach Updates auf dem Handy die App ggf. 2× öffnen (Service Worker lädt neue Version im Hintergrund).
+
+## PWA (installierbare App)
+- `manifest.json` – App-Name, Icons, Standalone-Modus (ohne Browserleiste), Hochformat
+- `sw.js` – Service Worker, macht die App nach dem ersten Besuch offline nutzbar
+- `icon-192.png` / `icon-512.png` – App-Icons (goldenes 道-Zeichen auf dunklem Grund)
+- Installation auf Android: Live-URL in Chrome öffnen → Menü ⋮ → „App installieren"
+- Backup vor PWA-Umbau: `index_v4_2026-07-07_pre-pwa.html` (lokal, nicht im Repo)
+
 ## Konventionen
 - Backups mit Versionsnummer im Dateinamen in diesem Ordner ablegen
   (z.B. `index_v4_2026-07-07.html`), bevor größere Änderungen gemacht werden.
