@@ -1,0 +1,3 @@
+# Lokale Backups nicht veröffentlichen
+index_v*_pre-*.html
+*.bak
