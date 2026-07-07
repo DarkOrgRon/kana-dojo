@@ -1,5 +1,5 @@
 // Service Worker: macht die App offline nutzbar (Cache-First für eigene Dateien)
-const CACHE = 'kana-dojo-v3';
+const CACHE = 'kana-dojo-v4';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
