@@ -8,9 +8,39 @@ einzigen Datei `index.html`, kein Build und kein Server nötig.
 Das alte Projekt im übergeordneten Ordner bleibt unberührt; diese App nutzt einen
 eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
-## IST-Stand (07.07.2026, aktuellste Version live)
+## IST-Stand (08.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v5`. Letzter Commit: „Charakterauswahl als festes 2x2-Raster, Updates sofort sichtbar".
+Aktueller Service-Worker-Cache: `kana-dojo-v6`. Letzter Commit: „Leitner-System …" (`ed0b716`).
+
+## Ausbauplan 2026-08 (mit Ronny abgestimmt, 08.08.2026)
+Sechs Pakete, nach jedem Paket Push + Test durch Ronny auf dem Handy:
+1. ✅ **Leitner-System** (deployed 08.08.2026, siehe unten)
+2. Anfänger-Lernpfad: Vorstellungs-Karte vor erster Abfrage neuer Zeichen (Zeichen groß,
+   Aussprache, Eselsbrücke). Eselsbrücken als Voreinstellung mitliefern; Nutzer kann eigene
+   lokal hinterlegen (localStorage, überschreibt Anzeige, Original bleibt abrufbar).
+3. Missionen: 2–3 aktive Quests mit Fortschrittsbalken (Reihen-Ziele, Tagesquests, Schriftrollen).
+4. Profimodus: 3 Herzen + Countdown; Herzen leer → nur Profimodus bis morgen gesperrt.
+5. Charakter-Level: 3–4 sichtbare Aufstiegsstufen pro Charakter (Sumo nach Mawashi-Rängen),
+   Basis: vorhandene charStats-Zähler.
+6. iBj-Eigenwerbung: Splash beim Start + dezent alle 50 Fragen, hart kodiert, kein Werbenetzwerk.
+Danach (separat, erst nach Ronnys Test): Play-Store-Veröffentlichung als TWA.
+
+## Paket 1: Leitner-System (08.08.2026)
+- **Neue Spielstand-Felder (additiv, kein Reset):** `S.box` (Zeichen → Box 1–5),
+  `S.recent` (letzte 500 Ergebnisse als 0/1, rollend).
+- Richtig → Box +1 (max. 5), falsch → zurück in Box 1. Ungesehen = „Neu" (Box 0).
+- **Abfrage-Gewichtung** in `pickQ` jetzt nach Box: Neu=6, Box1=8, Box2=5, Box3=3, Box4=2, Box5=1
+  (ersetzt die alte Quoten-Gewichtung über cStats).
+- **Fortschritt-Tab:** neue Sektion „Leitner-Boxen" – „Gemeistert: X von 208 Zeichen (ab Box 4)"
+  + Balken je Box (`renderLeitner`). 208 = alle Einzel-Kana inkl. Dakuten/Kombis; Wörter laufen
+  intern mit, werden aber nicht angezeigt.
+- **Genauigkeits-Badges (acc70–acc99) umgestellt:** zählen erst, wenn alle Kana-Reihen
+  freigeschaltet sind (`組合` + `カ組`), und messen die Quote über die letzten 500 Antworten
+  (`recentAcc`) statt über die Lebenszeit. Bereits verdiente Badges bleiben erhalten.
+  Grund: alte Version war zu früh zu leicht UND später mathematisch unerreichbar.
+- Getestet (lokal, Browser): Box-Auf-/Abstieg, Persistenz nach Reload, Migration alter
+  Spielstände ohne die neuen Felder, keine Konsolenfehler.
+- Backup vor Umbau: `index_v7_2026-08-08_pre-leitner.html` (lokal, nicht im Repo)
 
 ## Erweiterung v5 (07.07.2026)
 - **4 Charaktere:** Geisha 🎎 (Fächer-Wirbel) und Sumo 🍙 (Stampf-Schockwelle) ergänzen Ninja und Samurai – alle 4 aus dem ursprünglichen Konzept damit umgesetzt. 4 neue Badges (Weg/Meister je Charakter) → 68 gesamt.
