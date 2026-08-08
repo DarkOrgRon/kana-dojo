@@ -24,9 +24,12 @@ Sechs Pakete, nach jedem Paket Push + Test durch Ronny auf dem Handy:
 Danach (separat, erst nach Ronnys Test): Play-Store-Veröffentlichung als TWA.
 
 ## Paket 5: Charakter-Level (08.08.2026)
-- **4 Stufen je Charakter** (`CHAR_LEVELS`=[0,100,500,1500] Antworten mit dem Charakter,
-  Basis: vorhandene `S.charStats`-Zähler – kein neues Spielstand-Feld nötig):
-  Schüler → Kämpfer → Meister → Legende (`LEVEL_NAMES`).
+- **4 Stufen je Charakter**: Schüler → Kämpfer → Meister → Legende (`LEVEL_NAMES`).
+- **Nachschärfung am selben Tag (Ronnys Entscheidung):** Stufen zählen nur noch
+  **richtige** Antworten – Status muss man sich verdienen. Neuer Zähler `S.charOk`
+  (startet bei 0, bewusst ohne Migration – Ronny setzt die App eh zurück),
+  `CHAR_LEVELS`=[0,500,2500,10000]. `S.charStats` (alle Antworten) bleibt unverändert
+  die Basis der „Weg des …"-Badges – nur die STUFE hängt an `charOk`.
 - **Optik je Stufe** als Paletten-Überschreibung (`LEVEL_STYLES`, Stufe 2 = bisheriger Look,
   niemand wird optisch „zurückgestuft" – Bestandszähler unter 100 sehen Stufe 1):
   Ninja: grau → Standard → schwarz/rotes Band → goldenes Band · Samurai: Leder → Standard →
@@ -38,10 +41,13 @@ Danach (separat, erst nach Ronnys Test): Play-Store-Veröffentlichung als TWA.
   Charakterauswahl je Karte eine `.cs-level`-Zeile (bei jedem Öffnen aktualisiert).
 - **Stufenaufstieg:** in `handleAnswer` erkannt (Level vor/nach Zähler-Inkrement),
   sofortiges Neuzeichnen + Toast „Stufenaufstieg!" über die gemeinsame Toast-Leiste.
-- Getestet (lokal): Schwellen (99→1, 100→2, 500→3, 1500→4), Sumo-Mawashi-Farben je Stufe,
-  Live-Aufstieg mit Toast bei der 100. Antwort, Stirnband-Pixelfarben je Stufe verifiziert,
-  Aura nur auf Stufe 4 (Pixel-Alpha-Messung), Auswahl-Karten zeigen Stufen, Reload sauber.
-- Backup vor Umbau: `index_v11_2026-08-08_pre-charakterlevel.html` (lokal, nicht im Repo)
+- Getestet (lokal): Schwellen (499→1, 500→2, 2499→2, 2500→3, 9999→3, 10000→4),
+  alter Zähler beeinflusst Stufe nicht mehr, falsche Antwort erhöht nur charStats,
+  richtige erhöht beide, Live-Aufstieg mit Toast bei der 500. richtigen Antwort,
+  Sumo-Mawashi-/Stirnband-Pixelfarben je Stufe, Aura nur Stufe 4 (Pixel-Alpha-Messung),
+  Auswahl-Karten zeigen Stufen, Reload sauber.
+- Backups: `index_v11_2026-08-08_pre-charakterlevel.html` (vor Level-Einbau),
+  `index_v12_2026-08-08_pre-level-nur-richtige.html` (vor Umstellung auf richtige Antworten)
 
 ## Paket 4: Profimodus (08.08.2026)
 - **Aktivierung:** Button „🔥 Profi" in der Schalter-Leiste (`#pro-toggle`, `toggleProMode()`).

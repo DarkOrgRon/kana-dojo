@@ -813,7 +813,7 @@ const MILESTONE_CFG={
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const SK='kana_dojo_v4';
-function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],missionsDone:[],rowRun:{},proDate:null,proHearts:3,proStats:{a:0,c:0}};}
+function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},charOk:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],missionsDone:[],rowRun:{},proDate:null,proHearts:3,proStats:{a:0,c:0}};}
 
 let S=defaultState();
 (()=>{try{const d=localStorage.getItem(SK);if(d){const parsed=JSON.parse(d);S={...defaultState(),...parsed};}}catch(e){}
@@ -1131,15 +1131,21 @@ function handleAnswer(pick,btn){
     S.daysLearned=(S.daysLearned||0)+1;
   }
   S.total++;S.dailyTotal++;
-  // Charakter-Zähler + Stufenaufstieg erkennen (neue Optik sofort zeichnen)
+  // Charakter-Zähler + Stufenaufstieg erkennen (neue Optik sofort zeichnen).
+  // charStats zählt alle Antworten (Basis der Weg-des-…-Badges),
+  // charOk nur richtige – NUR charOk bestimmt die Stufe (verdienter Status).
   let levelUpToast=null;
   if(S.character){
-    const lvVorher=charLevel(S.character);
     S.charStats[S.character]=(S.charStats[S.character]||0)+1;
-    const lvJetzt=charLevel(S.character);
-    if(lvJetzt>lvVorher){
-      renderHero();
-      levelUpToast={emoji:SPRITES[S.character].emoji,head:'Stufenaufstieg!',label:SPRITES[S.character].name+' ist jetzt '+LEVEL_NAMES[lvJetzt-1]+' '+levelStars(lvJetzt)};
+    if(isOk){
+      if(!S.charOk)S.charOk={};
+      const lvVorher=charLevel(S.character);
+      S.charOk[S.character]=(S.charOk[S.character]||0)+1;
+      const lvJetzt=charLevel(S.character);
+      if(lvJetzt>lvVorher){
+        renderHero();
+        levelUpToast={emoji:SPRITES[S.character].emoji,head:'Stufenaufstieg!',label:SPRITES[S.character].name+' ist jetzt '+LEVEL_NAMES[lvJetzt-1]+' '+levelStars(lvJetzt)};
+      }
     }
   }
   if(isOk){S.correct++;S.dailyCorrect++;S.combo++;if(S.combo>S.bestCombo)S.bestCombo=S.combo;if(COMBO_MILESTONES.includes(S.combo))triggerComboMilestone(S.combo);}
@@ -1645,11 +1651,12 @@ SPRITES.sumo={
 };
 
 // ── CHARAKTER-LEVEL ───────────────────────────────────────────────────────────
-// 4 Stufen pro Charakter, gemessen an den Antworten mit diesem Charakter
-// (S.charStats). Die Optik je Stufe ist eine Paletten-Überschreibung des
-// Basis-Sprites; Stufe 2 entspricht dem bisherigen Standard-Look.
+// 4 Stufen pro Charakter, gemessen an den RICHTIGEN Antworten mit diesem
+// Charakter (S.charOk, seit 08.08.2026 – Status muss man sich verdienen).
+// Die Optik je Stufe ist eine Paletten-Überschreibung des Basis-Sprites;
+// Stufe 2 entspricht dem bisherigen Standard-Look.
 // _aura zeichnet einen Glow hinter dem Sprite (nur Stufe 4).
-const CHAR_LEVELS=[0,100,500,1500];
+const CHAR_LEVELS=[0,500,2500,10000];
 const LEVEL_NAMES=['Schüler','Kämpfer','Meister','Legende'];
 const LEVEL_STYLES={
   ninja:[
@@ -1678,7 +1685,7 @@ const LEVEL_STYLES={
   ],
 };
 function charLevel(ch){
-  const n=(S.charStats&&S.charStats[ch])||0;
+  const n=(S.charOk&&S.charOk[ch])||0;
   let lv=1;
   for(let i=1;i<CHAR_LEVELS.length;i++)if(n>=CHAR_LEVELS[i])lv=i+1;
   return lv;
