@@ -93,6 +93,12 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 .intro-own-label{display:block;font-size:11px;color:var(--dim);text-align:left;margin-bottom:4px;}
 #intro-own{width:100%;background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 10px;resize:none;font-family:inherit;box-sizing:border-box;}
 #intro-btn{margin-top:12px;width:100%;background:var(--gold);color:#1a1408;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;}
+/* Profimodus: Herzen + Countdown-Balken, Toggle-Button */
+#pro-status{display:none;align-items:center;gap:10px;max-width:340px;margin:12px auto 0;padding:0 16px;}
+#pro-hearts{font-size:14px;letter-spacing:2px;white-space:nowrap;}
+#pro-timer-wrap{flex:1;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+#pro-timer{height:100%;width:100%;background:var(--green);transition:width 0.1s linear;}
+#pro-toggle.active{background:linear-gradient(135deg,#8b4513,#ff6b35);border-color:var(--gold);color:#fff;}
 /* Missions-Streifen unterm Quiz + Missions-Zeilen im Fortschritt */
 #mission-strip{max-width:340px;margin:14px auto 0;display:flex;flex-direction:column;gap:5px;padding:0 4px;}
 .mission-row{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;}
@@ -265,11 +271,17 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
   <button class="script-btn" data-script="hiragana" onclick="setScript('hiragana')">ひ Hiragana</button>
   <button class="script-btn" data-script="katakana" onclick="setScript('katakana')">カ Katakana</button>
   <button class="script-btn active" data-script="both" onclick="setScript('both')">両方 Beide</button>
+  <button class="script-btn" id="pro-toggle" onclick="toggleProMode()">🔥 Profi</button>
 </div>
 
 <div id="content">
   <!-- Quiz View -->
   <div id="view-quiz">
+    <!-- Profimodus-Leiste: Herzen + Countdown (nur im Profimodus sichtbar) -->
+    <div id="pro-status">
+      <span id="pro-hearts"></span>
+      <div id="pro-timer-wrap"><div id="pro-timer"></div></div>
+    </div>
     <div id="quiz-stage">
       <div id="hero-wrap">
         <canvas id="hero-cv"></canvas>
@@ -774,6 +786,10 @@ const BADGES=[
   {id:'geisha500', label:'Geisha-Meisterin',   emoji:'🪭', cond:s=>(s.charStats.geisha||0)>=500},
   {id:'sumo1',     label:'Weg des Sumo',       emoji:'🍙', cond:s=>(s.charStats.sumo||0)>=1},
   {id:'sumo500',   label:'Sumo-Meister',       emoji:'🏆', cond:s=>(s.charStats.sumo||0)>=500},
+  // ── Profimodus ────────────────────────────────────────────────────────────
+  {id:'pro25',     label:'Profi-Novize',       emoji:'🔥', cond:s=>((s.proStats&&s.proStats.c)||0)>=25},
+  {id:'pro100',    label:'Profi-Krieger',      emoji:'⚡', cond:s=>((s.proStats&&s.proStats.c)||0)>=100},
+  {id:'pro500',    label:'Profi-Legende',      emoji:'👑', cond:s=>((s.proStats&&s.proStats.c)||0)>=500},
   // ── Schriftsysteme komplett ───────────────────────────────────────────────
   {id:'hira_all',  label:'Hiragana komplett',  emoji:'🌸', cond:s=>s.unlocked.includes('組合')},
   {id:'kata_all',  label:'Katakana komplett',  emoji:'🎐', cond:s=>s.unlocked.includes('カ組')},
@@ -795,7 +811,7 @@ const MILESTONE_CFG={
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const SK='kana_dojo_v4';
-function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],missionsDone:[],rowRun:{}};}
+function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],missionsDone:[],rowRun:{},proDate:null,proHearts:3,proStats:{a:0,c:0}};}
 
 let S=defaultState();
 (()=>{try{const d=localStorage.getItem(SK);if(d){const parsed=JSON.parse(d);S={...defaultState(),...parsed};}}catch(e){}
@@ -923,6 +939,65 @@ let currentQ=null;
 let answering=false;
 let nextTimer=null;
 
+// ── PROFIMODUS ────────────────────────────────────────────────────────────────
+// 3 Herzen pro Tag + Countdown pro Frage. Fehler oder Zeitablauf = Herz weg.
+// Alle Herzen weg → Profimodus bis morgen gesperrt, freies Üben läuft weiter.
+let proMode=false,proTimerId=null,proT0=0,proDur=0;
+
+function proResetIfNewDay(){
+  const t=getToday();
+  if(S.proDate!==t){S.proDate=t;S.proHearts=3;save();}
+}
+function toggleProMode(){
+  proResetIfNewDay();
+  const fl=document.getElementById('feedback-line');
+  if(!proMode&&S.proHearts<=0){
+    fl.textContent='💔 Profimodus bis morgen gesperrt – freies Üben geht weiter!';
+    fl.style.color='var(--danger)';
+    return;
+  }
+  proMode=!proMode;
+  document.getElementById('pro-toggle').classList.toggle('active',proMode);
+  document.getElementById('pro-status').style.display=proMode?'flex':'none';
+  renderHearts();
+  clearTimeout(nextTimer);
+  stopProTimer();
+  renderQuestion();
+}
+function renderHearts(){
+  document.getElementById('pro-hearts').textContent=
+    '❤️'.repeat(Math.max(0,S.proHearts||0))+'🖤'.repeat(Math.max(0,3-(S.proHearts||0)));
+}
+function startProTimer(){
+  if(!proMode||!currentQ||answering)return;
+  stopProTimer();
+  // Wörter brauchen mehr Lesezeit als einzelne Zeichen
+  proDur=WORD_GROUPS.includes(currentQ.q.group)?10000:7000;
+  proT0=Date.now();
+  const bar=document.getElementById('pro-timer');
+  bar.style.width='100%';bar.style.background='var(--green)';
+  proTimerId=setInterval(()=>{
+    const rest=Math.max(0,proDur-(Date.now()-proT0));
+    const p=rest/proDur*100;
+    bar.style.width=p+'%';
+    bar.style.background=p>50?'var(--green)':p>25?'var(--gold)':'var(--danger)';
+    if(rest<=0){stopProTimer();if(!answering)handleAnswer(null,null);}
+  },100);
+}
+function stopProTimer(){if(proTimerId){clearInterval(proTimerId);proTimerId=null;}}
+function loseHeart(){
+  proResetIfNewDay();
+  S.proHearts=Math.max(0,(S.proHearts||0)-1);
+  renderHearts();
+  if(S.proHearts<=0){
+    proMode=false;
+    stopProTimer();
+    document.getElementById('pro-toggle').classList.remove('active');
+    document.getElementById('pro-status').style.display='none';
+    showBadgeToast([{emoji:'💔',head:'Alle Herzen verloren!',label:'Profimodus bis morgen gesperrt – üben geht weiter'}]);
+  }
+}
+
 // ── VORSTELLUNGS-KARTE (Anfänger-Lernpfad) ────────────────────────────────────
 // Zeigt ein neues Zeichen vor der ersten Abfrage: groß, mit Aussprache und
 // Eselsbrücke. Nutzer können eine eigene Merkhilfe eintragen (bleibt lokal).
@@ -957,6 +1032,9 @@ function closeIntro(){
   S.seen[c]=1;
   save();
   el.classList.remove('open');
+  // Profimodus: Countdown erst jetzt starten (lief er schon – z.B. 💡-Spick-Blick
+  // während einer Frage – läuft er weiter, kein Zeit-Reset durchs Nachschauen)
+  if(!proTimerId)startProTimer();
 }
 // 💡-Button auf der Quiz-Karte: Info zum aktuellen Zeichen erneut ansehen
 function openIntroForCurrent(){
@@ -999,17 +1077,21 @@ function renderQuestion(){
     answersEl.appendChild(btn);
   });
 
-  // Neues Zeichen? Erst die Vorstellungs-Karte zeigen (legt sich über das Quiz)
-  maybeShowIntro(q);
+  // Neues Zeichen? Erst die Vorstellungs-Karte zeigen (legt sich über das Quiz).
+  // Der Profimodus-Countdown startet erst, wenn die Karte geschlossen ist.
+  const introShown=maybeShowIntro(q);
   renderMissionStrip();
+  if(!introShown)startProTimer();
 }
 
 function handleAnswer(pick,btn){
   if(answering)return;
   answering=true;
   clearTimeout(nextTimer);
+  stopProTimer();
 
-  const isOk=pick.romaji===currentQ.q.romaji;
+  // pick=null bedeutet: Profimodus-Countdown abgelaufen (zählt wie ein Fehler)
+  const isOk=!!pick&&pick.romaji===currentQ.q.romaji;
   const card=document.getElementById('char-card');
   card.style.animation='none';
   card.classList.add(isOk?'correct':'wrong');
@@ -1026,7 +1108,7 @@ function handleAnswer(pick,btn){
 
   const fl=document.getElementById('feedback-line');
   if(isOk){fl.textContent='✓ Richtig!';fl.style.color='var(--green)';spawnParticles(10);}
-  else{fl.textContent='✗ '+currentQ.q.romaji;fl.style.color='var(--danger)';}
+  else{fl.textContent=(pick?'✗ ':'⏰ Zeit abgelaufen! → ')+currentQ.q.romaji;fl.style.color='var(--danger)';}
 
   // Charakter-Animation + Sound
   if(isOk){heroAttack();snd('ok');}else{heroHurt();snd('wrong');}
@@ -1068,6 +1150,13 @@ function handleAnswer(pick,btn){
   if(!S.rowRun)S.rowRun={};
   S.rowRun[q.group]=isOk?((S.rowRun[q.group]||0)+1):0;
   if(S.combo>(S.dailyBestCombo||0))S.dailyBestCombo=S.combo;
+
+  // Profimodus: Statistik fortschreiben, bei Fehler/Timeout ein Herz abziehen
+  if(proMode){
+    if(!S.proStats)S.proStats={a:0,c:0};
+    S.proStats.a++;if(isOk)S.proStats.c++;
+    if(!isOk)loseHeart();
+  }
 
   computeUnlocks();
 
@@ -1317,7 +1406,7 @@ function renderBadges(){
 // ── SCRIPT SELECTOR ───────────────────────────────────────────────────────────
 function setScript(sc){
   S.script=sc;save();
-  document.querySelectorAll('.script-btn').forEach(b=>b.classList.toggle('active',b.dataset.script===sc));
+  document.querySelectorAll('.script-btn').forEach(b=>{if(b.id!=='pro-toggle')b.classList.toggle('active',b.dataset.script===sc);});
   clearTimeout(nextTimer);
   renderQuestion();
 }
@@ -1659,9 +1748,10 @@ function resetAll(){
 // Set initial script button (null-sicher, falls ein unbekannter Wert gespeichert ist)
 const initSb=document.querySelector(`.script-btn[data-script="${S.script}"]`);
 if(initSb)initSb.classList.add('active');
-document.querySelectorAll('.script-btn').forEach(b=>{if(b.dataset.script!==S.script)b.classList.remove('active');});
+document.querySelectorAll('.script-btn').forEach(b=>{if(b.id!=='pro-toggle'&&b.dataset.script!==S.script)b.classList.remove('active');});
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+proResetIfNewDay();
 updateHeader();
 updateSoundBtn();
 renderHero();

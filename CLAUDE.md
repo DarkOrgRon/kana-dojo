@@ -17,11 +17,32 @@ Sechs Pakete, nach jedem Paket Push + Test durch Ronny auf dem Handy:
 1. ✅ **Leitner-System** (deployed 08.08.2026, siehe unten)
 2. ✅ **Anfänger-Lernpfad** (deployed 08.08.2026, siehe unten)
 3. ✅ **Missionen** (deployed 08.08.2026, siehe unten)
-4. Profimodus: 3 Herzen + Countdown; Herzen leer → nur Profimodus bis morgen gesperrt.
+4. ✅ **Profimodus** (deployed 08.08.2026, siehe unten)
 5. Charakter-Level: 3–4 sichtbare Aufstiegsstufen pro Charakter (Sumo nach Mawashi-Rängen),
    Basis: vorhandene charStats-Zähler.
 6. iBj-Eigenwerbung: Splash beim Start + dezent alle 50 Fragen, hart kodiert, kein Werbenetzwerk.
 Danach (separat, erst nach Ronnys Test): Play-Store-Veröffentlichung als TWA.
+
+## Paket 4: Profimodus (08.08.2026)
+- **Aktivierung:** Button „🔥 Profi" in der Schalter-Leiste (`#pro-toggle`, `toggleProMode()`).
+  Nicht persistiert – nach App-Neustart startet immer der Normalmodus.
+- **Mechanik:** 3 Herzen pro Tag (`S.proHearts`, `S.proDate`), Countdown pro Frage
+  (7 s Einzel-Kana, 10 s Wörter) als schrumpfender Farbbalken (`#pro-timer`, grün→gold→rot).
+  Fehler ODER Zeitablauf = 1 Herz weg (`loseHeart()`). Timeout läuft über `handleAnswer(null,null)`
+  und zählt überall als falsche Antwort (Leitner Box 1, Kombo-Reset, Serien-Reset, recent 0).
+- **Sperre:** Bei 0 Herzen schaltet der Modus selbst ab (💔-Toast); erneutes Einschalten am
+  selben Tag zeigt nur die Sperr-Meldung. **Bewusste Design-Entscheidung mit Ronny:** Die Sperre
+  gilt NUR für den Profimodus – freies Üben (und damit das Leitner-Lernen) geht immer weiter.
+  Neuer Tag → `proResetIfNewDay()` (beim Laden + bei jedem Toggle/Herzverlust) → 3 Herzen.
+- **Belohnung:** 3 exklusive Badges (71 gesamt): Profi-Novize 🔥 (25 richtige im Profimodus),
+  Profi-Krieger ⚡ (100), Profi-Legende 👑 (500). Zähler: `S.proStats {a,c}`.
+- **Details:** Countdown startet erst nach Schließen einer Vorstellungs-Karte; 💡-Spick-Blick
+  während einer Frage pausiert den Timer NICHT (Nachschauen kostet Zeit, bewusst).
+  Die Schriftsystem-Button-Logik lässt `#pro-toggle` in Ruhe (id-Ausnahme an beiden Stellen).
+- Getestet (lokal): Timer läuft/färbt, richtige Antwort kostet kein Herz, Fehler kostet eins,
+  Timeout kostet eins (feuerte im Test real), 0 Herzen → Auto-Aus + Sperr-Meldung,
+  Tages-Reset gibt 3 Herzen, Normalmodus unberührt (kein Timer, keine Herzen), Reload sauber.
+- Backup vor Umbau: `index_v10_2026-08-08_pre-profimodus.html` (lokal, nicht im Repo)
 
 ## Paket 3: Missionen (08.08.2026)
 - **Drei Missions-Arten:**
