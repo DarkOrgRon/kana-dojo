@@ -15,15 +15,34 @@ Aktueller Service-Worker-Cache: `kana-dojo-v6`. Letzter Commit: „Leitner-Syste
 ## Ausbauplan 2026-08 (mit Ronny abgestimmt, 08.08.2026)
 Sechs Pakete, nach jedem Paket Push + Test durch Ronny auf dem Handy:
 1. ✅ **Leitner-System** (deployed 08.08.2026, siehe unten)
-2. Anfänger-Lernpfad: Vorstellungs-Karte vor erster Abfrage neuer Zeichen (Zeichen groß,
-   Aussprache, Eselsbrücke). Eselsbrücken als Voreinstellung mitliefern; Nutzer kann eigene
-   lokal hinterlegen (localStorage, überschreibt Anzeige, Original bleibt abrufbar).
+2. ✅ **Anfänger-Lernpfad** (deployed 08.08.2026, siehe unten)
 3. Missionen: 2–3 aktive Quests mit Fortschrittsbalken (Reihen-Ziele, Tagesquests, Schriftrollen).
 4. Profimodus: 3 Herzen + Countdown; Herzen leer → nur Profimodus bis morgen gesperrt.
 5. Charakter-Level: 3–4 sichtbare Aufstiegsstufen pro Charakter (Sumo nach Mawashi-Rängen),
    Basis: vorhandene charStats-Zähler.
 6. iBj-Eigenwerbung: Splash beim Start + dezent alle 50 Fragen, hart kodiert, kein Werbenetzwerk.
 Danach (separat, erst nach Ronnys Test): Play-Store-Veröffentlichung als TWA.
+
+## Paket 2: Anfänger-Lernpfad (08.08.2026)
+- **Vorstellungs-Karte:** Overlay `#intro-card` erscheint, bevor ein neues Einzel-Kana zum
+  ersten Mal abgefragt wird (Zeichen groß, Romaji, Schriftsystem, 💡-Eselsbrücke). Für Wörter
+  (WORD_GROUPS) keine Karte – sie bestehen aus bekannten Zeichen.
+- **Eselsbrücken:** `MNEMO` = 92 deutsche Merkhilfen für alle Basis-Kana (Form-Assoziationen,
+  inkl. Verwechsler-Hinweise シ/ツ und ソ/ン). Dakuten/Handakuten/Kombis werden in
+  `getDefaultMnemo()` automatisch abgeleitet (Unicode: Dakuten = Basiszeichen+1, Handakuten +2;
+  Kombis über kleines ゃゅょ erkannt).
+- **Eigene Merkhilfen:** Textfeld auf der Karte → `S.myMnemo[zeichen]` (nur lokal auf dem Gerät,
+  überschreibt nichts – Standard-Eselsbrücke bleibt sichtbar).
+- **💡-Button** oben rechts auf der Quiz-Karte öffnet die Karte fürs aktuelle Zeichen erneut
+  („Zeichen-Info", auch zum Nachtragen eigener Merkhilfen). Bewusste Entscheidung: Damit kann
+  man während einer Frage „spicken" – für eine Lern-App gewollt (besser nachschauen als raten).
+- **Neue Spielstand-Felder (additiv):** `S.seen` (Zeichen → vorgestellt), `S.myMnemo`.
+  Migration: Bestandsnutzer bekommen alle bereits geübten Zeichen (cStats-Keys) als `seen`
+  markiert → keine Karten-Flut nach dem Update.
+- Getestet (lokal): Bestandsnutzer-Migration, Karte bei neuem Zeichen, eigene Merkhilfe
+  speichern/vorbefüllen, 💡-Reopen, Dakuten-/Kombi-Ableitung, Neu-Nutzer-Ablauf
+  (Charakterwahl → erste Karte), Overlay passt auf 375px-Viewport, keine Konsolenfehler.
+- Backup vor Umbau: `index_v8_2026-08-08_pre-lernpfad.html` (lokal, nicht im Repo)
 
 ## Paket 1: Leitner-System (08.08.2026)
 - **Neue Spielstand-Felder (additiv, kein Reset):** `S.box` (Zeichen → Box 1–5),

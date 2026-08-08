@@ -78,6 +78,21 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 }
 #char-card.correct{border-color:var(--green);box-shadow:0 0 50px rgba(74,222,128,0.35);}
 #char-card.wrong{border-color:var(--danger);box-shadow:0 0 50px rgba(248,113,113,0.35);}
+#char-card{position:relative;}
+#char-info{position:absolute;top:6px;right:6px;background:none;border:none;font-size:15px;cursor:pointer;opacity:0.45;padding:4px;line-height:1;}
+#char-info:active{opacity:1;}
+/* Vorstellungs-Karte für neue Zeichen (Anfänger-Lernpfad) */
+#intro-card{position:fixed;inset:0;z-index:19500;background:rgba(5,5,12,0.96);display:none;align-items:center;justify-content:center;padding:20px 16px;backdrop-filter:blur(6px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#intro-card.open{display:flex;}
+.intro-box{background:linear-gradient(145deg,rgba(18,12,8,0.99),rgba(8,8,20,0.99));border:2px solid var(--gold);border-radius:16px;padding:22px 20px;max-width:340px;width:100%;text-align:center;margin:auto;box-shadow:0 0 40px rgba(232,200,122,0.15);}
+.intro-label{color:var(--gold);font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.intro-char{font-size:84px;line-height:1.15;color:#f5f0e8;text-shadow:0 2px 14px rgba(232,200,122,0.25);}
+.intro-romaji{font-size:26px;color:var(--gold);font-weight:700;margin-top:2px;}
+.intro-script{font-size:11px;color:var(--dim);letter-spacing:1px;margin:4px 0 12px;}
+.intro-mnemo{font-size:13px;color:var(--text);background:rgba(232,200,122,0.08);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px;text-align:left;line-height:1.45;}
+.intro-own-label{display:block;font-size:11px;color:var(--dim);text-align:left;margin-bottom:4px;}
+#intro-own{width:100%;background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 10px;resize:none;font-family:inherit;box-sizing:border-box;}
+#intro-btn{margin-top:12px;width:100%;background:var(--gold);color:#1a1408;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;}
 #char-display{color:#f5f0e8;text-shadow:0 2px 12px rgba(232,200,122,0.2);text-align:center;padding:0 8px;line-height:1.1;}
 #char-meta{font-size:10px;color:var(--dim);margin-top:10px;letter-spacing:1px;}
 
@@ -178,6 +193,20 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 <div id="badge-notify"></div>
 <div id="combo-notify"></div>
 
+<!-- Vorstellungs-Karte: erscheint, bevor ein neues Zeichen zum ersten Mal abgefragt wird -->
+<div id="intro-card">
+  <div class="intro-box">
+    <div class="intro-label" id="intro-label">Neues Zeichen!</div>
+    <div class="intro-char" id="intro-char"></div>
+    <div class="intro-romaji" id="intro-romaji"></div>
+    <div class="intro-script" id="intro-script"></div>
+    <div class="intro-mnemo" id="intro-mnemo"></div>
+    <label class="intro-own-label" for="intro-own">✏️ Eigene Merkhilfe (optional, bleibt auf diesem Gerät):</label>
+    <textarea id="intro-own" rows="2" placeholder="z. B. deine eigene Eselsbrücke …"></textarea>
+    <button id="intro-btn" onclick="closeIntro()">Merken &amp; los!</button>
+  </div>
+</div>
+
 <div id="char-select">
   <h1 class="cs-title">⚔️ Wähle deinen Krieger</h1>
   <p class="cs-sub">Er kämpft an deiner Seite gegen die Kana</p>
@@ -242,6 +271,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
         <div id="hero-name"></div>
       </div>
       <div id="char-card">
+        <button id="char-info" title="Zeichen-Info & Merkhilfe" onclick="openIntroForCurrent()">💡</button>
         <div id="char-display"></div>
         <div id="char-meta"></div>
       </div>
@@ -480,6 +510,129 @@ const GROUP_ORDER=[
   '2文字','3文字','4文字','5文字','混合',
 ];
 
+// ── ESELSBRÜCKEN (Anfänger-Lernpfad) ─────────────────────────────────────────
+// Merkhilfen für die 92 Basis-Kana. Dakuten-, Handakuten- und Kombi-Zeichen
+// werden in getDefaultMnemo() automatisch abgeleitet. Nutzer können eigene
+// Merkhilfen hinterlegen (S.myMnemo, nur lokal auf dem Gerät).
+const MNEMO={
+  // Hiragana
+  'あ':'Sieht aus wie ein „a" mit Kreuz obendrauf – a wie Anfang',
+  'い':'Zwei Kerzen nebeneinander – „ii", zwei kleine i',
+  'う':'Ein Gesicht im Profil, Mund gespitzt: „u"',
+  'え':'Ein exotischer Vogel im Sprung – „e" wie exotisch',
+  'お':'Ein „o" mit Schleife – opulent verziert',
+  'か':'Ein Karate-Tritt mit Schwung – „ka!"',
+  'き':'Ein Schlüssel (englisch „key") – ki',
+  'く':'Ein offener Vogelschnabel – „kuck!"',
+  'け':'Ein Kegel lehnt am Zaun – „ke"',
+  'こ':'Zwei kurze Striche – kurz und kompakt: „ko"',
+  'さ':'Eine Säge mit Griff – „sa"',
+  'し':'Ein glatter Angelhaken – „shi"',
+  'す':'Ein Strudel mit Schwänzchen – „su"',
+  'せ':'Ein Segelmast mit Querbalken – „se"',
+  'そ':'So ein Zickzack! Wie ein Blitz – „so"',
+  'た':'Links ein „t", rechts ein kleines „a" – ta!',
+  'ち':'Eine gespiegelte 5 – „chi"',
+  'つ':'Eine Tsunami-Welle – „tsu"',
+  'て':'Ein Tisch mit gebogenem Bein – „te"',
+  'と':'Ein Zeh (englisch „toe") mit Dorn – „to"',
+  'な':'Kreuz und Knoten – „na"',
+  'に':'Eine Nische in der Wand – „ni"',
+  'ぬ':'Nudeln mit Schleife – „nu" wie Nudel',
+  'ね':'Eine Katze (neko) mit eingerolltem Schwanz – „ne"',
+  'の':'Ein Verbotsschild: „No!"',
+  'は':'Ein „H" mit Schleife – „ha"',
+  'ひ':'Ein breites Grinsen – „hihi!"',
+  'ふ':'Der Fuji mit Wolken drumherum – „fu"',
+  'へ':'Ein flacher Hügel – „he"',
+  'ほ':'Wie は mit extra Dach: „ho ho ho", doppelt geschmückt',
+  'ま':'Ein Mast mit Knoten – „ma"',
+  'み':'Die Zahl 21 mit Schwung – „mi"',
+  'む':'Die Kuh macht „muh" – mit Kringel',
+  'め':'Me heißt Auge auf Japanisch – sieht aus wie ein Auge',
+  'も':'Ein Angelhaken mit zwei Würmern – „mo"',
+  'や':'Eine Jacht mit Segel – „ya"',
+  'ゆ':'Ein U-Boot mit Periskop – „yu"',
+  'よ':'Ein Yo-Yo mit Schnur – „yo"',
+  'ら':'Eine Radio-Antenne mit Punkt – „ra"',
+  'り':'Zwei Striche, rechts länger – ein Riss: „ri"',
+  'る':'Eine 3 mit Kringel am Ende – „ru"',
+  'れ':'Jemand reckt sich nach rechts – „re"',
+  'ろ':'Eine 3 ohne Kringel – das nackte る: „ro"',
+  'わ':'Wie れ, aber mit runder Welle – „wa"',
+  'を':'Ein Tänzer mit weitem Schwung – „wo" (nur als Partikel)',
+  'ん':'Ein geschwungenes „n" – das einzige Kana ohne Vokal',
+  // Katakana
+  'ア':'Eine 7 mit Haken – „A" wie Axt',
+  'イ':'Ein Mensch lehnt am Baum – „i"',
+  'ウ':'Ein Dach mit Antenne – das eckige う',
+  'エ':'Ein Eisenträger (Doppel-T) – „e"',
+  'オ':'Ein Opa mit Stock – „o"',
+  'カ':'Das eckige か ohne Extra-Strich – „ka"',
+  'キ':'Ein eckiger Schlüssel (key) – „ki"',
+  'ク':'Ein Vogelkopf von der Seite – „ku"',
+  'ケ':'Ein schiefer Kleiderhaken – „ke"',
+  'コ':'Eine offene Kiste – „ko" wie Karton',
+  'サ':'Ein Sattel mit zwei Hörnern – „sa"',
+  'シ':'Lächelndes Gesicht: flache Striche, Schwung von unten – „shi"',
+  'ス':'Ein Zelt mit ausgestrecktem Bein – „su"',
+  'セ':'Das eckige せ – „se"',
+  'ソ':'EIN Tropfen + steiler Schwung – „so"',
+  'タ':'ク mit Strich drin – ein Tablett: „ta"',
+  'チ':'Ein „T" mit Schwung – chi wie Tee (cha)',
+  'ツ':'Zwei STEILE Tropfen + steiler Schwung – „tsu" (bei シ liegen die Striche flach)',
+  'テ':'Ein Tisch mit Deckel – „te"',
+  'ト':'Ein Torpfosten mit Haken – „to"',
+  'ナ':'Ein Kreuz mit schrägem Bein – „na"',
+  'ニ':'Zwei Striche – wie das Kanji für „zwei" (ni!)',
+  'ヌ':'Ein X mit Dach – „nu"',
+  'ネ':'Ein geschmückter Pfahl – „ne"',
+  'ノ':'Ein einziger Schrägstrich – „no", schräg abgelehnt',
+  'ハ':'Zwei offene Striche – ein Lachen: „ha!"',
+  'ヒ':'Ein Stiefel-Absatz – „hi"',
+  'フ':'Eine Fahne im Wind – „fu"',
+  'ヘ':'Derselbe Hügel wie へ – das einzige Zeichen, das gleich bleibt!',
+  'ホ':'Ein Baum mit Strahlen – „ho ho ho"',
+  'マ':'Eine 7 mit Punkt – „ma"',
+  'ミ':'Drei Striche – mittsu heißt drei: „mi"',
+  'ム':'Eine kleine Pyramide – „mu"',
+  'メ':'Ein durchgestrichenes Auge – „me"',
+  'モ':'Das eckige も – „mo"',
+  'ヤ':'Die eckige Jacht – „ya"',
+  'ユ':'Ein „U" mit Boden – „yu"',
+  'ヨ':'Ein gespiegeltes „E" – „yo"',
+  'ラ':'フ mit Dach drüber – „ra"',
+  'リ':'Das eckige り – zwei Striche: „ri"',
+  'ル':'Ein Fluss mit Haken am Ende – „ru"',
+  'レ':'Eine Skisprung-Rampe – „re"',
+  'ロ':'Ein Quadrat – wie das Kanji für „Mund": „ro"',
+  'ワ':'Ein breites Dach mit Bein – „wa"',
+  'ヲ':'ヨ mit Schräge – „wo" (kommt fast nie vor)',
+  'ン':'EIN flacher Strich + Schwung von unten – „n" (Cousin von ソ)',
+};
+
+// Merkhilfe für ein Kana ermitteln: Basis-Zeichen direkt aus MNEMO,
+// Kombis (きゃ), Dakuten (が) und Handakuten (ぱ) werden abgeleitet.
+function getDefaultMnemo(k){
+  if(MNEMO[k.char])return MNEMO[k.char];
+  const c=k.char;
+  // Kombi-Zeichen: großes Kana + kleines ゃ/ゅ/ょ verschmelzen
+  if(c.length===2&&'ゃゅょャュョ'.includes(c[1])){
+    return c[0]+' + kleines '+c[1]+' verschmelzen zu „'+k.romaji+'"';
+  }
+  // Handakuten (kleiner Kreis): aus h wird p
+  if(k.group==='ぱ行'||k.group==='パ行'){
+    const base=String.fromCharCode(c.charCodeAt(0)-2);
+    return base+' mit Kreis (Handakuten): aus „h" wird „p" → '+k.romaji;
+  }
+  // Dakuten (zwei Striche): der Laut wird stimmhaft/weich
+  if(['が行','ざ行','だ行','ば行','ガ行','ザ行','ダ行','バ行'].includes(k.group)){
+    const base=String.fromCharCode(c.charCodeAt(0)-1);
+    return base+' mit zwei Strichen (Dakuten): der Laut wird weich → '+k.romaji;
+  }
+  return null;
+}
+
 // Genauigkeits-Abzeichen: zählen erst, wenn alle Kana-Reihen freigeschaltet sind
 // (Hiragana- und Katakana-Kombis = letzte Kana-Gruppen), und messen die Trefferquote
 // über die letzten 500 Antworten statt über die gesamte Lebenszeit.
@@ -585,7 +738,7 @@ const MILESTONE_CFG={
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const SK='kana_dojo_v4';
-function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},sound:true,history:{},box:{},recent:[]};}
+function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{}};}
 
 let S=defaultState();
 (()=>{try{const d=localStorage.getItem(SK);if(d){const parsed=JSON.parse(d);S={...defaultState(),...parsed};}}catch(e){}
@@ -602,6 +755,13 @@ let S=defaultState();
   // Migration: heutigen Tag in den Verlauf übernehmen, falls noch nicht erfasst
   if(!S.history)S.history={};
   if(S.dailyTotal>0&&!S.history[today])S.history[today]={a:S.dailyTotal,c:S.dailyCorrect||0};
+  // Migration Lernpfad: bereits geübte Zeichen gelten als vorgestellt,
+  // damit Bestandsnutzer keine Karten-Flut für bekannte Zeichen bekommen
+  if(!S.seen)S.seen={};
+  if(Object.keys(S.seen).length===0&&S.total>0){
+    Object.keys(S.cStats||{}).forEach(c=>S.seen[c]=1);
+  }
+  if(!S.myMnemo)S.myMnemo={};
 })();
 
 function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
@@ -703,6 +863,46 @@ let currentQ=null;
 let answering=false;
 let nextTimer=null;
 
+// ── VORSTELLUNGS-KARTE (Anfänger-Lernpfad) ────────────────────────────────────
+// Zeigt ein neues Zeichen vor der ersten Abfrage: groß, mit Aussprache und
+// Eselsbrücke. Nutzer können eine eigene Merkhilfe eintragen (bleibt lokal).
+function maybeShowIntro(q){
+  if(WORD_GROUPS.includes(q.group))return false; // Wörter bestehen aus bekannten Zeichen
+  if(!S.seen)S.seen={};
+  if(S.seen[q.char])return false;
+  openIntro(q,false);
+  return true;
+}
+function openIntro(q,review){
+  const el=document.getElementById('intro-card');
+  document.getElementById('intro-label').textContent=review?'Zeichen-Info':'✨ Neues Zeichen!';
+  document.getElementById('intro-char').textContent=q.char;
+  document.getElementById('intro-romaji').textContent=q.romaji;
+  document.getElementById('intro-script').textContent=(q.script==='h'?'Hiragana':'Katakana')+' · '+q.group;
+  const m=getDefaultMnemo(q);
+  const mEl=document.getElementById('intro-mnemo');
+  mEl.textContent=m?'💡 '+m:'';
+  mEl.style.display=m?'block':'none';
+  document.getElementById('intro-own').value=(S.myMnemo&&S.myMnemo[q.char])||'';
+  el.dataset.char=q.char;
+  el.classList.add('open');
+}
+function closeIntro(){
+  const el=document.getElementById('intro-card');
+  const c=el.dataset.char;
+  const v=document.getElementById('intro-own').value.trim();
+  if(!S.myMnemo)S.myMnemo={};
+  if(v)S.myMnemo[c]=v;else delete S.myMnemo[c];
+  if(!S.seen)S.seen={};
+  S.seen[c]=1;
+  save();
+  el.classList.remove('open');
+}
+// 💡-Button auf der Quiz-Karte: Info zum aktuellen Zeichen erneut ansehen
+function openIntroForCurrent(){
+  if(currentQ&&currentQ.q)openIntro(currentQ.q,true);
+}
+
 function renderQuestion(){
   currentQ=pickQ();
   answering=false;
@@ -738,6 +938,9 @@ function renderQuestion(){
     btn.onclick=()=>handleAnswer(ans,btn);
     answersEl.appendChild(btn);
   });
+
+  // Neues Zeichen? Erst die Vorstellungs-Karte zeigen (legt sich über das Quiz)
+  maybeShowIntro(q);
 }
 
 function handleAnswer(pick,btn){
