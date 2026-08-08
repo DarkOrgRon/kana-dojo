@@ -261,6 +261,8 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
       <div class="stat-box"><div class="stat-box-label">🎯 Genauigkeit</div><div class="stat-box-value" id="p-acc">0%</div></div>
       <div class="stat-box"><div class="stat-box-label">✅ Heute</div><div class="stat-box-value" id="p-today">0</div></div>
     </div>
+    <h3 style="color:var(--gold);margin-bottom:10px;font-size:15px;">Leitner-Boxen</h3>
+    <div id="leitner-summary" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px;"></div>
     <h3 style="color:var(--gold);margin-bottom:10px;font-size:15px;">Verlauf – letzte 14 Tage</h3>
     <div id="history-chart"></div>
     <h3 style="color:var(--gold);margin-bottom:10px;font-size:15px;">Gruppen-Fortschritt</h3>
@@ -478,6 +480,12 @@ const GROUP_ORDER=[
   '2文字','3文字','4文字','5文字','混合',
 ];
 
+// Genauigkeits-Abzeichen: zählen erst, wenn alle Kana-Reihen freigeschaltet sind
+// (Hiragana- und Katakana-Kombis = letzte Kana-Gruppen), und messen die Trefferquote
+// über die letzten 500 Antworten statt über die gesamte Lebenszeit.
+const allKanaUnlocked=s=>s.unlocked.includes('組合')&&s.unlocked.includes('カ組');
+const recentAcc=s=>{const r=s.recent||[];if(r.length<500)return -1;return r.reduce((a,b)=>a+b,0)/r.length;};
+
 const BADGES=[
   // ── Erste Schritte ────────────────────────────────────────────────────────
   {id:'first',     label:'Erste Antwort',      emoji:'⚡', cond:s=>s.total>=1},
@@ -501,11 +509,11 @@ const BADGES=[
   {id:'streak180', label:'Halbjahres-Streak',  emoji:'🎋', cond:s=>s.streak>=180},
   {id:'streak365', label:'Jahres-Streak',      emoji:'🎌', cond:s=>s.streak>=365},
   // ── Genauigkeit ───────────────────────────────────────────────────────────
-  {id:'acc70',     label:'70% Auf dem Weg',    emoji:'🎓', cond:s=>s.total>=15&&s.correct/s.total>=0.7},
-  {id:'acc80',     label:'80% Genauigkeit',    emoji:'🎯', cond:s=>s.total>=20&&s.correct/s.total>=0.8},
-  {id:'acc90',     label:'90% Scharfsinnig',   emoji:'🔍', cond:s=>s.total>=40&&s.correct/s.total>=0.9},
-  {id:'acc95',     label:'95% Meister',        emoji:'🌟', cond:s=>s.total>=50&&s.correct/s.total>=0.95},
-  {id:'acc99',     label:'99% Fast Perfekt',   emoji:'💎', cond:s=>s.total>=100&&s.correct/s.total>=0.99},
+  {id:'acc70',     label:'70% Auf dem Weg',    emoji:'🎓', cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.7},
+  {id:'acc80',     label:'80% Genauigkeit',    emoji:'🎯', cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.8},
+  {id:'acc90',     label:'90% Scharfsinnig',   emoji:'🔍', cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.9},
+  {id:'acc95',     label:'95% Meister',        emoji:'🌟', cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.95},
+  {id:'acc99',     label:'99% Fast Perfekt',   emoji:'💎', cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.99},
   // ── Fragen ────────────────────────────────────────────────────────────────
   {id:'q10',       label:'Erster Schritt',     emoji:'🐣', cond:s=>s.dailyTotal>=10},
   {id:'q25',       label:'Einsteiger',         emoji:'📝', cond:s=>s.dailyTotal>=25},
@@ -577,7 +585,7 @@ const MILESTONE_CFG={
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const SK='kana_dojo_v4';
-function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},sound:true,history:{}};}
+function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},sound:true,history:{},box:{},recent:[]};}
 
 let S=defaultState();
 (()=>{try{const d=localStorage.getItem(SK);if(d){const parsed=JSON.parse(d);S={...defaultState(),...parsed};}}catch(e){}
@@ -630,7 +638,10 @@ function pickQ(){
   // weighted pick, avoid repeating same char
   const eligible=pool.filter(k=>k.char!==lastChar);
   const src=eligible.length>=4?eligible:pool;
-  const weights=src.map(k=>{const st=S.cStats[k.char];if(!st)return 3;const a=st.c/st.a;return a<0.5?4:a<0.75?2:1;});
+  // Leitner-Gewichtung: niedrige Boxen kommen häufiger dran, neue Zeichen bevorzugt
+  // Box 0 (neu)=6, Box 1=8, Box 2=5, Box 3=3, Box 4=2, Box 5=1
+  const LEITNER_W=[6,8,5,3,2,1];
+  const weights=src.map(k=>LEITNER_W[(S.box&&S.box[k.char])||0]);
   const tot=weights.reduce((a,b)=>a+b,0);
   let r=Math.random()*tot;
   let chosen=src[src.length-1];
@@ -781,6 +792,13 @@ function handleAnswer(pick,btn){
   cs.a++;if(isOk)cs.c++;
   const gs=S.gStats[q.group]||(S.gStats[q.group]={a:0,c:0});
   gs.a++;if(isOk)gs.c++;
+  // Leitner-System: richtig → eine Box höher (max. 5), falsch → zurück in Box 1
+  if(!S.box)S.box={};
+  S.box[q.char]=isOk?Math.min(5,(S.box[q.char]||0)+1):1;
+  // Rollende Trefferliste der letzten 500 Antworten (Basis der Genauigkeits-Abzeichen)
+  if(!S.recent)S.recent=[];
+  S.recent.push(isOk?1:0);
+  if(S.recent.length>500)S.recent.splice(0,S.recent.length-500);
 
   computeUnlocks();
 
@@ -884,6 +902,7 @@ function renderProgress(){
   document.getElementById('p-total').textContent=S.total;
   document.getElementById('p-acc').textContent=acc+'%';
   document.getElementById('p-today').textContent=S.dailyTotal;
+  renderLeitner();
   renderHistory();
   const gl=document.getElementById('group-list');
   gl.innerHTML='';
@@ -906,6 +925,28 @@ function renderProgress(){
     row.innerHTML=inner;
     gl.appendChild(row);
   });
+}
+
+// Leitner-Übersicht: wie viele Zeichen in welcher Box liegen (nur Einzel-Kana,
+// Wörter laufen intern mit, würden die Anzeige aber unübersichtlich machen)
+function renderLeitner(){
+  const el=document.getElementById('leitner-summary');
+  const kana=ALL_KANA.filter(k=>!WORD_GROUPS.includes(k.group));
+  const counts=[0,0,0,0,0,0];
+  kana.forEach(k=>{counts[(S.box&&S.box[k.char])||0]++;});
+  const mastered=counts[4]+counts[5];
+  const names=['Neu','Box 1','Box 2','Box 3','Box 4','Box 5'];
+  const colors=['rgba(255,255,255,0.25)','var(--danger)','#ff8c42','var(--gold)','var(--green)','#00d2d3'];
+  let html=`<div style="margin-bottom:10px;font-size:13px;">Gemeistert: <b style="color:var(--gold)">${mastered}</b> von ${kana.length} Zeichen <span style="color:var(--dim)">(ab Box 4)</span></div>`;
+  const max=Math.max(1,...counts);
+  names.forEach((n,i)=>{
+    html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="width:44px;font-size:11px;color:var(--dim)">${n}</span>
+      <div class="progress-bar-wrap" style="flex:1;width:auto"><div class="progress-bar" style="width:${Math.round(counts[i]/max*100)}%;background:${colors[i]}"></div></div>
+      <span style="width:28px;text-align:right;font-size:11px;">${counts[i]}</span></div>`;
+  });
+  html+=`<div style="font-size:11px;color:var(--dim);margin-top:8px">Richtig → eine Box höher · Fehler → zurück in Box 1 · Zeichen aus niedrigen Boxen kommen häufiger dran</div>`;
+  el.innerHTML=html;
 }
 
 // Balkendiagramm: Antworten pro Tag (Höhe) + Trefferquote (Farbe), letzte 14 Tage
