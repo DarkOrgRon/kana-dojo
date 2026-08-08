@@ -93,6 +93,8 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 .intro-own-label{display:block;font-size:11px;color:var(--dim);text-align:left;margin-bottom:4px;}
 #intro-own{width:100%;background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 10px;resize:none;font-family:inherit;box-sizing:border-box;}
 #intro-btn{margin-top:12px;width:100%;background:var(--gold);color:#1a1408;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;}
+/* Charakter-Level: Stufen-Zeile in der Auswahl */
+.cs-level{font-size:10px;color:var(--gold);letter-spacing:1px;margin-top:2px;}
 /* Profimodus: Herzen + Countdown-Balken, Toggle-Button */
 #pro-status{display:none;align-items:center;gap:10px;max-width:340px;margin:12px auto 0;padding:0 16px;}
 #pro-hearts{font-size:14px;letter-spacing:2px;white-space:nowrap;}
@@ -1129,7 +1131,17 @@ function handleAnswer(pick,btn){
     S.daysLearned=(S.daysLearned||0)+1;
   }
   S.total++;S.dailyTotal++;
-  if(S.character)S.charStats[S.character]=(S.charStats[S.character]||0)+1;
+  // Charakter-Zähler + Stufenaufstieg erkennen (neue Optik sofort zeichnen)
+  let levelUpToast=null;
+  if(S.character){
+    const lvVorher=charLevel(S.character);
+    S.charStats[S.character]=(S.charStats[S.character]||0)+1;
+    const lvJetzt=charLevel(S.character);
+    if(lvJetzt>lvVorher){
+      renderHero();
+      levelUpToast={emoji:SPRITES[S.character].emoji,head:'Stufenaufstieg!',label:SPRITES[S.character].name+' ist jetzt '+LEVEL_NAMES[lvJetzt-1]+' '+levelStars(lvJetzt)};
+    }
+  }
   if(isOk){S.correct++;S.dailyCorrect++;S.combo++;if(S.combo>S.bestCombo)S.bestCombo=S.combo;if(COMBO_MILESTONES.includes(S.combo))triggerComboMilestone(S.combo);}
   else{S.combo=0;}
 
@@ -1163,7 +1175,7 @@ function handleAnswer(pick,btn){
   // Badges + Missionen prüfen (gemeinsamer Toast)
   const newB=BADGES.filter(b=>!S.badges.includes(b.id)&&b.cond(S));
   newB.forEach(b=>S.badges.push(b.id));
-  const toasts=[...newB,...checkMissions(q.group)];
+  const toasts=[...newB,...checkMissions(q.group),...(levelUpToast?[levelUpToast]:[])];
   if(toasts.length>0){
     spawnParticles(20);
     showBadgeToast(toasts);
@@ -1632,11 +1644,67 @@ SPRITES.sumo={
   ],
 };
 
-function drawSprite(cv,rows,pal,scale){
+// ── CHARAKTER-LEVEL ───────────────────────────────────────────────────────────
+// 4 Stufen pro Charakter, gemessen an den Antworten mit diesem Charakter
+// (S.charStats). Die Optik je Stufe ist eine Paletten-Überschreibung des
+// Basis-Sprites; Stufe 2 entspricht dem bisherigen Standard-Look.
+// _aura zeichnet einen Glow hinter dem Sprite (nur Stufe 4).
+const CHAR_LEVELS=[0,100,500,1500];
+const LEVEL_NAMES=['Schüler','Kämpfer','Meister','Legende'];
+const LEVEL_STYLES={
+  ninja:[
+    {K:'#4a4a5a',D:'#33333f',R:'#6a6a7a'},                                 // 1: graue Kleidung, graues Band
+    {},                                                                     // 2: Standard (dunkelblau, rotes Band)
+    {K:'#0f0f1a',D:'#050508',R:'#e74c3c'},                                 // 3: schwarze Kleidung, leuchtend rotes Band
+    {K:'#0f0f1a',D:'#050508',R:'#e8c87a',_aura:'rgba(232,200,122,0.45)'},  // 4: goldenes Band + Aura
+  ],
+  samurai:[
+    {R:'#6a5a4a',D:'#4a3f35',G:'#8a7a5a',X:'#9a9aa4'},                     // 1: Leder statt Rüstung, matte Klinge
+    {},                                                                     // 2: Standard (rote Rüstung)
+    {R:'#a11212',D:'#5a0808',G:'#ffd700',X:'#e8e8f4'},                     // 3: Prunk-Rüstung, Gold-Zier
+    {R:'#a11212',D:'#5a0808',G:'#ffd700',X:'#ffdf6b',_aura:'rgba(255,223,107,0.45)'}, // 4: glühende Klinge + Aura
+  ],
+  geisha:[
+    {R:'#a86a6a',P:'#c8a0a8',G:'#b8a878'},                                 // 1: schlichter Kimono
+    {},                                                                     // 2: Standard
+    {R:'#c2185b',P:'#f48fb1',G:'#ffd700'},                                 // 3: prächtiger Kimono, Gold-Schmuck
+    {R:'#c2185b',P:'#ffb7c5',G:'#ffd700',_aura:'rgba(255,183,197,0.45)'},  // 4: leuchtender Fächer + Aura
+  ],
+  sumo:[
+    {M:'#d8d8d8'},                                                          // 1: weißes Mawashi (Einsteiger-Rang)
+    {},                                                                     // 2: blaues Mawashi (Standard)
+    {M:'#7a4a9a'},                                                          // 3: lila Mawashi
+    {M:'#2a2a2a',_aura:'rgba(232,200,122,0.45)'},                          // 4: schwarzes Mawashi + Aura (Yokozuna)
+  ],
+};
+function charLevel(ch){
+  const n=(S.charStats&&S.charStats[ch])||0;
+  let lv=1;
+  for(let i=1;i<CHAR_LEVELS.length;i++)if(n>=CHAR_LEVELS[i])lv=i+1;
+  return lv;
+}
+function charPalette(ch){
+  const ov=(LEVEL_STYLES[ch]||[])[charLevel(ch)-1]||{};
+  return {...SPRITES[ch].palette,...ov};
+}
+function charAura(ch){
+  const ov=(LEVEL_STYLES[ch]||[])[charLevel(ch)-1]||{};
+  return ov._aura||null;
+}
+function levelStars(lv){return '★'.repeat(lv)+'☆'.repeat(4-lv);}
+
+function drawSprite(cv,rows,pal,scale,aura){
   cv.width=rows[0].length*scale;
   cv.height=rows.length*scale;
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
+  // Aura (Stufe 4): weicher Glow hinter dem Sprite
+  if(aura){
+    const cx=cv.width/2,cy=cv.height/2,r=cv.width*0.62;
+    const g=ctx.createRadialGradient(cx,cy,r*0.15,cx,cy,r);
+    g.addColorStop(0,aura);g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,cv.width,cv.height);
+  }
   rows.forEach((row,y)=>{
     for(let x=0;x<row.length;x++){
       const col=pal[row[x]];
@@ -1651,8 +1719,9 @@ function renderHero(){
   if(!S.character||!SPRITES[S.character]){wrap.style.display='none';return;}
   wrap.style.display='flex';
   const c=SPRITES[S.character];
-  drawSprite(document.getElementById('hero-cv'),c.idle,c.palette,5);
-  document.getElementById('hero-name').textContent=c.name;
+  drawSprite(document.getElementById('hero-cv'),c.idle,charPalette(S.character),5,charAura(S.character));
+  const lv=charLevel(S.character);
+  document.getElementById('hero-name').textContent=c.name+' · '+LEVEL_NAMES[lv-1]+' '+levelStars(lv);
   const btn=document.getElementById('char-switch-btn');
   if(btn)btn.textContent=c.emoji;
 }
@@ -1666,7 +1735,7 @@ function heroAttack(){
   wrap.classList.remove('hurt','attacking');
   void wrap.offsetWidth;
   wrap.classList.add('attacking');
-  drawSprite(cv,c.attack,c.palette,5);
+  drawSprite(cv,c.attack,charPalette(S.character),5,charAura(S.character));
   // Effekt je Charakter: Shuriken / Katana-Slash / Fächer / Schockwelle
   const stage=document.getElementById('quiz-stage');
   const card=document.getElementById('char-card');
@@ -1703,7 +1772,7 @@ function heroAttack(){
   }
   heroAttackTimer=setTimeout(()=>{
     wrap.classList.remove('attacking');
-    drawSprite(cv,c.idle,c.palette,5);
+    drawSprite(cv,c.idle,charPalette(S.character),5,charAura(S.character));
   },420);
 }
 
@@ -1719,7 +1788,18 @@ function heroHurt(){
 // ── CHARAKTERAUSWAHL ──────────────────────────────────────────────────────────
 function openCharSelect(){
   ['ninja','samurai','geisha','sumo'].forEach(id=>{
-    drawSprite(document.getElementById('cs-'+id),SPRITES[id].idle,SPRITES[id].palette,6);
+    const cv=document.getElementById('cs-'+id);
+    drawSprite(cv,SPRITES[id].idle,charPalette(id),6,charAura(id));
+    // Stufen-Zeile unter dem Namen (wird bei jedem Öffnen aktualisiert)
+    const card=cv.closest('.cs-card');
+    let lvEl=card.querySelector('.cs-level');
+    if(!lvEl){
+      lvEl=document.createElement('div');
+      lvEl.className='cs-level';
+      card.querySelector('.cs-name').after(lvEl);
+    }
+    const lv=charLevel(id);
+    lvEl.textContent=LEVEL_NAMES[lv-1]+' '+levelStars(lv);
   });
   document.getElementById('char-select').classList.add('open');
 }

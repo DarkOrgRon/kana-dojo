@@ -18,10 +18,30 @@ Sechs Pakete, nach jedem Paket Push + Test durch Ronny auf dem Handy:
 2. ✅ **Anfänger-Lernpfad** (deployed 08.08.2026, siehe unten)
 3. ✅ **Missionen** (deployed 08.08.2026, siehe unten)
 4. ✅ **Profimodus** (deployed 08.08.2026, siehe unten)
-5. Charakter-Level: 3–4 sichtbare Aufstiegsstufen pro Charakter (Sumo nach Mawashi-Rängen),
-   Basis: vorhandene charStats-Zähler.
+5. ✅ **Charakter-Level** (deployed 08.08.2026, siehe unten)
 6. iBj-Eigenwerbung: Splash beim Start + dezent alle 50 Fragen, hart kodiert, kein Werbenetzwerk.
+   **Bewusst zurückgestellt (Ronny, 08.08.2026):** erst nachdem die App ein paar Tage getestet wurde.
 Danach (separat, erst nach Ronnys Test): Play-Store-Veröffentlichung als TWA.
+
+## Paket 5: Charakter-Level (08.08.2026)
+- **4 Stufen je Charakter** (`CHAR_LEVELS`=[0,100,500,1500] Antworten mit dem Charakter,
+  Basis: vorhandene `S.charStats`-Zähler – kein neues Spielstand-Feld nötig):
+  Schüler → Kämpfer → Meister → Legende (`LEVEL_NAMES`).
+- **Optik je Stufe** als Paletten-Überschreibung (`LEVEL_STYLES`, Stufe 2 = bisheriger Look,
+  niemand wird optisch „zurückgestuft" – Bestandszähler unter 100 sehen Stufe 1):
+  Ninja: grau → Standard → schwarz/rotes Band → goldenes Band · Samurai: Leder → Standard →
+  Prunk/Gold → glühende Klinge · Geisha: schlicht → Standard → prächtig → leuchtend ·
+  Sumo: Mawashi weiß → blau → lila → schwarz (echte Rang-Anmutung).
+- **Stufe 4 = goldene/rosa Aura**: radialer Glow hinter dem Sprite, gezeichnet in
+  `drawSprite` (neuer 5. Parameter `aura`); `_aura`-Schlüssel im Style-Objekt.
+- **Anzeige:** unterm Quiz-Helden „Ninja · Kämpfer ★★☆☆" (`levelStars`), in der
+  Charakterauswahl je Karte eine `.cs-level`-Zeile (bei jedem Öffnen aktualisiert).
+- **Stufenaufstieg:** in `handleAnswer` erkannt (Level vor/nach Zähler-Inkrement),
+  sofortiges Neuzeichnen + Toast „Stufenaufstieg!" über die gemeinsame Toast-Leiste.
+- Getestet (lokal): Schwellen (99→1, 100→2, 500→3, 1500→4), Sumo-Mawashi-Farben je Stufe,
+  Live-Aufstieg mit Toast bei der 100. Antwort, Stirnband-Pixelfarben je Stufe verifiziert,
+  Aura nur auf Stufe 4 (Pixel-Alpha-Messung), Auswahl-Karten zeigen Stufen, Reload sauber.
+- Backup vor Umbau: `index_v11_2026-08-08_pre-charakterlevel.html` (lokal, nicht im Repo)
 
 ## Paket 4: Profimodus (08.08.2026)
 - **Aktivierung:** Button „🔥 Profi" in der Schalter-Leiste (`#pro-toggle`, `toggleProMode()`).
