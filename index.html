@@ -93,6 +93,11 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 .intro-own-label{display:block;font-size:11px;color:var(--dim);text-align:left;margin-bottom:4px;}
 #intro-own{width:100%;background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 10px;resize:none;font-family:inherit;box-sizing:border-box;}
 #intro-btn{margin-top:12px;width:100%;background:var(--gold);color:#1a1408;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;}
+/* Missions-Streifen unterm Quiz + Missions-Zeilen im Fortschritt */
+#mission-strip{max-width:340px;margin:14px auto 0;display:flex;flex-direction:column;gap:5px;padding:0 4px;}
+.mission-row{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;}
+.mission-label{flex:1;font-size:11px;color:var(--text);text-align:left;min-width:0;}
+.mission-count{font-size:10px;color:var(--dim);min-width:34px;text-align:right;}
 #char-display{color:#f5f0e8;text-shadow:0 2px 12px rgba(232,200,122,0.2);text-align:center;padding:0 8px;line-height:1.1;}
 #char-meta{font-size:10px;color:var(--dim);margin-top:10px;letter-spacing:1px;}
 
@@ -278,6 +283,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
     </div>
     <div id="feedback-line"></div>
     <div id="answers"></div>
+    <div id="mission-strip"></div>
   </div>
 
   <!-- Progress View -->
@@ -291,6 +297,8 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
       <div class="stat-box"><div class="stat-box-label">🎯 Genauigkeit</div><div class="stat-box-value" id="p-acc">0%</div></div>
       <div class="stat-box"><div class="stat-box-label">✅ Heute</div><div class="stat-box-value" id="p-today">0</div></div>
     </div>
+    <h3 style="color:var(--gold);margin-bottom:10px;font-size:15px;">Missionen</h3>
+    <div id="mission-list" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px;"></div>
     <h3 style="color:var(--gold);margin-bottom:10px;font-size:15px;">Leitner-Boxen</h3>
     <div id="leitner-summary" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px;"></div>
     <h3 style="color:var(--gold);margin-bottom:10px;font-size:15px;">Verlauf – letzte 14 Tage</h3>
@@ -633,6 +641,55 @@ function getDefaultMnemo(k){
   return null;
 }
 
+// ── MISSIONEN ─────────────────────────────────────────────────────────────────
+// Drei Arten: Tagesquests (täglich neu), Reihen-Missionen (richtige in Folge
+// pro Gruppe, 3 Stufen, einmalig) und Schriftrollen-Stücke (Reihe komplett
+// gemeistert = alle Zeichen in Box 4+).
+const DAILY_QUESTS=[
+  {id:'dq30',    label:'30 Fragen beantworten',    target:30, val:s=>s.dailyTotal},
+  {id:'dq20ok',  label:'20 richtige Antworten',    target:20, val:s=>s.dailyCorrect},
+  {id:'dqCombo', label:'Eine 8er-Kombo schaffen',  target:8,  val:s=>s.dailyBestCombo||0},
+];
+const ROW_TIERS=[10,25,50];
+
+// Reihe komplett gemeistert? (alle Zeichen der Gruppe in Box 4+)
+function scrollPieceDone(g){
+  const chars=ALL_KANA.filter(k=>k.group===g);
+  return chars.length>0&&chars.every(k=>((S.box&&S.box[k.char])||0)>=4);
+}
+
+// Nach jeder Antwort: erfüllte Missionen einsammeln (gibt Toast-Einträge zurück)
+function checkMissions(group){
+  const toasts=[];
+  if(!S.dailyClaimed)S.dailyClaimed=[];
+  if(!S.missionsDone)S.missionsDone=[];
+  // Tagesquests
+  DAILY_QUESTS.forEach(dq=>{
+    if(!S.dailyClaimed.includes(dq.id)&&dq.val(S)>=dq.target){
+      S.dailyClaimed.push(dq.id);
+      toasts.push({emoji:'🎯',head:'Tagesquest erfüllt!',label:dq.label});
+    }
+  });
+  // Reihen-Missionen (richtige in Folge in dieser Gruppe)
+  const run=(S.rowRun&&S.rowRun[group])||0;
+  ROW_TIERS.forEach(t=>{
+    const id='row_'+group+'_'+t;
+    if(run>=t&&!S.missionsDone.includes(id)){
+      S.missionsDone.push(id);
+      toasts.push({emoji:'🏹',head:'Mission erfüllt!',label:group+': '+t+' richtige in Folge'});
+    }
+  });
+  // Schriftrollen-Stück (nur Kana-Reihen, keine Wortgruppen)
+  if(!WORD_GROUPS.includes(group)){
+    const id='scroll_'+group;
+    if(!S.missionsDone.includes(id)&&scrollPieceDone(group)){
+      S.missionsDone.push(id);
+      toasts.push({emoji:'📜',head:'Schriftrollen-Stück!',label:group+' komplett gemeistert'});
+    }
+  }
+  return toasts;
+}
+
 // Genauigkeits-Abzeichen: zählen erst, wenn alle Kana-Reihen freigeschaltet sind
 // (Hiragana- und Katakana-Kombis = letzte Kana-Gruppen), und messen die Trefferquote
 // über die letzten 500 Antworten statt über die gesamte Lebenszeit.
@@ -738,7 +795,7 @@ const MILESTONE_CFG={
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const SK='kana_dojo_v4';
-function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{}};}
+function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],missionsDone:[],rowRun:{}};}
 
 let S=defaultState();
 (()=>{try{const d=localStorage.getItem(SK);if(d){const parsed=JSON.parse(d);S={...defaultState(),...parsed};}}catch(e){}
@@ -749,7 +806,7 @@ let S=defaultState();
     if(S.lastDate!==yest)S.streak=0;
   }
   // daily counter reset
-  if(S.dailyDate!==today){S.dailyTotal=0;S.dailyCorrect=0;S.dailyDate=today;}
+  if(S.dailyDate!==today){S.dailyTotal=0;S.dailyCorrect=0;S.dailyDate=today;S.dailyBestCombo=0;S.dailyClaimed=[];}
   // Migration: Lerntage für Bestandsdaten schätzen (mind. so viele wie der Streak)
   if(!S.daysLearned&&S.total>0)S.daysLearned=Math.max(S.streak,1);
   // Migration: heutigen Tag in den Verlauf übernehmen, falls noch nicht erfasst
@@ -788,10 +845,13 @@ function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.fl
 
 let lastChar='';
 function pickQ(){
+  // Bugfix 08.08.2026: Buttons speichern 'hiragana'/'katakana', der Filter prüfte
+  // aber auf 'h'/'k' – dadurch hat der Schriftsystem-Filter nie gegriffen.
+  const sc=S.script==='hiragana'?'h':S.script==='katakana'?'k':S.script;
   const pool=ALL_KANA.filter(k=>{
     if(!S.unlocked.includes(k.group))return false;
-    if(S.script==='h'&&k.script!=='h')return false;
-    if(S.script==='k'&&k.script!=='k')return false;
+    if(sc==='h'&&k.script!=='h')return false;
+    if(sc==='k'&&k.script!=='k')return false;
     return true;
   });
   if(pool.length<4)return null;
@@ -941,6 +1001,7 @@ function renderQuestion(){
 
   // Neues Zeichen? Erst die Vorstellungs-Karte zeigen (legt sich über das Quiz)
   maybeShowIntro(q);
+  renderMissionStrip();
 }
 
 function handleAnswer(pick,btn){
@@ -972,7 +1033,7 @@ function handleAnswer(pick,btn){
 
   // Update state
   const today=getToday();
-  if(S.dailyDate!==today){S.dailyTotal=0;S.dailyCorrect=0;S.dailyDate=today;}
+  if(S.dailyDate!==today){S.dailyTotal=0;S.dailyCorrect=0;S.dailyDate=today;S.dailyBestCombo=0;S.dailyClaimed=[];}
   // Verlauf pro Tag erfassen (max. 60 Tage aufbewahren)
   if(!S.history)S.history={};
   const hd=S.history[today]||(S.history[today]={a:0,c:0});
@@ -1003,15 +1064,22 @@ function handleAnswer(pick,btn){
   S.recent.push(isOk?1:0);
   if(S.recent.length>500)S.recent.splice(0,S.recent.length-500);
 
+  // Missionen fortschreiben: Serie pro Reihe (Fehler setzt zurück) + Tages-Bestkombo
+  if(!S.rowRun)S.rowRun={};
+  S.rowRun[q.group]=isOk?((S.rowRun[q.group]||0)+1):0;
+  if(S.combo>(S.dailyBestCombo||0))S.dailyBestCombo=S.combo;
+
   computeUnlocks();
 
-  // Check badges
+  // Badges + Missionen prüfen (gemeinsamer Toast)
   const newB=BADGES.filter(b=>!S.badges.includes(b.id)&&b.cond(S));
-  if(newB.length>0){
-    newB.forEach(b=>S.badges.push(b.id));
+  newB.forEach(b=>S.badges.push(b.id));
+  const toasts=[...newB,...checkMissions(q.group)];
+  if(toasts.length>0){
     spawnParticles(20);
-    showBadgeToast(newB);
+    showBadgeToast(toasts);
   }
+  renderMissionStrip();
 
   save();
   updateHeader();
@@ -1078,7 +1146,7 @@ function showBadgeToast(badges){
   badges.forEach(b=>{
     const t=document.createElement('div');
     t.className='badge-toast';
-    t.innerHTML=`<span style="font-size:26px">${b.emoji}</span><div><div style="color:var(--gold);font-weight:700;font-size:12px">Abzeichen erhalten!</div><div style="font-size:15px">${b.label}</div></div>`;
+    t.innerHTML=`<span style="font-size:26px">${b.emoji}</span><div><div style="color:var(--gold);font-weight:700;font-size:12px">${b.head||'Abzeichen erhalten!'}</div><div style="font-size:15px">${b.label}</div></div>`;
     el.appendChild(t);
   });
   el.style.display='flex';
@@ -1105,6 +1173,7 @@ function renderProgress(){
   document.getElementById('p-total').textContent=S.total;
   document.getElementById('p-acc').textContent=acc+'%';
   document.getElementById('p-today').textContent=S.dailyTotal;
+  renderMissions();
   renderLeitner();
   renderHistory();
   const gl=document.getElementById('group-list');
@@ -1128,6 +1197,61 @@ function renderProgress(){
     row.innerHTML=inner;
     gl.appendChild(row);
   });
+}
+
+// Missions-Streifen unterm Quiz: zeigt die erste offene Tagesquest und die
+// Reihen-Mission der aktuellen Gruppe – Fortschritt immer im Blick
+function renderMissionStrip(){
+  const el=document.getElementById('mission-strip');
+  if(!el)return;
+  if(!currentQ){el.innerHTML='';return;}
+  const g=currentQ.q.group;
+  const rows=[];
+  const dq=DAILY_QUESTS.find(d=>!(S.dailyClaimed||[]).includes(d.id));
+  if(dq)rows.push({label:'🎯 '+dq.label,cur:Math.min(dq.val(S),dq.target),max:dq.target});
+  else rows.push({label:'🎯 Alle Tagesquests erfüllt!',cur:1,max:1});
+  const nextTier=ROW_TIERS.find(t=>!(S.missionsDone||[]).includes('row_'+g+'_'+t));
+  if(nextTier)rows.push({label:'🏹 '+g+': '+nextTier+' richtige in Folge',cur:Math.min((S.rowRun&&S.rowRun[g])||0,nextTier),max:nextTier});
+  else rows.push({label:'🏹 '+g+': alle Serien-Missionen erfüllt!',cur:1,max:1});
+  el.innerHTML=rows.map(r=>{
+    const p=Math.round(r.cur/r.max*100);
+    return `<div class="mission-row"><span class="mission-label">${r.label}</span><div class="progress-bar-wrap" style="flex:0 0 64px;width:auto"><div class="progress-bar" style="width:${p}%;background:${p>=100?'var(--green)':'var(--gold)'}"></div></div><span class="mission-count">${r.cur}/${r.max}</span></div>`;
+  }).join('');
+}
+
+// Missions-Übersicht im Fortschritt-Tab: Tagesquests, Schriftrollen, Serien-Zähler
+function renderMissions(){
+  const el=document.getElementById('mission-list');
+  if(!el)return;
+  let html='<div style="font-size:12px;color:var(--gold);margin-bottom:6px;">Tagesquests (täglich neu)</div>';
+  DAILY_QUESTS.forEach(dq=>{
+    const done=(S.dailyClaimed||[]).includes(dq.id);
+    const cur=Math.min(dq.val(S),dq.target);
+    const p=done?100:Math.round(cur/dq.target*100);
+    html+=`<div class="mission-row" style="border:none;padding:3px 0;background:none">
+      <span class="mission-label">${done?'✅':'🎯'} ${dq.label}</span>
+      <div class="progress-bar-wrap" style="flex:0 0 64px;width:auto"><div class="progress-bar" style="width:${p}%;background:${p>=100?'var(--green)':'var(--gold)'}"></div></div>
+      <span class="mission-count">${done?dq.target:cur}/${dq.target}</span></div>`;
+  });
+  // Schriftrollen: gemeisterte Kana-Reihen (alle Zeichen Box 4+)
+  const kanaRows=GROUP_ORDER.filter(g=>!WORD_GROUPS.includes(g));
+  const hira=kanaRows.filter(g=>ALL_KANA.some(k=>k.group===g&&k.script==='h'));
+  const kata=kanaRows.filter(g=>ALL_KANA.some(k=>k.group===g&&k.script==='k'));
+  const pieces=list=>list.filter(g=>(S.missionsDone||[]).includes('scroll_'+g)||scrollPieceDone(g)).length;
+  const hp=pieces(hira),kp=pieces(kata);
+  html+='<div style="font-size:12px;color:var(--gold);margin:10px 0 6px;">Schriftrollen (Reihe komplett gemeistert = 1 Stück)</div>';
+  [['📜 Hiragana-Rolle',hp,hira.length],['📜 Katakana-Rolle',kp,kata.length]].forEach(([lbl,cur,max])=>{
+    const p=Math.round(cur/max*100);
+    html+=`<div class="mission-row" style="border:none;padding:3px 0;background:none">
+      <span class="mission-label">${lbl}</span>
+      <div class="progress-bar-wrap" style="flex:0 0 64px;width:auto"><div class="progress-bar" style="width:${p}%;background:${p>=100?'var(--green)':'var(--gold)'}"></div></div>
+      <span class="mission-count">${cur}/${max}</span></div>`;
+  });
+  // Serien-Missionen gesamt
+  const rowDone=(S.missionsDone||[]).filter(id=>id.startsWith('row_')).length;
+  const rowTotal=GROUP_ORDER.length*ROW_TIERS.length;
+  html+=`<div style="font-size:11px;color:var(--dim);margin-top:10px;">🏹 Serien-Missionen: ${rowDone} von ${rowTotal} erfüllt · aktive Ziele siehst du direkt unterm Quiz</div>`;
+  el.innerHTML=html;
 }
 
 // Leitner-Übersicht: wie viele Zeichen in welcher Box liegen (nur Einzel-Kana,
@@ -1532,8 +1656,9 @@ function resetAll(){
   openCharSelect();
 }
 
-// Set initial script button
-document.querySelector(`.script-btn[data-script="${S.script}"]`).classList.add('active');
+// Set initial script button (null-sicher, falls ein unbekannter Wert gespeichert ist)
+const initSb=document.querySelector(`.script-btn[data-script="${S.script}"]`);
+if(initSb)initSb.classList.add('active');
 document.querySelectorAll('.script-btn').forEach(b=>{if(b.dataset.script!==S.script)b.classList.remove('active');});
 
 // ── INIT ──────────────────────────────────────────────────────────────────────

@@ -16,12 +16,38 @@ Aktueller Service-Worker-Cache: `kana-dojo-v6`. Letzter Commit: „Leitner-Syste
 Sechs Pakete, nach jedem Paket Push + Test durch Ronny auf dem Handy:
 1. ✅ **Leitner-System** (deployed 08.08.2026, siehe unten)
 2. ✅ **Anfänger-Lernpfad** (deployed 08.08.2026, siehe unten)
-3. Missionen: 2–3 aktive Quests mit Fortschrittsbalken (Reihen-Ziele, Tagesquests, Schriftrollen).
+3. ✅ **Missionen** (deployed 08.08.2026, siehe unten)
 4. Profimodus: 3 Herzen + Countdown; Herzen leer → nur Profimodus bis morgen gesperrt.
 5. Charakter-Level: 3–4 sichtbare Aufstiegsstufen pro Charakter (Sumo nach Mawashi-Rängen),
    Basis: vorhandene charStats-Zähler.
 6. iBj-Eigenwerbung: Splash beim Start + dezent alle 50 Fragen, hart kodiert, kein Werbenetzwerk.
 Danach (separat, erst nach Ronnys Test): Play-Store-Veröffentlichung als TWA.
+
+## Paket 3: Missionen (08.08.2026)
+- **Drei Missions-Arten:**
+  - **Tagesquests** (`DAILY_QUESTS`, täglich neu): 30 Fragen, 20 richtige, eine 8er-Kombo.
+    Erfüllung wird in `S.dailyClaimed` vermerkt (Reset mit den Tages-Zählern, an beiden
+    Reset-Stellen). Neu dafür: `S.dailyBestCombo` (beste Kombo des Tages).
+  - **Reihen-Missionen** (`ROW_TIERS` = 10/25/50 richtige **in Folge** pro Gruppe, einmalig):
+    Serien-Zähler `S.rowRun[gruppe]`, Fehler in der Gruppe setzt auf 0. Erfüllte IDs
+    (`row_<gruppe>_<stufe>`) in `S.missionsDone`.
+  - **Schriftrollen-Stücke:** Reihe komplett gemeistert (alle Zeichen Box 4+, `scrollPieceDone`)
+    → `scroll_<gruppe>` in `S.missionsDone`. Anzeige als „Hiragana-/Katakana-Rolle X/16".
+- **UI:** `#mission-strip` unterm Quiz zeigt die erste offene Tagesquest + die Reihen-Mission
+  der aktuellen Gruppe (Mini-Fortschrittsbalken, live nach jeder Antwort). Im Fortschritt-Tab
+  neue Sektion „Missionen" (`renderMissions`): alle Tagesquests, beide Schriftrollen,
+  Gesamtzähler Serien-Missionen (X von 111).
+- **Toasts:** Badge- und Missions-Meldungen laufen über denselben Toast (`showBadgeToast`,
+  jetzt mit variabler Überschrift `head`), Missionen mit 🎯/🏹/📜 + Partikeln.
+- **Bugfix Schriftsystem-Filter (vorbestehend, beim Testen entdeckt):** Die Umschalt-Buttons
+  speichern `'hiragana'`/`'katakana'`, `pickQ` prüfte aber auf `'h'`/`'k'` – der Filter hat
+  **nie** gegriffen (es kamen immer beide Schriftsysteme). Gefixt durch Normalisierung in
+  `pickQ`; Initial-Highlight der Buttons zusätzlich null-sicher gemacht.
+- Getestet (lokal): Serie 10/25-Anbahnung + Toast bei Stufe 10, Fehler-Reset der Serie,
+  kombinierter Badge+Missions-Toast, Tagesquest-Autovervollständigung (8er-Kombo),
+  Schriftrollen-Stück, Fortschritt-Panel, Persistenz nach Reload, Katakana-/Hiragana-Filter
+  greift jetzt wirklich, Streifen passt auf 375px.
+- Backup vor Umbau: `index_v9_2026-08-08_pre-missionen.html` (lokal, nicht im Repo)
 
 ## Paket 2: Anfänger-Lernpfad (08.08.2026)
 - **Vorstellungs-Karte:** Overlay `#intro-card` erscheint, bevor ein neues Einzel-Kana zum
