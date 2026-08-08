@@ -10,7 +10,42 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (08.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v6`. Letzter Commit: „Leitner-System …" (`ed0b716`).
+Aktueller Service-Worker-Cache: `kana-dojo-v11`. Letzter Commit: „Charakter-Level: nur richtige
+Antworten zählen …" (`41fc81c`). Pakete 1–5 des Ausbauplans sind komplett deployed.
+
+## ⏭️ WO WEITERMACHEN (Stand 08.08.2026)
+**Aktuelle Phase:** Ronny testet die App mehrere Tage im Alltag (inkl. komplettem Reset,
+um den Anfängermodus als Neu-Nutzer zu erleben). KEINE weiteren Features bauen, bis er
+grünes Licht gibt („Testen vor Weiterentwicklung").
+
+Danach in dieser Reihenfolge:
+1. **Paket 7 – Tastatur-Eingabe bei Wörtern** (Ronnys Idee vom 08.08.2026, Details unten;
+   zuerst umsetzen, wenn der Testlauf Feedback dazu liefert)
+2. **Paket 6 – iBj-Eigenwerbung** (Splash beim Start + dezent alle 50 Fragen, hart kodiert,
+   kein Werbenetzwerk – bewusst zurückgestellt bis nach dem Testlauf)
+3. **Play-Store-Veröffentlichung als TWA** (Trusted Web Activity; braucht Google Play
+   Developer-Konto ~25 USD einmalig, Datenschutzerklärung, Store-Assets)
+Fernziel (großes, eigenes Projekt, erst wenn die App etabliert ist): Registrierung/Accounts
+mit Bonuspunkten als Shop-Rabattcodes – Registrierung läuft dann über Shopify (iBj), damit
+liegt dort auch die E-Mail-Einwilligung (DSGVO: separate Checkbox + Double-Opt-in, keine
+Kopplung). Monetarisierungs-Ziel laut Ronny: primär Reichweite/Branding, Rabattcodes sekundär.
+
+## Paket 7 (geplant): Tastatur-Eingabe bei Wörtern
+Ronnys Test-Befund: Wörter sind mit 4 Antwort-Buttons zu leicht zu erraten (Ratequote 25 %,
+plus Ausschluss über einzelne erkannte Zeichen). Buttons testen nur Wiedererkennen,
+Tippen testet aktives Lesen-Können.
+**Konzept:** Sobald Wortgruppen (2文字 …) dran sind, wird die Antwort per Tastatur (Romaji,
+deutsche Tastatur reicht – nur a–z nötig) eingegeben statt per Button gewählt.
+Einzelzeichen bleiben bei Buttons.
+Bei der Umsetzung beachten (Feedback-Notizen vom 08.08.2026):
+- Eingabefeld: `autocomplete/autocorrect/autocapitalize` aus, `Enter` = absenden,
+  bei Fehler die richtige Lösung anzeigen (wie bisher).
+- **Schreibweisen-Toleranz:** Hepburn ist Anzeige-Standard, aber gängige Kunrei-Varianten
+  als richtig akzeptieren (shi/si, tsu/tu, fu/hu, chi/ti, ji/zi …). Groß-/Kleinschreibung
+  und Leerzeichen egal.
+- **Profimodus:** Countdown für Wörter von 10 s auf ~15 s erhöhen (Tippzeit).
+- Mobile-Layout testen (aufklappende Tastatur verkleinert den Viewport).
+- Optionale Kür (NICHT Teil des Pakets): freiwilliger Tastatur-Modus auch für Einzelzeichen.
 
 ## Ausbauplan 2026-08 (mit Ronny abgestimmt, 08.08.2026)
 Sechs Pakete, nach jedem Paket Push + Test durch Ronny auf dem Handy:
