@@ -10,9 +10,10 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v14`. Letzter Commit: „Paket C: Badge-Erklaerung
-durch Antippen …" (`f90bb53`). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026) sowie die
-Pakete A, B und C aus dem Testlauf-Feedback (21.08.2026). Badge-Gesamtzahl: **74**.
+Aktueller Service-Worker-Cache: `kana-dojo-v16`. Letzter Commit: „Paket D: Charakter-Sprites
+aus den Pixel-Art-Mockups …" (`d08768d`). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026)
+sowie die Pakete A, B, C und D (21.08.2026). Badge-Gesamtzahl: **74**.
+Dateigröße `index.html`: ca. 261 KB (davon ~155 KB Sprite-Raster).
 
 ## ⏭️ WO WEITERMACHEN (Stand 21.08.2026, abends)
 **Pakete A, B und C sind umgesetzt, deployed und live verifiziert** (Commits `c6713e5`,
@@ -24,8 +25,9 @@ keine weiteren Features bauen („Testen vor Weiterentwicklung").
 
 Reihenfolge danach:
 1. ~~Pakete A → B → C~~ ✅ erledigt 21.08.2026
-2. **Paket D – Sprite-Überarbeitung 32×32** (Charakter-Optik; eigener Lauf, Vorarbeit
-   dokumentiert im Abschnitt „Paket D" weiter unten). Wartet auf echte 32×32-Pixel-PNGs.
+2. ~~Paket D – Charakter-Sprites~~ ✅ erledigt 21.08.2026 (Details unten). **Offen dabei:**
+   die Effekt-Sprites (Shuriken, Fächer) sind noch die alten 7×7-Raster – Ronny kann
+   `effekte.png` nachliefern (Vorgaben in `PROMPT_Bild-KI_Sprites.md`).
 3. **Paket 7 – Tastatur-Eingabe bei Wörtern** (Ronnys Idee vom 08.08.2026, Details unten)
 4. **Paket 6 – iBj-Eigenwerbung** (Splash beim Start + dezent alle 50 Fragen, hart kodiert,
    kein Werbenetzwerk – bewusst zurückgestellt bis nach dem Testlauf)
@@ -268,7 +270,62 @@ wenn man drauf klickt, dass sich das Badge umdreht und man nachlesen kann, wofü
   Lauf, siehe unten. Bewusst getrennt, weil es Grafik-Zulieferung braucht.
 - Tastatur-Eingabe bei Wörtern → Paket 7.
 
-## Paket D (geplant): Charakter-Optik / echte 32×32-Pixel-Art
+## ✅ Paket D: Charakter-Sprites (umgesetzt 21.08.2026)
+Commit `d08768d`, Cache `kana-dojo-v16`, Backup vorher `index_v16_2026-08-21_pre-paketD.html`.
+
+**Quelle:** vier Mockup-Sheets von Ronny in `sprites-quelle\mockup-{ninja,samurai,geisha,sumo}.png`
+(je 1536×1024, 4 Level × 2 Posen in einem Bild, Magenta-Hintergrund, mit Beschriftungen,
+Trennlinien und mitgezeichnetem Shuriken). Plus das frühere Einzel-Testbild `ninja_l2.png`.
+
+**Ergebnis in der App:**
+- Sprite-Fenster je Charakter unterschiedlich breit (Ninja 71, Samurai 108, Geisha 84,
+  Sumo 69 Kunstpixel), Höhe einheitlich **56** – Leerzeilen werden oben ergänzt, damit die
+  Füße aller Figuren auf derselben Zeile stehen und die Auswahl-Karten gleich hoch sind.
+- **Je Level ein eigenes Raster UND eine eigene 16-Farb-Palette** (`SPRITES[ch].levels[1..4]`).
+  `LEVEL_STYLES` (Farbüberschreibung auf einem Basis-Sprite) ist damit entfallen.
+- Anzeige: Skalierung **2** im Quiz (Figur ca. 110 px statt vorher 80 px), Skalierung **2** in
+  der Charakterauswahl mit schmalem Körperausschnitt (`bodyRows`, ±21 Spalten) – bei
+  Skalierung 3 passte das 2×2-Raster nicht mehr ohne Scrollen auf ein 375×812-Handy.
+- **Waffe/Arm darf über die Kana-Karte reichen** (Ronnys Entscheidung, „Vorschlag 1"):
+  `#hero-wrap` ist 92 px breit mit `z-index:2`, die Leinwand ist absolut positioniert und
+  wird von `positioniereHeld()` so verschoben, dass die Körpermitte immer bei 44 px sitzt.
+  Gemessene Überlappung mit der Karte: Ninja 10 px, Geisha 30 px, Samurai 80 px, Sumo 0 px.
+  Unkritisch, weil die Angriffspose erst NACH der Antwort erscheint (420 ms).
+- Aura (Stufe 4) wird auf die **Körpermitte** zentriert, nicht auf die Leinwandmitte –
+  sonst läge der Glow bei ausgestreckter Waffe weit neben der Figur (`drawSprite`, 6. Parameter).
+- Erhalten: `charLevel`, `charPalette`, `charAura`, `levelStars`, `drawSprite`, `S.charOk`,
+  Schwellen `[0,500,2500,10000]`. Neu: `charStufe`, `charRows`, `bodyRows`, `positioniereHeld`,
+  `HERO_SCALE`, `HERO_BODY_X`, `AURA`.
+
+**Konverter (im Repo, wiederverwendbar):** `tools/sprites_bauen.py` erzeugt aus den Sheets die
+Raster + Paletten als JS; `tools/vorschau_buehne.py` baut die Quiz-Ansicht als Bild nach
+(Browser-Screenshots waren in der Umgebung nicht möglich). Kernschritte und die Gründe dafür:
+1. **Zellen finden** über Zeilenprofile; je Zelle die **größte zusammenhängende Fläche** = Figur.
+   Dadurch fallen Shuriken, Bewegungslinien, Beschriftungen und Trennlinien automatisch weg.
+2. **Anker = Median der x-Werte** aller Figurenpixel. ⚠️ Wichtige Lehre: Der erste Ansatz nahm
+   die Mitte der obersten 25 % („Kopf") – beim Samurai liegt die **Katana-Spitze genauso hoch
+   wie der Helm**, dadurch kippte der Anker um 30 Kunstpixel nach rechts. Der Median ist
+   robust, weil eine dünne Klinge wenige Pixel hat.
+3. **Blockmittelwert** über die inneren Anteile jedes Blocks, gebrochene Rastergrenzen erlaubt
+   (die Sheets liefern nur ~4,2 Bildpunkte pro Kunstpixel und sind nicht rastertreu skaliert).
+4. **Farbreduktion pro Level** (nicht global über alle 4 Level) – global wurden die Farben
+   sichtbar trüb, weil 16 Farben für grau + dunkelblau + schwarz/rot + gold reichen müssen.
+5. **Magenta-Blend-Farben verwerfen**: Der Bodenschatten aus den Sheets landet nach der
+   Quantisierung als eigene lila Farbe (z. B. `#63006b`). Regel eng gefasst
+   (`g<35 && r>60 && b>60 && |r-b|<50`), damit der **echte lila Mawashi** des Sumo
+   (`#57078f`, Grünanteil deutlich über 0) nicht mitgelöscht wird – geprüft.
+6. Anschließend Zeilen/Spalten beschneiden, die in **allen** 8 Posen leer sind.
+
+**Getestet (lokal im Browser gegen den echten Code):** keine Konsolenfehler; Körpermitte aller
+vier Charaktere exakt bei 44 px; Fußlinie aller vier identisch (448 px); Sprite-Höhe einheitlich
+56; Angriffspose + Shuriken-Effekt startet am ausgestreckten Arm (147 px) und kehrt zu Idle
+zurück; Stufe 4 zeigt Aura und „Legende ★★★★"; Charakterauswahl passt auf 375×812 **ohne
+Scrollen** (Inhalt 812 px), kein seitlicher Überlauf; Bühnenbreite 343 px.
+
+**Offen:** Die Effekt-Sprites `SHURIKEN` und `FAN` sind noch die alten 7×7-Raster und passen
+stilistisch nicht ganz zu den neuen Figuren. `effekte.png` kann nachgeliefert werden.
+
+## Paket D – Vorarbeit und Messungen (Historie, 21.08.2026)
 Ronnys Befund vom 12.08.2026: „Optik der Charaktere verbessern, aktuell wirken diese zu blass."
 Ziel: die heutigen 16×16-Sprites durch hochwertige 32×32-Pixel-Art ersetzen, 4 Charaktere ×
 4 Level × 2 Posen = **32 Zustände**, plus Shuriken und Fächer.
