@@ -10,8 +10,8 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v16`. Letzter Commit: „Paket D: Charakter-Sprites
-aus den Pixel-Art-Mockups …" (`d08768d`). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026)
+Aktueller Service-Worker-Cache: `kana-dojo-v17`. Letzter Commit: „Fix: Name und Stufe lagen
+über der Figur …" (`c6bb2df`). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026)
 sowie die Pakete A, B, C und D (21.08.2026). Badge-Gesamtzahl: **74**.
 Dateigröße `index.html`: ca. 261 KB (davon ~155 KB Sprite-Raster).
 
@@ -321,6 +321,23 @@ vier Charaktere exakt bei 44 px; Fußlinie aller vier identisch (448 px); Sprite
 56; Angriffspose + Shuriken-Effekt startet am ausgestreckten Arm (147 px) und kehrt zu Idle
 zurück; Stufe 4 zeigt Aura und „Legende ★★★★"; Charakterauswahl passt auf 375×812 **ohne
 Scrollen** (Inhalt 812 px), kein seitlicher Überlauf; Bühnenbreite 343 px.
+
+**Nachbesserung am selben Tag (Ronnys Befund):** Name und Stufe lagen über der Figur.
+Gemessene Ursache: Der einzeilige Text „Ninja · Schüler ★☆☆☆" brach in der 92 px schmalen
+Spalte auf **drei Zeilen** um (45 px hoch) und wuchs von `bottom:0` aus **25 px nach oben in
+die Figur** hinein – die Sperrschrift von 2 px lässt nur ca. 12 Zeichen pro Zeile zu.
+Behoben (Commit `c6bb2df`, Cache `kana-dojo-v17`):
+- Leinwand oben verankert (`top:0` statt `bottom:20px`) → Figur sitzt 16 px höher,
+- Spaltenhöhe 132 → **148 px**, davon Figur 0–112 und Text 124–148 (12 px Abstand),
+- Name und Stufe als **zwei eigene Zeilen** (`.hn-name` 10 px gesperrt, `.hn-lvl` 9 px mit
+  `white-space:nowrap`) statt einer umbrechenden Zeile.
+Verifiziert über alle 4 Charaktere × 4 Stufen inkl. Angriffspose: Überlappung **0 px**,
+maximal 2 Textzeilen, längster Text „Legende ★★★★" = 81 px in einer 92 px breiten Spalte,
+kein seitlicher Überlauf – auf Handy- und Desktop-Breite.
+⚠️ Messfalle dabei: `getBoundingClientRect()` eines `display:block`-Elements liefert die
+Breite des ELTERNBLOCKS (92 px), nicht die Textbreite. Erst die Messung mit einem
+`nowrap`-Hilfselement zeigte die echten 81 px. Ein daraufhin geplantes Verkleinern der
+Schrift war also unnötig und wurde nicht umgesetzt.
 
 **Offen:** Die Effekt-Sprites `SHURIKEN` und `FAN` sind noch die alten 7×7-Raster und passen
 stilistisch nicht ganz zu den neuen Figuren. `effekte.png` kann nachgeliefert werden.
