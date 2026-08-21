@@ -60,7 +60,10 @@ Kopplung). Monetarisierungs-Ziel laut Ronny: primär Reichweite/Branding, Rabatt
 - **Sprite-Werkzeuge im Repo:** `tools/sprites_bauen.py` (Mockup-Sheets → Raster + Paletten),
   `tools/vorschau_buehne.py` (Quiz-Ansicht als Bild nachbauen – Browser-Screenshots waren in
   der Entwicklungsumgebung nicht möglich).
-- **Sprite-Quellen:** `sprites-quelle/` (nicht im Repo verlinkt gepflegt, aber vorhanden).
+- **Sprite-Quellen:** `sprites-quelle/` – die vier Mockup-Sheets plus `ninja_l2.png`.
+  Bewusst **nicht im Repo** (7,4 MB, von der App nicht gebraucht, nur von
+  `tools/sprites_bauen.py`). Sie liegen im Projektordner auf Google Drive und sind
+  dadurch gesichert. Wer die Sprites neu erzeugen will, braucht diesen Ordner.
 - **Deploy-Ritual:** Backup → ändern → `CACHE` in `sw.js` hochzählen → Syntax-Check →
   Browser-Test inkl. Migration mit Altspielstand → Push → Live-Dateien per `curl`+`cmp`
   byte-genau gegen `git show origin/main:` prüfen.
