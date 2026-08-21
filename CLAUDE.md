@@ -15,28 +15,55 @@ Aktueller Service-Worker-Cache: `kana-dojo-v17`. Letzter Commit: „Fix: Name un
 sowie die Pakete A, B, C und D (21.08.2026). Badge-Gesamtzahl: **74**.
 Dateigröße `index.html`: ca. 261 KB (davon ~155 KB Sprite-Raster).
 
-## ⏭️ WO WEITERMACHEN (Stand 21.08.2026, abends)
-**Pakete A, B und C sind umgesetzt, deployed und live verifiziert** (Commits `c6713e5`,
-`bbaa936`, `f90bb53`; Cache jetzt `kana-dojo-v14`). Nachweise und Abweichungen stehen im
-Abschnitt „✅ UMSETZUNGSPLAN Pakete A–C".
+## ⏭️ WO WEITERMACHEN (Stand 21.08.2026, Abschluss des Tages)
+**Alles Geplante dieses Tages ist umgesetzt, deployed und live verifiziert.**
+Cache `kana-dojo-v17`, letzter Commit `c6bb2df` (Code) bzw. `73cbbfd` (Doku).
 
-**Aktuelle Phase:** Ronny testet die drei Pakete auf dem Handy. Bis zu seiner Rückmeldung
-keine weiteren Features bauen („Testen vor Weiterentwicklung").
+Heute erledigt: **A** Bugfixes (Ortszeit, Charakter-Badges) · **B** Wertungs-Fairness
+(Übungsfragen, Perfekter Tag) · **C** Badge-Erklärungen · **D** neue Charakter-Sprites
+inkl. Nachbesserung der Namenszeile. Nachweise jeweils in den Abschnitten unten.
+
+**Aktuelle Phase:** Ronny testet im Alltag. Bis zu seiner Rückmeldung KEINE weiteren Features
+bauen („Testen vor Weiterentwicklung"). Ideen sammelt er auf einer Odoo-Karte und übergibt sie
+gebündelt – dann erst clustern, nicht sofort umsetzen.
+
+**Was sinnvoll zu beobachten ist** (Hinweise für den Testlauf, keine offenen Bugs):
+- **Perfekter Tag:** zeigt sich erst am Folgetag (Auswertung am Tagesende) – 50 gewertete
+  Antworten ohne Fehler nötig, und mindestens 8 von 16 Reihen eines Schriftsystems frei.
+- **Tageswechsel** sollte jetzt exakt um 00:00 Ortszeit greifen (vorher 02:00).
+- **Charakter-Stufen** brauchen 500 richtige Antworten für Stufe 2 – im Testlauf also
+  vermutlich noch alle auf „Schüler ★☆☆☆". Zum schnellen Prüfen der Optik höherer Stufen
+  kann man in der Browser-Konsole `S.charOk={ninja:10000};renderHero()` setzen.
+- **Samurai im Angriff:** Katana ragt bewusst ca. 80 px über die Kana-Karte (Ronnys Vorschlag 1).
 
 Reihenfolge danach:
 1. ~~Pakete A → B → C~~ ✅ erledigt 21.08.2026
-2. ~~Paket D – Charakter-Sprites~~ ✅ erledigt 21.08.2026 (Details unten). **Offen dabei:**
-   die Effekt-Sprites (Shuriken, Fächer) sind noch die alten 7×7-Raster – Ronny kann
-   `effekte.png` nachliefern (Vorgaben in `PROMPT_Bild-KI_Sprites.md`).
+2. ~~Paket D – Charakter-Sprites~~ ✅ erledigt 21.08.2026. **Restpunkt:** Die Effekt-Sprites
+   (Shuriken, Fächer) sind noch die alten 7×7-Raster und passen stilistisch nicht ganz.
+   Ronny kann `effekte.png` nachliefern (Vorgaben in `PROMPT_Bild-KI_Sprites.md`),
+   dann Umrechnung über `tools/sprites_bauen.py`-Logik und Austausch von `SHURIKEN`/`FAN`.
 3. **Paket 7 – Tastatur-Eingabe bei Wörtern** (Ronnys Idee vom 08.08.2026, Details unten)
 4. **Paket 6 – iBj-Eigenwerbung** (Splash beim Start + dezent alle 50 Fragen, hart kodiert,
    kein Werbenetzwerk – bewusst zurückgestellt bis nach dem Testlauf)
 5. **Play-Store-Veröffentlichung als TWA** (Trusted Web Activity; braucht Google Play
-   Developer-Konto ~25 USD einmalig, Datenschutzerklärung, Store-Assets)
+   Developer-Konto ~25 USD einmalig, Datenschutzerklärung, Store-Assets, Screenshots).
+   Für die Store-Screenshots lassen sich die Sprites verlustfrei hochskalieren
+   (`tools/vorschau_buehne.py` als Ausgangspunkt).
 Fernziel (großes, eigenes Projekt, erst wenn die App etabliert ist): Registrierung/Accounts
 mit Bonuspunkten als Shop-Rabattcodes – Registrierung läuft dann über Shopify (iBj), damit
 liegt dort auch die E-Mail-Einwilligung (DSGVO: separate Checkbox + Double-Opt-in, keine
 Kopplung). Monetarisierungs-Ziel laut Ronny: primär Reichweite/Branding, Rabattcodes sekundär.
+
+## 🧰 Werkzeuge und Konventionen (Kurzüberblick)
+- **Backups:** `index_vN_JJJJ-MM-TT_zweck.html` im Projektordner (per `.gitignore` nicht im Repo).
+  Stand 21.08.2026: v13 (pre-A), v14 (pre-B), v15 (pre-C), v16 (pre-D), v17 (nach Namenszeile).
+- **Sprite-Werkzeuge im Repo:** `tools/sprites_bauen.py` (Mockup-Sheets → Raster + Paletten),
+  `tools/vorschau_buehne.py` (Quiz-Ansicht als Bild nachbauen – Browser-Screenshots waren in
+  der Entwicklungsumgebung nicht möglich).
+- **Sprite-Quellen:** `sprites-quelle/` (nicht im Repo verlinkt gepflegt, aber vorhanden).
+- **Deploy-Ritual:** Backup → ändern → `CACHE` in `sw.js` hochzählen → Syntax-Check →
+  Browser-Test inkl. Migration mit Altspielstand → Push → Live-Dateien per `curl`+`cmp`
+  byte-genau gegen `git show origin/main:` prüfen.
 
 ## ✅ UMSETZUNGSPLAN Pakete A–C (freigegeben UND umgesetzt am 21.08.2026)
 Grundlage: 5 Befunde aus Ronnys Testlauf (09.–16.08.2026). Alle Ursachen wurden am

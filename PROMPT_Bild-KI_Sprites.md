@@ -1,5 +1,15 @@
 # Prompt für die Bild-KI: echte Pixel-Sprites (Paket D) — Fassung 2
 
+> **STATUS 21.08.2026: Die Charakter-Sprites sind FERTIG und live.** Ronny hat statt
+> 16 Einzelbildern vier Sheets geliefert (`sprites-quelle/mockup-{ninja,samurai,geisha,sumo}.png`,
+> je 4 Level × 2 Posen in einem Bild). Die waren verwertbar – Extraktion und Einbau sind
+> erledigt (siehe `CLAUDE.md`, Abschnitt „✅ Paket D").
+> **Offen ist nur noch `effekte.png`** (Shuriken + Fächer, Vorgaben im Abschnitt weiter unten).
+> Das Sheet-Format hat sich als Vorteil erwiesen: Die vier Level entstehen in einem Durchgang
+> und sehen dadurch garantiert wie dieselbe Figur aus. Falls später neue Charaktere dazukommen,
+> also wieder als Sheet erzeugen – nur bitte etwas größer (die Sheets liefern nur ~4,2
+> Bildpunkte pro Kunstpixel; das Einzeltestbild hatte 13,9 und war dadurch etwas sauberer).
+
 Stand 21.08.2026, **nach dem erfolgreichen Testbild**. Diese Fassung ersetzt Fassung 1.
 
 ## Was sich gegenüber Fassung 1 geändert hat
