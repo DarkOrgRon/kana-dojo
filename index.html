@@ -172,12 +172,14 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 #quiz-stage #char-card{margin:0;z-index:1;}
 /* Held: feste Spaltenbreite, die Leinwand selbst ist absolut positioniert und darf
    nach rechts ueber die Kana-Karte hinausragen (lange Waffen wie das Katana). */
-#hero-wrap{position:relative;width:92px;height:132px;z-index:2;}
+#hero-wrap{position:relative;width:92px;height:148px;z-index:2;}
 #hero-name{position:absolute;left:0;bottom:0;width:92px;text-align:center;}
-#hero-cv{position:absolute;left:0;bottom:20px;image-rendering:pixelated;animation:heroBob 1.1s steps(2) infinite;}
+#hero-cv{position:absolute;left:0;top:0;image-rendering:pixelated;animation:heroBob 1.1s steps(2) infinite;}
 #hero-wrap.hurt #hero-cv{animation:shake 0.4s ease;filter:grayscale(0.8) brightness(0.6);}
 #hero-wrap.attacking #hero-cv{animation:heroLunge 0.4s ease;}
-#hero-name{font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:5px;text-transform:uppercase;}
+#hero-name{margin:0;line-height:1.15;}
+.hn-name{display:block;font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+.hn-lvl{display:block;font-size:9px;color:var(--gold);letter-spacing:0.3px;margin-top:2px;white-space:nowrap;}
 @keyframes heroBob{0%,100%{transform:translateY(0);}50%{transform:translateY(3px);}}
 @keyframes heroLunge{0%{transform:translateX(0);}30%{transform:translateX(14px);}100%{transform:translateX(0);}}
 .fx-shuriken{position:absolute;z-index:50;image-rendering:pixelated;pointer-events:none;animation:shurikenFly 0.32s linear forwards;}
@@ -1840,7 +1842,10 @@ function renderHero(){
   drawSprite(document.getElementById('hero-cv'),charRows(S.character,'idle'),charPalette(S.character),HERO_SCALE,charAura(S.character),SPRITES[S.character].anchor);
   positioniereHeld();
   const lv=charLevel(S.character);
-  document.getElementById('hero-name').textContent=c.name+' · '+LEVEL_NAMES[lv-1]+' '+levelStars(lv);
+  // Zwei getrennte Zeilen: Der einzeilige Text brach in der 92 px schmalen Spalte auf
+  // drei Zeilen um und ragte dabei in die Figur hinein (Sperrschrift = ~12 Zeichen/Zeile).
+  document.getElementById('hero-name').innerHTML=
+    '<span class="hn-name">'+c.name+'</span><span class="hn-lvl">'+LEVEL_NAMES[lv-1]+' '+levelStars(lv)+'</span>';
   const btn=document.getElementById('char-switch-btn');
   if(btn)btn.textContent=c.emoji;
 }
