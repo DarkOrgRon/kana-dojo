@@ -8,24 +8,24 @@ einzigen Datei `index.html`, kein Build und kein Server nötig.
 Das alte Projekt im übergeordneten Ordner bleibt unberührt; diese App nutzt einen
 eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
-## IST-Stand (Code-Stand 08.08.2026, Plan-Stand 21.08.2026)
+## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v11`. Letzter Code-Commit: „Charakter-Level: nur
-richtige Antworten zählen …" (`41fc81c`), letzter Commit insgesamt `d2ac171` (Doku).
-Pakete 1–5 des Ausbauplans sind komplett deployed. Seit dem 08.08. wurde **kein Code geändert**
-(lokal und GitHub am 21.08.2026 als identisch verifiziert, 0/0 Rückstand).
+Aktueller Service-Worker-Cache: `kana-dojo-v14`. Letzter Commit: „Paket C: Badge-Erklaerung
+durch Antippen …" (`f90bb53`). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026) sowie die
+Pakete A, B und C aus dem Testlauf-Feedback (21.08.2026). Badge-Gesamtzahl: **74**.
 
-## ⏭️ WO WEITERMACHEN (Stand 21.08.2026)
-**Testlauf abgeschlossen.** Ronny hat die App vom 08.–16.08.2026 im Alltag getestet und
-5 Befunde gemeldet. Daraus ist der **Umsetzungsplan Pakete A–C** entstanden (siehe eigenen
-Abschnitt direkt unten) – am 21.08.2026 von Ronny freigegeben, **noch nicht umgesetzt**.
-Die Umsetzung erfolgt bewusst durch ein anderes Modell; der Plan ist deshalb als
-vollständige Übergabe-Spezifikation geschrieben.
+## ⏭️ WO WEITERMACHEN (Stand 21.08.2026, abends)
+**Pakete A, B und C sind umgesetzt, deployed und live verifiziert** (Commits `c6713e5`,
+`bbaa936`, `f90bb53`; Cache jetzt `kana-dojo-v14`). Nachweise und Abweichungen stehen im
+Abschnitt „✅ UMSETZUNGSPLAN Pakete A–C".
 
-Reihenfolge ab jetzt:
-1. **Pakete A → B → C** (Testlauf-Befunde, freigegeben – Details im nächsten Abschnitt)
+**Aktuelle Phase:** Ronny testet die drei Pakete auf dem Handy. Bis zu seiner Rückmeldung
+keine weiteren Features bauen („Testen vor Weiterentwicklung").
+
+Reihenfolge danach:
+1. ~~Pakete A → B → C~~ ✅ erledigt 21.08.2026
 2. **Paket D – Sprite-Überarbeitung 32×32** (Charakter-Optik; eigener Lauf, Vorarbeit
-   dokumentiert im Abschnitt „Paket D" weiter unten)
+   dokumentiert im Abschnitt „Paket D" weiter unten). Wartet auf echte 32×32-Pixel-PNGs.
 3. **Paket 7 – Tastatur-Eingabe bei Wörtern** (Ronnys Idee vom 08.08.2026, Details unten)
 4. **Paket 6 – iBj-Eigenwerbung** (Splash beim Start + dezent alle 50 Fragen, hart kodiert,
    kein Werbenetzwerk – bewusst zurückgestellt bis nach dem Testlauf)
@@ -36,15 +36,67 @@ mit Bonuspunkten als Shop-Rabattcodes – Registrierung läuft dann über Shopif
 liegt dort auch die E-Mail-Einwilligung (DSGVO: separate Checkbox + Double-Opt-in, keine
 Kopplung). Monetarisierungs-Ziel laut Ronny: primär Reichweite/Branding, Rabattcodes sekundär.
 
-## 🔧 UMSETZUNGSPLAN Pakete A–C (freigegeben 21.08.2026, NOCH NICHT UMGESETZT)
+## ✅ UMSETZUNGSPLAN Pakete A–C (freigegeben UND umgesetzt am 21.08.2026)
 Grundlage: 5 Befunde aus Ronnys Testlauf (09.–16.08.2026). Alle Ursachen wurden am
 21.08.2026 im Code verifiziert (Zeilennummern beziehen sich auf Commit `d2ac171`).
-Umsetzung durch ein anderes Modell – diese Spezifikation ist die Übergabe.
+
+**Umsetzungsstand (alles deployed und live verifiziert):**
+| Paket | Commit | Cache | Backup vorher |
+|---|---|---|---|
+| A – Bugfixes | `c6713e5` | `kana-dojo-v12` | `index_v13_2026-08-21_pre-paketA.html` |
+| B – Fairness | `bbaa936` | `kana-dojo-v13` | `index_v14_2026-08-21_pre-paketB.html` |
+| C – Badge-Info | `f90bb53` | `kana-dojo-v14` | `index_v15_2026-08-21_pre-paketC.html` |
+
+Abweichungen von der Spezifikation (bewusst, beim Bauen entschieden):
+- **C1:** Die Beschreibungen liegen in einer separaten Tabelle `BADGE_DESC` (plus Helfer
+  `badgeDesc(id)`) statt als `desc`-Feld in jedem der 74 Badge-Einträge. Funktional gleich,
+  aber ein Eingriff statt 74 – deutlich weniger Fehlerrisiko. Vollständigkeit ist geprüft:
+  74 Badges, 74 Beschreibungen, keine verwaisten Einträge.
+- **C2 Layout:** Der erste Entwurf ließ die Karte beim Umdrehen um 34 px wachsen und schob
+  die Nachbarkarten (auf 375 px gemessen). Behoben durch kürzere Beschreibungen (max. 46
+  Zeichen) **und** feste Mindesthöhe `.badge-card{min-height:88px}` → größte Abweichung jetzt
+  **3 px**, Gesamtraster ±3 px. ⚠️ Wer Beschreibungen erweitert, muss diese Messung wiederholen.
+- **B2 Migration:** `perfectEvalDate` wird beim ersten Laden auf *gestern* gesetzt, die Zählung
+  beginnt also ab heute und **nicht rückwirkend**. Sonst würden Tage aus dem Altverlauf gegen
+  das heutige Freischalt-Gate geprüft und könnten unverdient zählen.
+
+**Nachweise (lokal im Browser gegen den echten Code gefahren):**
+- A1: Bei 00:30 Ortszeit liefert `getToday()` den neuen Tag, der alte UTC-Weg lieferte den
+  Vortag. Zeitumstellung 29.03. und 25.10.2026 je gestern/heute/morgen korrekt; für den
+  kritischen Fall (00:30 am Umstellungstag) nachgewiesen, dass das alte Verfahren einen
+  falschen Tag liefert, das neue nicht. 14-Tage-Reihe lückenlos, heutiger Tag rechts.
+- A2: `charOk` 2499 → Stufe 2 und **kein** Badge; 2500 → Stufe 3 **und** Badge (gemeinsam).
+  Gegenprobe 99.999 Antworten bei 100 richtigen → Stufe 1, kein Badge (genau Ronnys Befund).
+- Migration: Altspielstand mit UTC-Datumsschlüsseln, ohne `charOk`/`box`/`recent`/Missions-
+  und Profifelder lädt fehlerfrei, Fortschritt bleibt erhalten, fehlende Felder werden ergänzt.
+  ⚠️ Bereits verdiente Badges werden nie aberkannt – ein altes „Meister"-Badge bleibt also
+  bestehen, auch wenn es nach neuer Regel noch nicht zustünde (für Ronny irrelevant, er setzt zurück).
+- B1: Antwort nach Vorstellungs-Karte lässt `total`, `correct`, `dailyTotal`, `combo`, `recent`,
+  `gStats`, `history`, `charOk`, `rowRun` unverändert, erhöht aber die Leitner-Box; Meldung
+  „(Übungsfrage – zählt nicht)". 💡 während einer normalen Frage setzt das Flag **nicht** –
+  die Antwort zählt normal (Missbrauch ausgeschlossen). Im Profimodus: kein Countdown,
+  kein Herzverlust, `proStats` unverändert, Box bei Fehler auf 1.
+- B2: 50/0 Fehler → 1 perfekter Tag · 1 Fehler → 0 · 49 Antworten → 0 · Gate nicht erfüllt → 0 ·
+  Lücke von 3 Tagen mit 2 perfekten Tagen → beide nachgezählt · zweite Auswertung desselben
+  Tages → kein Doppelzählen · laufender Tag wird nie gezählt · Badge-Stufen bei 5 korrekt.
+- C: 74/74 Beschreibungen vorhanden, Umdrehen funktioniert in beide Richtungen, gesperrte
+  Badges zeigen die Anforderung, `cursor:pointer`, kein seitlicher Überlauf auf 375 px.
+- Gesamttest frischer Spielstand: 10 Antworten = 7 Übungsfragen + 3 gewertete →
+  `total` 3, Verlauf 3, Leitner-Boxen 7. Zähler und Verlauf konsistent.
+
+### Offen / nächster Schritt
+Ronny testet die drei Pakete auf dem Handy (Reset empfohlen, um den Anfängerpfad neu zu
+erleben). Danach **Paket D** (32×32-Sprites, siehe eigenen Abschnitt), dann Paket 7, dann
+Paket 6, dann Play Store.
+
+---
+
+## Spezifikation Pakete A–C (Referenz, wie umgesetzt)
 
 ### Verbindliche Arbeitsregeln (für JEDES Paket einzeln)
 1. **Backup vorher:** `index_vN_2026-MM-TT_zweck.html` in den Projektordner (nicht ins Repo,
    ist per `.gitignore` ausgeschlossen).
-2. **`CACHE`-Version in `sw.js` hochzählen** (aktuell `kana-dojo-v11`), sonst sieht Ronnys
+2. **`CACHE`-Version in `sw.js` hochzählen** (aktuell `kana-dojo-v14`), sonst sieht Ronnys
    Handy die alte Version.
 3. **Syntax-Check** des Script-Blocks vor dem Deploy (JS aus `index.html` extrahieren,
    `node --check`).
