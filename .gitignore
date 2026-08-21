@@ -1,3 +1,7 @@
-# Lokale Backups nicht veröffentlichen
-index_v*_pre-*.html
+# Lokale Backups nicht veröffentlichen (alle versionierten Zwischenstände)
+index_v*.html
 *.bak
+
+# Quellbilder der Sprites: liegen im Projektordner (Google Drive) und werden von der
+# App nicht gebraucht – nur von tools/sprites_bauen.py. 7,4 MB gehören nicht ins Repo.
+sprites-quelle/*.png
