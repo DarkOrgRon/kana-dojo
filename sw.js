@@ -1,7 +1,7 @@
 // Service Worker: macht die App offline nutzbar.
 // Strategie: HTML immer zuerst frisch aus dem Netz laden (Updates sofort sichtbar),
 // nur bei fehlender Verbindung aus dem Cache. Übrige Dateien Cache-First.
-const CACHE = 'kana-dojo-v12';
+const CACHE = 'kana-dojo-v13';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

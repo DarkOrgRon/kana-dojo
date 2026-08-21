@@ -310,6 +310,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
       <div class="stat-box"><div class="stat-box-label">✅ Beantwortet</div><div class="stat-box-value" id="p-total">0</div></div>
       <div class="stat-box"><div class="stat-box-label">🎯 Genauigkeit</div><div class="stat-box-value" id="p-acc">0%</div></div>
       <div class="stat-box"><div class="stat-box-label">✅ Heute</div><div class="stat-box-value" id="p-today">0</div></div>
+      <div class="stat-box"><div class="stat-box-label">💯 Perfekte Tage</div><div class="stat-box-value" id="p-perfect">0</div></div>
     </div>
     <h3 style="color:var(--gold);margin-bottom:10px;font-size:15px;">Missionen</h3>
     <div id="mission-list" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px;"></div>
@@ -655,6 +656,54 @@ function getDefaultMnemo(k){
   return null;
 }
 
+// ── PERFEKTE TAGE ─────────────────────────────────────────────────────────────
+// Ein Tag gilt als perfekt, wenn drei Bedingungen erfüllt sind:
+//  1. mindestens 50 GEWERTETE Antworten an diesem Tag (Übungsfragen zählen nicht),
+//  2. kein einziger Fehler,
+//  3. Freischalt-Gate: mind. 8 von 16 Reihen eines Schriftsystems freigeschaltet (50 %).
+// Die Auswertung erfolgt bewusst RÜCKBLICKEND am Tagesende – sonst könnte man das
+// Abzeichen morgens einsammeln und einen Fehler am Abend hätte keine Wirkung mehr.
+const PERFECT_MIN_ANSWERS=50;
+function perfectDayGate(){
+  const kanaRows=GROUP_ORDER.filter(g=>!WORD_GROUPS.includes(g));
+  const cnt=sc=>kanaRows.filter(g=>S.unlocked.includes(g)&&ALL_KANA.some(k=>k.group===g&&k.script===sc)).length;
+  return cnt('h')>=8||cnt('k')>=8;
+}
+// Wertet alle noch offenen, abgeschlossenen Tage aus (auch mehrere, falls die App
+// ein paar Tage nicht geöffnet wurde). Gibt die Anzahl neu gezählter perfekter Tage zurück.
+function evalPerfectDays(){
+  const today=getToday();
+  if(!S.history)S.history={};
+  const offen=Object.keys(S.history)
+    .filter(d=>d<today&&(!S.perfectEvalDate||d>S.perfectEvalDate))
+    .sort();
+  if(offen.length===0)return 0;
+  const gate=perfectDayGate();
+  let neu=0;
+  offen.forEach(d=>{
+    const h=S.history[d];
+    if(gate&&h&&h.a>=PERFECT_MIN_ANSWERS&&h.c===h.a)neu++;
+  });
+  S.perfectEvalDate=offen[offen.length-1];
+  if(neu>0)S.perfectDays=(S.perfectDays||0)+neu;
+  return neu;
+}
+// Auswertung anstoßen und ggf. Badges + Meldung zeigen
+function runPerfectDayCheck(){
+  const neu=evalPerfectDays();
+  const newB=BADGES.filter(b=>!S.badges.includes(b.id)&&b.cond(S));
+  newB.forEach(b=>S.badges.push(b.id));
+  if(neu>0||newB.length>0){
+    const toasts=[...newB];
+    if(neu>0)toasts.unshift({emoji:'💯',head:neu===1?'Perfekter Tag!':neu+' perfekte Tage!',label:'Insgesamt '+S.perfectDays+' perfekte Tage'});
+    save();
+    spawnParticles(20);
+    showBadgeToast(toasts);
+  } else if(neu===0){
+    save();
+  }
+}
+
 // ── MISSIONEN ─────────────────────────────────────────────────────────────────
 // Drei Arten: Tagesquests (täglich neu), Reihen-Missionen (richtige in Folge
 // pro Gruppe, 3 Stufen, einmalig) und Schriftrollen-Stücke (Reihe komplett
@@ -780,7 +829,13 @@ const BADGES=[
   {id:'at5000',    label:'5.000 Gesamt',       emoji:'🐲', cond:s=>s.total>=5000},
   {id:'at10000',   label:'10.000 Gesamt',      emoji:'🌌', cond:s=>s.total>=10000},
   // ── Perfektion ────────────────────────────────────────────────────────────
-  {id:'perfect30', label:'Perfekter Tag',      emoji:'💯', cond:s=>s.dailyTotal>=30&&s.dailyCorrect===s.dailyTotal},
+  // Sammelreihe seit 21.08.2026 (ersetzt das alte Badge „perfect30"): Ein perfekter Tag
+  // erfordert mind. 50 gewertete Antworten ohne Fehler UND ein Freischalt-Gate,
+  // und wird erst am Tagesende ausgewertet – siehe evalPerfectDays().
+  {id:'perfectDay1', label:'Perfekter Tag',    emoji:'💯', cond:s=>(s.perfectDays||0)>=1},
+  {id:'perfectDay5', label:'5 perfekte Tage',  emoji:'🌟', cond:s=>(s.perfectDays||0)>=5},
+  {id:'perfectDay10',label:'10 perfekte Tage', emoji:'🏅', cond:s=>(s.perfectDays||0)>=10},
+  {id:'perfectDay25',label:'25 perfekte Tage', emoji:'👑', cond:s=>(s.perfectDays||0)>=25},
   // ── Charaktere ────────────────────────────────────────────────────────────
   // Zählen seit 21.08.2026 RICHTIGE Antworten (charOk) statt aller Antworten (charStats)
   // und die Meister-Schwelle liegt auf 2500 – damit sagen Badge und Sternestufe dasselbe
@@ -819,7 +874,7 @@ const MILESTONE_CFG={
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const SK='kana_dojo_v4';
-function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},charOk:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],missionsDone:[],rowRun:{},proDate:null,proHearts:3,proStats:{a:0,c:0}};}
+function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},charOk:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],missionsDone:[],rowRun:{},proDate:null,proHearts:3,proStats:{a:0,c:0},perfectDays:0,perfectEvalDate:null};}
 
 let S=defaultState();
 (()=>{try{const d=localStorage.getItem(SK);if(d){const parsed=JSON.parse(d);S={...defaultState(),...parsed};}}catch(e){}
@@ -843,6 +898,11 @@ let S=defaultState();
     Object.keys(S.cStats||{}).forEach(c=>S.seen[c]=1);
   }
   if(!S.myMnemo)S.myMnemo={};
+  // Migration „Perfekter Tag": Zählung beginnt ab heute, nicht rückwirkend.
+  // Sonst würden Tage aus dem Altverlauf gegen das heutige Freischalt-Gate geprüft
+  // und könnten unverdient zählen.
+  if(!S.perfectEvalDate)S.perfectEvalDate=dateOffset(-1);
+  if(typeof S.perfectDays!=='number')S.perfectDays=0;
 })();
 
 function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
@@ -952,6 +1012,11 @@ function spawnParticles(n){
 // ── QUIZ ENGINE ───────────────────────────────────────────────────────────────
 let currentQ=null;
 let answering=false;
+// true, wenn zu dieser Frage gerade die Vorstellungs-Karte gezeigt wurde: Die Lösung stand
+// dann groß auf der Karte, deshalb zählt die Antwort nicht in die Wertung (Übungsfrage).
+// Wird AUSSCHLIESSLICH von der automatischen Erst-Vorstellung gesetzt, nie vom 💡-Button –
+// sonst könnte man jede Frage durch Antippen von 💡 entwerten.
+let practiceQ=false;
 let nextTimer=null;
 
 // ── PROFIMODUS ────────────────────────────────────────────────────────────────
@@ -1048,8 +1113,9 @@ function closeIntro(){
   save();
   el.classList.remove('open');
   // Profimodus: Countdown erst jetzt starten (lief er schon – z.B. 💡-Spick-Blick
-  // während einer Frage – läuft er weiter, kein Zeit-Reset durchs Nachschauen)
-  if(!proTimerId)startProTimer();
+  // während einer Frage – läuft er weiter, kein Zeit-Reset durchs Nachschauen).
+  // Für Übungsfragen läuft KEIN Countdown: eine ungewertete Frage darf kein Herz kosten.
+  if(!proTimerId&&!practiceQ)startProTimer();
 }
 // 💡-Button auf der Quiz-Karte: Info zum aktuellen Zeichen erneut ansehen
 function openIntroForCurrent(){
@@ -1095,6 +1161,7 @@ function renderQuestion(){
   // Neues Zeichen? Erst die Vorstellungs-Karte zeigen (legt sich über das Quiz).
   // Der Profimodus-Countdown startet erst, wenn die Karte geschlossen ist.
   const introShown=maybeShowIntro(q);
+  practiceQ=introShown;
   renderMissionStrip();
   if(!introShown)startProTimer();
 }
@@ -1128,9 +1195,29 @@ function handleAnswer(pick,btn){
   // Charakter-Animation + Sound
   if(isOk){heroAttack();snd('ok');}else{heroHurt();snd('wrong');}
 
+  // ── ÜBUNGSFRAGE (direkt nach der Vorstellungs-Karte) ────────────────────────
+  // Die Lösung stand gerade auf der Karte – diese Antwort wird deshalb NICHT gewertet.
+  // Fortgeschrieben wird nur der Lernstand (Leitner-Box), nichts Spielerisches:
+  // keine Zähler, keine Kombo, keine Serien, kein Verlauf, keine Trefferquote,
+  // keine Freischaltung, keine Badges/Missionen, kein Herzverlust.
+  if(practiceQ){
+    const pq=currentQ.q;
+    if(!S.box)S.box={};
+    S.box[pq.char]=isOk?Math.min(5,(S.box[pq.char]||0)+1):1;
+    fl.textContent+=' (Übungsfrage – zählt nicht)';
+    save();
+    nextTimer=setTimeout(renderQuestion,950);
+    return;
+  }
+
   // Update state
   const today=getToday();
-  if(S.dailyDate!==today){S.dailyTotal=0;S.dailyCorrect=0;S.dailyDate=today;S.dailyBestCombo=0;S.dailyClaimed=[];}
+  if(S.dailyDate!==today){
+    // Tageswechsel mitten im Betrieb: erst den abgeschlossenen Vortag auswerten,
+    // dann die Tageszähler zurücksetzen (Reihenfolge ist wichtig!)
+    runPerfectDayCheck();
+    S.dailyTotal=0;S.dailyCorrect=0;S.dailyDate=today;S.dailyBestCombo=0;S.dailyClaimed=[];
+  }
   // Verlauf pro Tag erfassen (max. 60 Tage aufbewahren)
   if(!S.history)S.history={};
   const hd=S.history[today]||(S.history[today]={a:0,c:0});
@@ -1293,6 +1380,7 @@ function renderProgress(){
   document.getElementById('p-total').textContent=S.total;
   document.getElementById('p-acc').textContent=acc+'%';
   document.getElementById('p-today').textContent=S.dailyTotal;
+  document.getElementById('p-perfect').textContent=(S.perfectDays||0);
   renderMissions();
   renderLeitner();
   renderHistory();
@@ -1852,6 +1940,7 @@ document.querySelectorAll('.script-btn').forEach(b=>{if(b.id!=='pro-toggle'&&b.d
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 proResetIfNewDay();
+runPerfectDayCheck();   // abgeschlossene Tage seit dem letzten Start auswerten
 updateHeader();
 updateSoundBtn();
 renderHero();
