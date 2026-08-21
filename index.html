@@ -708,6 +708,8 @@ function checkMissions(group){
 // (Hiragana- und Katakana-Kombis = letzte Kana-Gruppen), und messen die Trefferquote
 // über die letzten 500 Antworten statt über die gesamte Lebenszeit.
 const allKanaUnlocked=s=>s.unlocked.includes('組合')&&s.unlocked.includes('カ組');
+// Richtige Antworten mit einem Charakter (null-sicher für Altspielstände ohne charOk)
+const charOkOf=(s,ch)=>(s.charOk&&s.charOk[ch])||0;
 const recentAcc=s=>{const r=s.recent||[];if(r.length<500)return -1;return r.reduce((a,b)=>a+b,0)/r.length;};
 
 const BADGES=[
@@ -780,14 +782,18 @@ const BADGES=[
   // ── Perfektion ────────────────────────────────────────────────────────────
   {id:'perfect30', label:'Perfekter Tag',      emoji:'💯', cond:s=>s.dailyTotal>=30&&s.dailyCorrect===s.dailyTotal},
   // ── Charaktere ────────────────────────────────────────────────────────────
-  {id:'ninja1',    label:'Weg des Ninja',      emoji:'🥷', cond:s=>(s.charStats.ninja||0)>=1},
-  {id:'ninja500',  label:'Ninja-Meister',      emoji:'🌑', cond:s=>(s.charStats.ninja||0)>=500},
-  {id:'samurai1',  label:'Weg des Samurai',    emoji:'⚔️', cond:s=>(s.charStats.samurai||0)>=1},
-  {id:'samurai500',label:'Samurai-Meister',    emoji:'🎌', cond:s=>(s.charStats.samurai||0)>=500},
-  {id:'geisha1',   label:'Weg der Geisha',     emoji:'🎎', cond:s=>(s.charStats.geisha||0)>=1},
-  {id:'geisha500', label:'Geisha-Meisterin',   emoji:'🪭', cond:s=>(s.charStats.geisha||0)>=500},
-  {id:'sumo1',     label:'Weg des Sumo',       emoji:'🍙', cond:s=>(s.charStats.sumo||0)>=1},
-  {id:'sumo500',   label:'Sumo-Meister',       emoji:'🏆', cond:s=>(s.charStats.sumo||0)>=500},
+  // Zählen seit 21.08.2026 RICHTIGE Antworten (charOk) statt aller Antworten (charStats)
+  // und die Meister-Schwelle liegt auf 2500 – damit sagen Badge und Sternestufe dasselbe
+  // (2500 richtige = Stufe 3 „Meister"). Vorher: charStats >= 500, daher „Meister-Badge
+  // erhalten, aber nur 1 Stern".
+  {id:'ninja1',    label:'Weg des Ninja',      emoji:'🥷', cond:s=>charOkOf(s,'ninja')>=1},
+  {id:'ninja500',  label:'Ninja-Meister',      emoji:'🌑', cond:s=>charOkOf(s,'ninja')>=2500},
+  {id:'samurai1',  label:'Weg des Samurai',    emoji:'⚔️', cond:s=>charOkOf(s,'samurai')>=1},
+  {id:'samurai500',label:'Samurai-Meister',    emoji:'🎌', cond:s=>charOkOf(s,'samurai')>=2500},
+  {id:'geisha1',   label:'Weg der Geisha',     emoji:'🎎', cond:s=>charOkOf(s,'geisha')>=1},
+  {id:'geisha500', label:'Geisha-Meisterin',   emoji:'🪭', cond:s=>charOkOf(s,'geisha')>=2500},
+  {id:'sumo1',     label:'Weg des Sumo',       emoji:'🍙', cond:s=>charOkOf(s,'sumo')>=1},
+  {id:'sumo500',   label:'Sumo-Meister',       emoji:'🏆', cond:s=>charOkOf(s,'sumo')>=2500},
   // ── Profimodus ────────────────────────────────────────────────────────────
   {id:'pro25',     label:'Profi-Novize',       emoji:'🔥', cond:s=>((s.proStats&&s.proStats.c)||0)>=25},
   {id:'pro100',    label:'Profi-Krieger',      emoji:'⚡', cond:s=>((s.proStats&&s.proStats.c)||0)>=100},
@@ -840,8 +846,15 @@ let S=defaultState();
 })();
 
 function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
-function getToday(){return new Date().toISOString().slice(0,10);}
-function dateOffset(d){return new Date(Date.now()+d*86400000).toISOString().slice(0,10);}
+// Datum immer in der ORTSZEIT des Geräts bilden (Tageswechsel um 00:00 Uhr lokal).
+// Vorher lief das über toISOString() = UTC – dadurch wechselte der Tag in deutscher
+// Sommerzeit erst um 02:00 Uhr, alles davor zählte noch zum Vortag (Bugfix 21.08.2026).
+function pad2(n){return String(n).padStart(2,'0');}
+function fmtLocal(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function getToday(){return fmtLocal(new Date());}
+// Kalender-Arithmetik über setDate(), NICHT über Millisekunden-Addition: eine starre
+// 24-Stunden-Rechnung verschluckt bzw. verdoppelt an den Zeitumstellungstagen einen Tag.
+function dateOffset(o){const d=new Date();d.setDate(d.getDate()+o);return fmtLocal(d);}
 
 // ── UNLOCK LOGIC ──────────────────────────────────────────────────────────────
 function computeUnlocks(){
@@ -1132,7 +1145,7 @@ function handleAnswer(pick,btn){
   }
   S.total++;S.dailyTotal++;
   // Charakter-Zähler + Stufenaufstieg erkennen (neue Optik sofort zeichnen).
-  // charStats zählt alle Antworten (Basis der Weg-des-…-Badges),
+  // charStats zählt weiter alle Antworten (reine Statistik, seit 21.08.2026 ohne Badge-Bezug),
   // charOk nur richtige – NUR charOk bestimmt die Stufe (verdienter Status).
   let levelUpToast=null;
   if(S.character){
