@@ -1,0 +1,1 @@
+Hier die von der Bild-KI erzeugten PNGs ablegen (siehe PROMPT_Bild-KI_Sprites.md).
