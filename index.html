@@ -144,6 +144,19 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 .badge-emoji{font-size:28px;}
 .badge-label{color:var(--dim);font-weight:700;font-size:13px;}
 .badge-card.earned .badge-label{color:var(--gold);}
+/* Umdrehen beim Antippen: Vorderseite = Name, Rückseite = Anforderung im Klartext.
+   Kein echter 3D-Dreh (spiegelt den Text), sondern ein Zusammenklappen per scaleX. */
+/* Feste Mindesthöhe, damit das Umdrehen die Nachbarkarten nicht verschiebt:
+   Vorder- und Rückseite brauchen dieselbe Höhe (Beschreibungen daher kurz halten). */
+.badge-card{cursor:pointer;min-height:88px;-webkit-tap-highlight-color:transparent;}
+.badge-body{min-width:0;flex:1;}
+.badge-back{display:none;font-size:11px;line-height:1.35;color:var(--muted);}
+.badge-card.earned .badge-back{color:var(--text);}
+.badge-card.flipped .badge-front{display:none;}
+.badge-card.flipped .badge-back{display:block;}
+.badge-hint{color:var(--dim);font-size:10px;margin-top:2px;}
+.badge-card.flipping{animation:badgeFlip 0.3s ease;}
+@keyframes badgeFlip{0%{transform:scaleX(1);}50%{transform:scaleX(0.06);}100%{transform:scaleX(1);}}
 .badge-unlocked{color:var(--green);font-size:10px;margin-top:2px;}
 
 /* Badge notification */
@@ -858,6 +871,89 @@ const BADGES=[
   {id:'kata_all',  label:'Katakana komplett',  emoji:'🎐', cond:s=>s.unlocked.includes('カ組')},
 ];
 
+// ── BADGE-ERKLÄRUNGEN ─────────────────────────────────────────────────────────
+// Klartext zu jedem Abzeichen, wird beim Antippen der Karte angezeigt (auch bei
+// noch gesperrten Abzeichen – dann als Ziel). Die Texte sind aus den cond-Funktionen
+// oben abgeleitet, nicht aus den Beschriftungen: „50 Fragen" heißt z. B. 50 Fragen
+// an EINEM Tag, „100 Gesamt" dagegen insgesamt.
+const BADGE_DESC={
+  first:'Beantworte deine erste Frage.',
+  combo5:'5 richtige Antworten in Folge.',
+  combo10:'10 richtige Antworten in Folge.',
+  combo25:'25 richtige Antworten in Folge.',
+  combo50:'50 richtige Antworten in Folge.',
+  combo75:'75 richtige Antworten in Folge.',
+  combo100:'100 richtige Antworten in Folge.',
+  combo150:'150 richtige Antworten in Folge.',
+  combo200:'200 richtige Antworten in Folge.',
+  combo500:'500 richtige Antworten in Folge.',
+  streak3:'Übe an 3 Tagen hintereinander.',
+  streak7:'Übe an 7 Tagen hintereinander.',
+  streak14:'Übe an 14 Tagen hintereinander.',
+  streak30:'Übe an 30 Tagen hintereinander.',
+  streak60:'Übe an 60 Tagen hintereinander.',
+  streak90:'Übe an 90 Tagen hintereinander.',
+  streak180:'Übe an 180 Tagen hintereinander.',
+  streak365:'Übe an 365 Tagen hintereinander.',
+  acc70:'Alle Kana frei + 70 % der letzten 500 richtig.',
+  acc80:'Alle Kana frei + 80 % der letzten 500 richtig.',
+  acc90:'Alle Kana frei + 90 % der letzten 500 richtig.',
+  acc95:'Alle Kana frei + 95 % der letzten 500 richtig.',
+  acc99:'Alle Kana frei + 99 % der letzten 500 richtig.',
+  q10:'Beantworte 10 Fragen an einem Tag.',
+  q25:'Beantworte 25 Fragen an einem Tag.',
+  q50:'Beantworte 50 Fragen an einem Tag.',
+  q100:'Beantworte 100 Fragen an einem Tag.',
+  q200:'Beantworte 200 Fragen an einem Tag.',
+  q500:'Beantworte 500 Fragen an einem Tag.',
+  q1000:'Beantworte 1.000 Fragen an einem Tag.',
+  q2500:'Beantworte 2.500 Fragen an einem Tag.',
+  q5000:'Beantworte 5.000 Fragen an einem Tag.',
+  kata:'Schalte die Reihe カ行 frei.',
+  dak:'Schalte die Reihe が行 frei.',
+  w2_unlock:'Schalte Wörter mit 2 Silben frei.',
+  w2_master:'30 Fragen mit 2-Silben-Wörtern, 80 % richtig.',
+  w3_unlock:'Schalte Wörter mit 3 Silben frei.',
+  w3_master:'30 Fragen mit 3-Silben-Wörtern, 80 % richtig.',
+  w4_unlock:'Schalte Wörter mit 4 Silben frei.',
+  w4_master:'30 Fragen mit 4-Silben-Wörtern, 80 % richtig.',
+  w5_unlock:'Schalte Wörter mit 5 Silben frei.',
+  w5_master:'30 Fragen mit 5-Silben-Wörtern, 80 % richtig.',
+  mix_unlock:'Schalte gemischte Wörter frei.',
+  mix_master:'20 gemischte Wörter, 80 % richtig.',
+  d1:'Lerne an deinem ersten Tag.',
+  d3:'Lerne an 3 verschiedenen Tagen.',
+  d7:'Lerne an 7 verschiedenen Tagen.',
+  d14:'Lerne an 14 verschiedenen Tagen.',
+  d30:'Lerne an 30 verschiedenen Tagen.',
+  d50:'Lerne an 50 verschiedenen Tagen.',
+  d100:'Lerne an 100 verschiedenen Tagen.',
+  d200:'Lerne an 200 verschiedenen Tagen.',
+  d365:'Lerne an 365 verschiedenen Tagen.',
+  at100:'Beantworte insgesamt 100 Fragen.',
+  at1000:'Beantworte insgesamt 1.000 Fragen.',
+  at5000:'Beantworte insgesamt 5.000 Fragen.',
+  at10000:'Beantworte insgesamt 10.000 Fragen.',
+  perfectDay1:'Ein Tag mit 50+ Antworten, ohne einen Fehler.',
+  perfectDay5:'Sammle 5 perfekte Tage.',
+  perfectDay10:'Sammle 10 perfekte Tage.',
+  perfectDay25:'Sammle 25 perfekte Tage.',
+  ninja1:'Beantworte eine Frage mit dem Ninja richtig.',
+  ninja500:'2.500 richtige Antworten mit dem Ninja.',
+  samurai1:'Beantworte eine Frage mit dem Samurai richtig.',
+  samurai500:'2.500 richtige Antworten mit dem Samurai.',
+  geisha1:'Beantworte eine Frage mit der Geisha richtig.',
+  geisha500:'2.500 richtige Antworten mit der Geisha.',
+  sumo1:'Beantworte eine Frage mit dem Sumo richtig.',
+  sumo500:'2.500 richtige Antworten mit dem Sumo.',
+  pro25:'25 richtige Antworten im Profimodus.',
+  pro100:'100 richtige Antworten im Profimodus.',
+  pro500:'500 richtige Antworten im Profimodus.',
+  hira_all:'Schalte alle Hiragana-Reihen frei.',
+  kata_all:'Schalte alle Katakana-Reihen frei.',
+};
+const badgeDesc=id=>BADGE_DESC[id]||'Keine Beschreibung hinterlegt.';
+
 // ── COMBO MILESTONES ──────────────────────────────────────────────────────────
 const COMBO_MILESTONES=[5,10,25,50,75,100,150,200,500];
 const MILESTONE_CFG={
@@ -1516,8 +1612,18 @@ function renderBadges(){
     const earned=S.badges.includes(b.id);
     const c=document.createElement('div');
     c.className='badge-card'+(earned?' earned':'');
+    // Vorderseite: Name (bzw. verdeckt) · Rückseite: Anforderung im Klartext.
+    // Auch gesperrte Abzeichen zeigen die Anforderung – als Ziel, was zu tun ist.
     c.innerHTML=`<span class="badge-emoji" style="filter:${earned?'none':'grayscale(1)'}">${earned?b.emoji:'❓'}</span>
-      <div><div class="badge-label">${earned?b.label:'???'}</div>${earned?'<div class="badge-unlocked">✓ Freigeschaltet</div>':''}</div>`;
+      <div class="badge-body">
+        <div class="badge-front"><div class="badge-label">${earned?b.label:'???'}</div>${earned?'<div class="badge-unlocked">✓ Freigeschaltet</div>':'<div class="badge-hint">Antippen für Info</div>'}</div>
+        <div class="badge-back">${badgeDesc(b.id)}</div>
+      </div>`;
+    c.title='Antippen zeigt, wofür es dieses Abzeichen gibt';
+    c.onclick=()=>{
+      c.classList.toggle('flipped');
+      c.classList.remove('flipping');void c.offsetWidth;c.classList.add('flipping');
+    };
     bg.appendChild(c);
   });
 }
