@@ -723,52 +723,58 @@ function runPerfectDayCheck(){
 }
 
 // ── MISSIONEN ─────────────────────────────────────────────────────────────────
-// Drei Arten: Tagesquests (täglich neu), Reihen-Missionen (richtige in Folge
-// pro Gruppe, 3 Stufen, einmalig) und Schriftrollen-Stücke (Reihe komplett
-// gemeistert = alle Zeichen in Box 4+).
+// Seit 21.08.2026 (Paket E) nur noch Tagesquests. Reihen-Serien und Schriftrollen
+// sind entfallen – ihre Rolle übernehmen die Meisterschafts-Abzeichen weiter unten,
+// die schärfer definiert sind (alle Zeichen einer Gruppe in Leitner-Box 5).
 const DAILY_QUESTS=[
   {id:'dq30',    label:'30 Fragen beantworten',    target:30, val:s=>s.dailyTotal},
   {id:'dq20ok',  label:'20 richtige Antworten',    target:20, val:s=>s.dailyCorrect},
-  {id:'dqCombo', label:'Eine 8er-Kombo schaffen',  target:8,  val:s=>s.dailyBestCombo||0},
+  {id:'dqCombo', label:'Eine 10er-Kombo schaffen', target:10, val:s=>s.dailyBestCombo||0},
 ];
-const ROW_TIERS=[10,25,50];
 
-// Reihe komplett gemeistert? (alle Zeichen der Gruppe in Box 4+)
-function scrollPieceDone(g){
-  const chars=ALL_KANA.filter(k=>k.group===g);
-  return chars.length>0&&chars.every(k=>((S.box&&S.box[k.char])||0)>=4);
-}
-
-// Nach jeder Antwort: erfüllte Missionen einsammeln (gibt Toast-Einträge zurück)
-function checkMissions(group){
+// Nach jeder Antwort: erfüllte Tagesquests einsammeln (gibt Toast-Einträge zurück)
+function checkMissions(){
   const toasts=[];
   if(!S.dailyClaimed)S.dailyClaimed=[];
-  if(!S.missionsDone)S.missionsDone=[];
-  // Tagesquests
   DAILY_QUESTS.forEach(dq=>{
     if(!S.dailyClaimed.includes(dq.id)&&dq.val(S)>=dq.target){
       S.dailyClaimed.push(dq.id);
       toasts.push({emoji:'🎯',head:'Tagesquest erfüllt!',label:dq.label});
     }
   });
-  // Reihen-Missionen (richtige in Folge in dieser Gruppe)
-  const run=(S.rowRun&&S.rowRun[group])||0;
-  ROW_TIERS.forEach(t=>{
-    const id='row_'+group+'_'+t;
-    if(run>=t&&!S.missionsDone.includes(id)){
-      S.missionsDone.push(id);
-      toasts.push({emoji:'🏹',head:'Mission erfüllt!',label:group+': '+t+' richtige in Folge'});
-    }
-  });
-  // Schriftrollen-Stück (nur Kana-Reihen, keine Wortgruppen)
-  if(!WORD_GROUPS.includes(group)){
-    const id='scroll_'+group;
-    if(!S.missionsDone.includes(id)&&scrollPieceDone(group)){
-      S.missionsDone.push(id);
-      toasts.push({emoji:'📜',head:'Schriftrollen-Stück!',label:group+' komplett gemeistert'});
-    }
-  }
   return toasts;
+}
+
+// ── MEISTERSCHAFT (Paket E) ───────────────────────────────────────────────────
+// Ein Meisterschafts-Abzeichen gilt, wenn JEDES Zeichen der Gruppenmenge in
+// Leitner-Box 5 liegt. Bewusst OHNE Prozent-Bedingung: Box 5 heißt fünfmal richtig
+// ohne Rückfall und ist damit der härtere Beweis; eine Lebenszeit-Trefferquote wäre
+// für Nutzer mit holprigem Start dagegen nie mehr erreichbar.
+// Die Gruppenmengen werden aus GROUP_ORDER abgeleitet, nicht als zweite Liste
+// gepflegt – sonst müsste man bei jeder Reihenänderung zwei Stellen synchron halten.
+// Verzoegert berechnet und gemerkt: WORD_GROUPS wird erst weiter unten definiert,
+// ein Zugriff beim Laden wuerde die App mit einem Fehler abbrechen.
+let _masterySets=null;
+function masterySets(){
+  if(_masterySets)return _masterySets;
+  const kana=GROUP_ORDER.filter(g=>!WORD_GROUPS.includes(g));
+  const hira=kana.filter(g=>ALL_KANA.some(k=>k.group===g&&k.script==='h'));
+  const kata=kana.filter(g=>ALL_KANA.some(k=>k.group===g&&k.script==='k'));
+  _masterySets={
+    hira_base:hira.slice(0,10), hira_daku:hira.slice(10,15), hira_kombi:hira.slice(15),
+    kata_base:kata.slice(0,10), kata_daku:kata.slice(10,15), kata_kombi:kata.slice(15),
+    w2_box5:['2文字'], w3_box5:['3文字'], w4_box5:['4文字'], w5_box5:['5文字'], mix_box5:['混合'],
+  };
+  return _masterySets;
+}
+// Box 5 kann später wieder verloren gehen (ein Fehler wirft auf Box 1 zurück) –
+// das Abzeichen bleibt trotzdem: es ist ein Meilenstein, keine Zustandsanzeige.
+function masteryDone(st,schluessel){
+  const gruppen=masterySets()[schluessel]||[];
+  if(gruppen.length===0)return false;
+  const box=st.box||{};
+  const zeichen=ALL_KANA.filter(k=>gruppen.includes(k.group));
+  return zeichen.length>0&&zeichen.every(k=>box[k.char]===5);
 }
 
 // Genauigkeits-Abzeichen: zählen erst, wenn alle Kana-Reihen freigeschaltet sind
@@ -780,102 +786,141 @@ const charOkOf=(s,ch)=>(s.charOk&&s.charOk[ch])||0;
 const recentAcc=s=>{const r=s.recent||[];if(r.length<500)return -1;return r.reduce((a,b)=>a+b,0)/r.length;};
 
 const BADGES=[
-  // ── Erste Schritte ────────────────────────────────────────────────────────
-  {id:'first',     label:'Erste Antwort',      emoji:'⚡', cond:s=>s.total>=1},
-  // ── Kombo ─────────────────────────────────────────────────────────────────
-  {id:'combo5',    label:'5er Kombo',          emoji:'🔥', cond:s=>s.bestCombo>=5},
-  {id:'combo10',   label:'10er Kombo',         emoji:'💥', cond:s=>s.bestCombo>=10},
-  {id:'combo25',   label:'25er Kombo',         emoji:'✨', cond:s=>s.bestCombo>=25},
-  {id:'combo50',   label:'50er Kombo',         emoji:'🌟', cond:s=>s.bestCombo>=50},
-  {id:'combo75',   label:'75er Kombo',         emoji:'⚡', cond:s=>s.bestCombo>=75},
-  {id:'combo100',  label:'100er Kombo',        emoji:'🌸', cond:s=>s.bestCombo>=100},
-  {id:'combo150',  label:'150er Kombo',        emoji:'💮', cond:s=>s.bestCombo>=150},
-  {id:'combo200',  label:'200er Kombo',        emoji:'🥷', cond:s=>s.bestCombo>=200},
-  {id:'combo500',  label:'500er Kombo',        emoji:'🏯', cond:s=>s.bestCombo>=500},
-  // ── Streak ────────────────────────────────────────────────────────────────
-  {id:'streak3',   label:'3 Tage Streak',      emoji:'📅', cond:s=>s.streak>=3},
-  {id:'streak7',   label:'Woche Streak',       emoji:'🗓️', cond:s=>s.streak>=7},
-  {id:'streak14',  label:'2 Wochen Streak',    emoji:'🌙', cond:s=>s.streak>=14},
-  {id:'streak30',  label:'Monats-Streak',      emoji:'🌊', cond:s=>s.streak>=30},
-  {id:'streak60',  label:'2 Monate Streak',    emoji:'🎴', cond:s=>s.streak>=60},
-  {id:'streak90',  label:'3 Monate Streak',    emoji:'🌿', cond:s=>s.streak>=90},
-  {id:'streak180', label:'Halbjahres-Streak',  emoji:'🎋', cond:s=>s.streak>=180},
-  {id:'streak365', label:'Jahres-Streak',      emoji:'🎌', cond:s=>s.streak>=365},
-  // ── Genauigkeit ───────────────────────────────────────────────────────────
-  {id:'acc70',     label:'70% Auf dem Weg',    emoji:'🎓', cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.7},
-  {id:'acc80',     label:'80% Genauigkeit',    emoji:'🎯', cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.8},
-  {id:'acc90',     label:'90% Scharfsinnig',   emoji:'🔍', cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.9},
-  {id:'acc95',     label:'95% Meister',        emoji:'🌟', cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.95},
-  {id:'acc99',     label:'99% Fast Perfekt',   emoji:'💎', cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.99},
-  // ── Fragen ────────────────────────────────────────────────────────────────
-  {id:'q10',       label:'Erster Schritt',     emoji:'🐣', cond:s=>s.dailyTotal>=10},
-  {id:'q25',       label:'Einsteiger',         emoji:'📝', cond:s=>s.dailyTotal>=25},
-  {id:'q50',       label:'50 Fragen',          emoji:'✅', cond:s=>s.dailyTotal>=50},
-  {id:'q100',      label:'Fleißig',            emoji:'📚', cond:s=>s.dailyTotal>=100},
-  {id:'q200',      label:'200 Fragen',         emoji:'💪', cond:s=>s.dailyTotal>=200},
-  {id:'q500',      label:'500 Fragen',         emoji:'🌸', cond:s=>s.dailyTotal>=500},
-  {id:'q1000',     label:'Veteran',            emoji:'⚔️', cond:s=>s.dailyTotal>=1000},
-  {id:'q2500',     label:'Meister',            emoji:'👑', cond:s=>s.dailyTotal>=2500},
-  {id:'q5000',     label:'Legende',            emoji:'🌺', cond:s=>s.dailyTotal>=5000},
-  // ── Freischaltungen ───────────────────────────────────────────────────────
-  {id:'kata',      label:'Katakana freigesch.',emoji:'カ', cond:s=>s.unlocked.includes('カ行')},
-  {id:'dak',       label:'Dakuten freigesch.', emoji:'゛', cond:s=>s.unlocked.includes('が行')},
-  // ── Wort-Stufen ───────────────────────────────────────────────────────────
-  {id:'w2_unlock', label:'2-Silben freigesch.',emoji:'🔤', cond:s=>s.unlocked.includes('2文字')},
-  {id:'w2_master', label:'2-Silben gemeistert',emoji:'⭐', cond:s=>s.gStats['2文字']&&s.gStats['2文字'].a>=30&&s.gStats['2文字'].c/s.gStats['2文字'].a>=0.8},
-  {id:'w3_unlock', label:'3-Silben freigesch.',emoji:'📝', cond:s=>s.unlocked.includes('3文字')},
-  {id:'w3_master', label:'3-Silben gemeistert',emoji:'🌟', cond:s=>s.gStats['3文字']&&s.gStats['3文字'].a>=30&&s.gStats['3文字'].c/s.gStats['3文字'].a>=0.8},
-  {id:'w4_unlock', label:'4-Silben freigesch.',emoji:'📖', cond:s=>s.unlocked.includes('4文字')},
-  {id:'w4_master', label:'4-Silben gemeistert',emoji:'💮', cond:s=>s.gStats['4文字']&&s.gStats['4文字'].a>=30&&s.gStats['4文字'].c/s.gStats['4文字'].a>=0.8},
-  {id:'w5_unlock', label:'5-Silben freigesch.',emoji:'📚', cond:s=>s.unlocked.includes('5文字')},
-  {id:'w5_master', label:'5-Silben gemeistert',emoji:'👑', cond:s=>s.gStats['5文字']&&s.gStats['5文字'].a>=30&&s.gStats['5文字'].c/s.gStats['5文字'].a>=0.8},
-  {id:'mix_unlock',label:'Gemischt freigesch.', emoji:'🎌', cond:s=>s.unlocked.includes('混合')},
-  {id:'mix_master',label:'Gemischt gemeistert', emoji:'🏯', cond:s=>s.gStats['混合']&&s.gStats['混合'].a>=20&&s.gStats['混合'].c/s.gStats['混合'].a>=0.8},
-  // ── Lerntage gesamt ───────────────────────────────────────────────────────
-  {id:'d1',        label:'1. Lerntag',         emoji:'🌱', cond:s=>s.daysLearned>=1},
-  {id:'d3',        label:'3 Lerntage',         emoji:'🌿', cond:s=>s.daysLearned>=3},
-  {id:'d7',        label:'7 Lerntage',         emoji:'🎍', cond:s=>s.daysLearned>=7},
-  {id:'d14',       label:'14 Lerntage',        emoji:'⛩️', cond:s=>s.daysLearned>=14},
-  {id:'d30',       label:'30 Lerntage',        emoji:'🗻', cond:s=>s.daysLearned>=30},
-  {id:'d50',       label:'50 Lerntage',        emoji:'🏮', cond:s=>s.daysLearned>=50},
-  {id:'d100',      label:'100 Lerntage',       emoji:'🎇', cond:s=>s.daysLearned>=100},
-  {id:'d200',      label:'200 Lerntage',       emoji:'🐉', cond:s=>s.daysLearned>=200},
-  {id:'d365',      label:'365 Lerntage',       emoji:'🌅', cond:s=>s.daysLearned>=365},
-  // ── Gesamt-Antworten (alle Zeiten) ────────────────────────────────────────
-  {id:'at100',     label:'100 Gesamt',         emoji:'🔖', cond:s=>s.total>=100},
-  {id:'at1000',    label:'1.000 Gesamt',       emoji:'📜', cond:s=>s.total>=1000},
-  {id:'at5000',    label:'5.000 Gesamt',       emoji:'🐲', cond:s=>s.total>=5000},
-  {id:'at10000',   label:'10.000 Gesamt',      emoji:'🌌', cond:s=>s.total>=10000},
-  // ── Perfektion ────────────────────────────────────────────────────────────
-  // Sammelreihe seit 21.08.2026 (ersetzt das alte Badge „perfect30"): Ein perfekter Tag
-  // erfordert mind. 50 gewertete Antworten ohne Fehler UND ein Freischalt-Gate,
-  // und wird erst am Tagesende ausgewertet – siehe evalPerfectDays().
-  {id:'perfectDay1', label:'Perfekter Tag',    emoji:'💯', cond:s=>(s.perfectDays||0)>=1},
-  {id:'perfectDay5', label:'5 perfekte Tage',  emoji:'🌟', cond:s=>(s.perfectDays||0)>=5},
-  {id:'perfectDay10',label:'10 perfekte Tage', emoji:'🏅', cond:s=>(s.perfectDays||0)>=10},
-  {id:'perfectDay25',label:'25 perfekte Tage', emoji:'👑', cond:s=>(s.perfectDays||0)>=25},
-  // ── Charaktere ────────────────────────────────────────────────────────────
-  // Zählen seit 21.08.2026 RICHTIGE Antworten (charOk) statt aller Antworten (charStats)
-  // und die Meister-Schwelle liegt auf 2500 – damit sagen Badge und Sternestufe dasselbe
-  // (2500 richtige = Stufe 3 „Meister"). Vorher: charStats >= 500, daher „Meister-Badge
-  // erhalten, aber nur 1 Stern".
-  {id:'ninja1',    label:'Weg des Ninja',      emoji:'🥷', cond:s=>charOkOf(s,'ninja')>=1},
-  {id:'ninja500',  label:'Ninja-Meister',      emoji:'🌑', cond:s=>charOkOf(s,'ninja')>=2500},
-  {id:'samurai1',  label:'Weg des Samurai',    emoji:'⚔️', cond:s=>charOkOf(s,'samurai')>=1},
-  {id:'samurai500',label:'Samurai-Meister',    emoji:'🎌', cond:s=>charOkOf(s,'samurai')>=2500},
-  {id:'geisha1',   label:'Weg der Geisha',     emoji:'🎎', cond:s=>charOkOf(s,'geisha')>=1},
-  {id:'geisha500', label:'Geisha-Meisterin',   emoji:'🪭', cond:s=>charOkOf(s,'geisha')>=2500},
-  {id:'sumo1',     label:'Weg des Sumo',       emoji:'🍙', cond:s=>charOkOf(s,'sumo')>=1},
-  {id:'sumo500',   label:'Sumo-Meister',       emoji:'🏆', cond:s=>charOkOf(s,'sumo')>=2500},
-  // ── Profimodus ────────────────────────────────────────────────────────────
-  {id:'pro25',     label:'Profi-Novize',       emoji:'🔥', cond:s=>((s.proStats&&s.proStats.c)||0)>=25},
-  {id:'pro100',    label:'Profi-Krieger',      emoji:'⚡', cond:s=>((s.proStats&&s.proStats.c)||0)>=100},
-  {id:'pro500',    label:'Profi-Legende',      emoji:'👑', cond:s=>((s.proStats&&s.proStats.c)||0)>=500},
-  // ── Schriftsysteme komplett ───────────────────────────────────────────────
-  {id:'hira_all',  label:'Hiragana komplett',  emoji:'🌸', cond:s=>s.unlocked.includes('組合')},
-  {id:'kata_all',  label:'Katakana komplett',  emoji:'🎐', cond:s=>s.unlocked.includes('カ組')},
+  // ── Erste Schritte ──────────────────────────────────────────────────────────
+  {id:'first',label:'Erste Antwort',emoji:'⚡',cond:s=>s.total>=1},
+  // ── Kombo ───────────────────────────────────────────────────────────────────
+  {id:'combo5',label:'5er Kombo',emoji:'🔥',cond:s=>s.bestCombo>=5},
+  {id:'combo10',label:'10er Kombo',emoji:'💥',cond:s=>s.bestCombo>=10},
+  {id:'combo25',label:'25er Kombo',emoji:'✨',cond:s=>s.bestCombo>=25},
+  {id:'combo50',label:'50er Kombo',emoji:'🌟',cond:s=>s.bestCombo>=50},
+  {id:'combo75',label:'75er Kombo',emoji:'⚡',cond:s=>s.bestCombo>=75},
+  {id:'combo100',label:'100er Kombo',emoji:'🌸',cond:s=>s.bestCombo>=100},
+  {id:'combo150',label:'150er Kombo',emoji:'💮',cond:s=>s.bestCombo>=150},
+  {id:'combo200',label:'200er Kombo',emoji:'🥷',cond:s=>s.bestCombo>=200},
+  {id:'combo500',label:'500er Kombo',emoji:'🏯',cond:s=>s.bestCombo>=500},
+  // ── Streak ──────────────────────────────────────────────────────────────────
+  {id:'streak3',label:'3 Tage Streak',emoji:'📅',cond:s=>s.streak>=3},
+  {id:'streak7',label:'7 Tage Streak',emoji:'🗓️',cond:s=>s.streak>=7},
+  {id:'streak14',label:'14 Tage Streak',emoji:'🌙',cond:s=>s.streak>=14},
+  {id:'streak25',label:'25 Tage Streak',emoji:'🌊',cond:s=>s.streak>=25},
+  {id:'streak50',label:'50 Tage Streak',emoji:'🎴',cond:s=>s.streak>=50},
+  {id:'streak75',label:'75 Tage Streak',emoji:'🌿',cond:s=>s.streak>=75},
+  {id:'streak100',label:'100 Tage Streak',emoji:'🎋',cond:s=>s.streak>=100},
+  {id:'streak150',label:'150 Tage Streak',emoji:'⛩️',cond:s=>s.streak>=150},
+  {id:'streak200',label:'200 Tage Streak',emoji:'🗻',cond:s=>s.streak>=200},
+  {id:'streak250',label:'250 Tage Streak',emoji:'🏔️',cond:s=>s.streak>=250},
+  {id:'streak300',label:'300 Tage Streak',emoji:'🌄',cond:s=>s.streak>=300},
+  {id:'streak365',label:'365 Tage Streak',emoji:'🎌',cond:s=>s.streak>=365},
+  // ── Genauigkeit ─────────────────────────────────────────────────────────────
+  {id:'acc70',label:'70% Auf dem Weg',emoji:'🎓',cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.7},
+  {id:'acc80',label:'80% Genauigkeit',emoji:'🎯',cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.8},
+  {id:'acc90',label:'90% Scharfsinnig',emoji:'🔍',cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.9},
+  {id:'acc95',label:'95% Meister',emoji:'🌟',cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.95},
+  {id:'acc99',label:'99% Fast Perfekt',emoji:'💎',cond:s=>allKanaUnlocked(s)&&recentAcc(s)>=0.99},
+  // ── Fragen an einem Tag ─────────────────────────────────────────────────────
+  {id:'q10',label:'Erster Schritt',emoji:'🐣',cond:s=>s.dailyTotal>=10},
+  {id:'q25',label:'Einsteiger',emoji:'📝',cond:s=>s.dailyTotal>=25},
+  {id:'q50',label:'50 Fragen',emoji:'✅',cond:s=>s.dailyTotal>=50},
+  {id:'q100',label:'Fleißig',emoji:'📚',cond:s=>s.dailyTotal>=100},
+  {id:'q200',label:'200 Fragen',emoji:'💪',cond:s=>s.dailyTotal>=200},
+  {id:'q500',label:'500 Fragen',emoji:'🌺',cond:s=>s.dailyTotal>=500},
+  // ── Freischaltungen ─────────────────────────────────────────────────────────
+  {id:'kata',label:'Katakana freigesch.',emoji:'カ',cond:s=>s.unlocked.includes('カ行')},
+  {id:'dak',label:'Dakuten freigesch.',emoji:'゛',cond:s=>s.unlocked.includes('が行')},
+  // ── Wortstufen freigeschaltet ───────────────────────────────────────────────
+  {id:'w2_unlock',label:'2-Silben freigesch.',emoji:'🔤',cond:s=>s.unlocked.includes('2文字')},
+  {id:'w3_unlock',label:'3-Silben freigesch.',emoji:'🔡',cond:s=>s.unlocked.includes('3文字')},
+  {id:'w4_unlock',label:'4-Silben freigesch.',emoji:'🔠',cond:s=>s.unlocked.includes('4文字')},
+  {id:'w5_unlock',label:'5-Silben freigesch.',emoji:'📖',cond:s=>s.unlocked.includes('5文字')},
+  {id:'mix_unlock',label:'Gemischt freigesch.',emoji:'📔',cond:s=>s.unlocked.includes('混合')},
+  // ── Wortstufen gemeistert ───────────────────────────────────────────────────
+  {id:'w2_box5',label:'2-Silben gemeistert',emoji:'⭐',cond:s=>masteryDone(s,'w2_box5')},
+  {id:'w3_box5',label:'3-Silben gemeistert',emoji:'💠',cond:s=>masteryDone(s,'w3_box5')},
+  {id:'w4_box5',label:'4-Silben gemeistert',emoji:'💮',cond:s=>masteryDone(s,'w4_box5')},
+  {id:'w5_box5',label:'5-Silben gemeistert',emoji:'👑',cond:s=>masteryDone(s,'w5_box5')},
+  {id:'mix_box5',label:'Gemischt gemeistert',emoji:'🏯',cond:s=>masteryDone(s,'mix_box5')},
+  // ── Kana-Meisterschaft ──────────────────────────────────────────────────────
+  {id:'hira_base',label:'Hiragana-Reihen gemeistert',emoji:'🍡',cond:s=>masteryDone(s,'hira_base')},
+  {id:'hira_daku',label:'Hiragana-Dakuten gemeistert',emoji:'🍶',cond:s=>masteryDone(s,'hira_daku')},
+  {id:'hira_kombi',label:'Hiragana-Kombis gemeistert',emoji:'🎑',cond:s=>masteryDone(s,'hira_kombi')},
+  {id:'kata_base',label:'Katakana-Reihen gemeistert',emoji:'🍥',cond:s=>masteryDone(s,'kata_base')},
+  {id:'kata_daku',label:'Katakana-Dakuten gemeistert',emoji:'🍵',cond:s=>masteryDone(s,'kata_daku')},
+  {id:'kata_kombi',label:'Katakana-Kombis gemeistert',emoji:'🎇',cond:s=>masteryDone(s,'kata_kombi')},
+  // ── Lerntage gesamt ─────────────────────────────────────────────────────────
+  {id:'d3',label:'3 Lerntage',emoji:'🌱',cond:s=>s.daysLearned>=3},
+  {id:'d10',label:'10 Lerntage',emoji:'🌿',cond:s=>s.daysLearned>=10},
+  {id:'d25',label:'25 Lerntage',emoji:'🎍',cond:s=>s.daysLearned>=25},
+  {id:'d50',label:'50 Lerntage',emoji:'🏮',cond:s=>s.daysLearned>=50},
+  {id:'d100',label:'100 Lerntage',emoji:'🎇',cond:s=>s.daysLearned>=100},
+  {id:'d150',label:'150 Lerntage',emoji:'🗻',cond:s=>s.daysLearned>=150},
+  {id:'d200',label:'200 Lerntage',emoji:'🐉',cond:s=>s.daysLearned>=200},
+  {id:'d250',label:'250 Lerntage',emoji:'🌅',cond:s=>s.daysLearned>=250},
+  {id:'d300',label:'300 Lerntage',emoji:'🏞️',cond:s=>s.daysLearned>=300},
+  {id:'d400',label:'400 Lerntage',emoji:'🌋',cond:s=>s.daysLearned>=400},
+  {id:'d500',label:'500 Lerntage',emoji:'🎆',cond:s=>s.daysLearned>=500},
+  {id:'d600',label:'600 Lerntage',emoji:'⛩️',cond:s=>s.daysLearned>=600},
+  {id:'d700',label:'700 Lerntage',emoji:'🕊️',cond:s=>s.daysLearned>=700},
+  {id:'d800',label:'800 Lerntage',emoji:'🦢',cond:s=>s.daysLearned>=800},
+  {id:'d900',label:'900 Lerntage',emoji:'🌠',cond:s=>s.daysLearned>=900},
+  {id:'d1000',label:'1000 Lerntage',emoji:'🗿',cond:s=>s.daysLearned>=1000},
+  // ── Gesamt-Antworten ────────────────────────────────────────────────────────
+  {id:'at100',label:'100 Gesamt',emoji:'🔖',cond:s=>s.total>=100},
+  {id:'at250',label:'250 Gesamt',emoji:'📗',cond:s=>s.total>=250},
+  {id:'at500',label:'500 Gesamt',emoji:'📘',cond:s=>s.total>=500},
+  {id:'at1000',label:'1.000 Gesamt',emoji:'📜',cond:s=>s.total>=1000},
+  {id:'at2500',label:'2.500 Gesamt',emoji:'📙',cond:s=>s.total>=2500},
+  {id:'at5000',label:'5.000 Gesamt',emoji:'🐲',cond:s=>s.total>=5000},
+  {id:'at7500',label:'7.500 Gesamt',emoji:'📕',cond:s=>s.total>=7500},
+  {id:'at10000',label:'10.000 Gesamt',emoji:'🌌',cond:s=>s.total>=10000},
+  {id:'at15000',label:'15.000 Gesamt',emoji:'🔮',cond:s=>s.total>=15000},
+  {id:'at20000',label:'20.000 Gesamt',emoji:'♾️',cond:s=>s.total>=20000},
+  // ── Perfekte Tage ───────────────────────────────────────────────────────────
+  {id:'perfectDay1',label:'Perfekter Tag',emoji:'💯',cond:s=>(s.perfectDays||0)>=1},
+  {id:'perfectDay5',label:'5 perfekte Tage',emoji:'🥈',cond:s=>(s.perfectDays||0)>=5},
+  {id:'perfectDay10',label:'10 perfekte Tage',emoji:'🥇',cond:s=>(s.perfectDays||0)>=10},
+  {id:'perfectDay25',label:'25 perfekte Tage',emoji:'🏅',cond:s=>(s.perfectDays||0)>=25},
+  {id:'perfectDay50',label:'50 perfekte Tage',emoji:'🎖️',cond:s=>(s.perfectDays||0)>=50},
+  {id:'perfectDay75',label:'75 perfekte Tage',emoji:'💫',cond:s=>(s.perfectDays||0)>=75},
+  {id:'perfectDay100',label:'100 perfekte Tage',emoji:'🌞',cond:s=>(s.perfectDays||0)>=100},
+  {id:'perfectDay150',label:'150 perfekte Tage',emoji:'✴️',cond:s=>(s.perfectDays||0)>=150},
+  {id:'perfectDay200',label:'200 perfekte Tage',emoji:'❇️',cond:s=>(s.perfectDays||0)>=200},
+  {id:'perfectDay250',label:'250 perfekte Tage',emoji:'🔆',cond:s=>(s.perfectDays||0)>=250},
+  {id:'perfectDay500',label:'500 perfekte Tage',emoji:'☀️',cond:s=>(s.perfectDays||0)>=500},
+  {id:'perfectDay750',label:'750 perfekte Tage',emoji:'🌟',cond:s=>(s.perfectDays||0)>=750},
+  {id:'perfectDay1000',label:'1000 perfekte Tage',emoji:'💎',cond:s=>(s.perfectDays||0)>=1000},
+  // ── Charaktere ──────────────────────────────────────────────────────────────
+  {id:'ninja1',label:'Weg des Ninja',emoji:'🥷',cond:s=>charOkOf(s,'ninja')>=1},
+  {id:'ninja500',label:'Ninja-Kämpfer',emoji:'🗡️',cond:s=>charOkOf(s,'ninja')>=500},
+  {id:'ninja2500',label:'Ninja-Meister',emoji:'🌑',cond:s=>charOkOf(s,'ninja')>=2500},
+  {id:'ninja10000',label:'Ninja-Legende',emoji:'🌠',cond:s=>charOkOf(s,'ninja')>=10000},
+  {id:'samurai1',label:'Weg des Samurai',emoji:'⚔️',cond:s=>charOkOf(s,'samurai')>=1},
+  {id:'samurai500',label:'Samurai-Kämpfer',emoji:'🛡️',cond:s=>charOkOf(s,'samurai')>=500},
+  {id:'samurai2500',label:'Samurai-Meister',emoji:'🎌',cond:s=>charOkOf(s,'samurai')>=2500},
+  {id:'samurai10000',label:'Samurai-Legende',emoji:'🐉',cond:s=>charOkOf(s,'samurai')>=10000},
+  {id:'geisha1',label:'Weg der Geisha',emoji:'🎎',cond:s=>charOkOf(s,'geisha')>=1},
+  {id:'geisha500',label:'Geisha-Kämpfer',emoji:'🪭',cond:s=>charOkOf(s,'geisha')>=500},
+  {id:'geisha2500',label:'Geisha-Meisterin',emoji:'🌸',cond:s=>charOkOf(s,'geisha')>=2500},
+  {id:'geisha10000',label:'Geisha-Legende',emoji:'🌺',cond:s=>charOkOf(s,'geisha')>=10000},
+  {id:'sumo1',label:'Weg des Sumo',emoji:'🍙',cond:s=>charOkOf(s,'sumo')>=1},
+  {id:'sumo500',label:'Sumo-Kämpfer',emoji:'🥋',cond:s=>charOkOf(s,'sumo')>=500},
+  {id:'sumo2500',label:'Sumo-Meister',emoji:'🏆',cond:s=>charOkOf(s,'sumo')>=2500},
+  {id:'sumo10000',label:'Sumo-Legende',emoji:'🗾',cond:s=>charOkOf(s,'sumo')>=10000},
+  // ── Profimodus ──────────────────────────────────────────────────────────────
+  {id:'pro25',label:'Profi 25',emoji:'🔥',cond:s=>((s.proStats&&s.proStats.c)||0)>=25},
+  {id:'pro50',label:'Profi 50',emoji:'💢',cond:s=>((s.proStats&&s.proStats.c)||0)>=50},
+  {id:'pro75',label:'Profi 75',emoji:'⚡',cond:s=>((s.proStats&&s.proStats.c)||0)>=75},
+  {id:'pro100',label:'Profi 100',emoji:'🌪️',cond:s=>((s.proStats&&s.proStats.c)||0)>=100},
+  {id:'pro250',label:'Profi 250',emoji:'🔱',cond:s=>((s.proStats&&s.proStats.c)||0)>=250},
+  {id:'pro500',label:'Profi 500',emoji:'👑',cond:s=>((s.proStats&&s.proStats.c)||0)>=500},
+  {id:'pro750',label:'Profi 750',emoji:'🏹',cond:s=>((s.proStats&&s.proStats.c)||0)>=750},
+  {id:'pro1000',label:'Profi 1.000',emoji:'🏅',cond:s=>((s.proStats&&s.proStats.c)||0)>=1000},
+  {id:'pro2500',label:'Profi 2.500',emoji:'🧿',cond:s=>((s.proStats&&s.proStats.c)||0)>=2500},
+  {id:'pro5000',label:'Profi 5.000',emoji:'🌋',cond:s=>((s.proStats&&s.proStats.c)||0)>=5000},
+  {id:'pro10000',label:'Profi 10.000',emoji:'🃏',cond:s=>((s.proStats&&s.proStats.c)||0)>=10000},
+  // ── Schriftsysteme komplett ─────────────────────────────────────────────────
+  {id:'hira_all',label:'Hiragana komplett',emoji:'🌸',cond:s=>s.unlocked.includes('組合')},
+  {id:'kata_all',label:'Katakana komplett',emoji:'🎐',cond:s=>s.unlocked.includes('カ組')},
 ];
-
 // ── BADGE-ERKLÄRUNGEN ─────────────────────────────────────────────────────────
 // Klartext zu jedem Abzeichen, wird beim Antippen der Karte angezeigt (auch bei
 // noch gesperrten Abzeichen – dann als Ziel). Die Texte sind aus den cond-Funktionen
@@ -895,10 +940,14 @@ const BADGE_DESC={
   streak3:'Übe an 3 Tagen hintereinander.',
   streak7:'Übe an 7 Tagen hintereinander.',
   streak14:'Übe an 14 Tagen hintereinander.',
-  streak30:'Übe an 30 Tagen hintereinander.',
-  streak60:'Übe an 60 Tagen hintereinander.',
-  streak90:'Übe an 90 Tagen hintereinander.',
-  streak180:'Übe an 180 Tagen hintereinander.',
+  streak25:'Übe an 25 Tagen hintereinander.',
+  streak50:'Übe an 50 Tagen hintereinander.',
+  streak75:'Übe an 75 Tagen hintereinander.',
+  streak100:'Übe an 100 Tagen hintereinander.',
+  streak150:'Übe an 150 Tagen hintereinander.',
+  streak200:'Übe an 200 Tagen hintereinander.',
+  streak250:'Übe an 250 Tagen hintereinander.',
+  streak300:'Übe an 300 Tagen hintereinander.',
   streak365:'Übe an 365 Tagen hintereinander.',
   acc70:'Alle Kana frei + 70 % der letzten 500 richtig.',
   acc80:'Alle Kana frei + 80 % der letzten 500 richtig.',
@@ -911,49 +960,90 @@ const BADGE_DESC={
   q100:'Beantworte 100 Fragen an einem Tag.',
   q200:'Beantworte 200 Fragen an einem Tag.',
   q500:'Beantworte 500 Fragen an einem Tag.',
-  q1000:'Beantworte 1.000 Fragen an einem Tag.',
-  q2500:'Beantworte 2.500 Fragen an einem Tag.',
-  q5000:'Beantworte 5.000 Fragen an einem Tag.',
   kata:'Schalte die Reihe カ行 frei.',
   dak:'Schalte die Reihe が行 frei.',
   w2_unlock:'Schalte Wörter mit 2 Silben frei.',
-  w2_master:'30 Fragen mit 2-Silben-Wörtern, 80 % richtig.',
   w3_unlock:'Schalte Wörter mit 3 Silben frei.',
-  w3_master:'30 Fragen mit 3-Silben-Wörtern, 80 % richtig.',
   w4_unlock:'Schalte Wörter mit 4 Silben frei.',
-  w4_master:'30 Fragen mit 4-Silben-Wörtern, 80 % richtig.',
   w5_unlock:'Schalte Wörter mit 5 Silben frei.',
-  w5_master:'30 Fragen mit 5-Silben-Wörtern, 80 % richtig.',
   mix_unlock:'Schalte gemischte Wörter frei.',
-  mix_master:'20 gemischte Wörter, 80 % richtig.',
-  d1:'Lerne an deinem ersten Tag.',
+  w2_box5:'Alle 2-Silben-Wörter in Leitner-Box 5.',
+  w3_box5:'Alle 3-Silben-Wörter in Leitner-Box 5.',
+  w4_box5:'Alle 4-Silben-Wörter in Leitner-Box 5.',
+  w5_box5:'Alle 5-Silben-Wörter in Leitner-Box 5.',
+  mix_box5:'Alle gemischten Wörter in Leitner-Box 5.',
+  hira_base:'Alle Hiragana-Grundreihen in Box 5.',
+  hira_daku:'Alle Hiragana-Dakuten in Box 5.',
+  hira_kombi:'Alle Hiragana-Kombinationen in Box 5.',
+  kata_base:'Alle Katakana-Grundreihen in Box 5.',
+  kata_daku:'Alle Katakana-Dakuten in Box 5.',
+  kata_kombi:'Alle Katakana-Kombinationen in Box 5.',
   d3:'Lerne an 3 verschiedenen Tagen.',
-  d7:'Lerne an 7 verschiedenen Tagen.',
-  d14:'Lerne an 14 verschiedenen Tagen.',
-  d30:'Lerne an 30 verschiedenen Tagen.',
+  d10:'Lerne an 10 verschiedenen Tagen.',
+  d25:'Lerne an 25 verschiedenen Tagen.',
   d50:'Lerne an 50 verschiedenen Tagen.',
   d100:'Lerne an 100 verschiedenen Tagen.',
+  d150:'Lerne an 150 verschiedenen Tagen.',
   d200:'Lerne an 200 verschiedenen Tagen.',
-  d365:'Lerne an 365 verschiedenen Tagen.',
+  d250:'Lerne an 250 verschiedenen Tagen.',
+  d300:'Lerne an 300 verschiedenen Tagen.',
+  d400:'Lerne an 400 verschiedenen Tagen.',
+  d500:'Lerne an 500 verschiedenen Tagen.',
+  d600:'Lerne an 600 verschiedenen Tagen.',
+  d700:'Lerne an 700 verschiedenen Tagen.',
+  d800:'Lerne an 800 verschiedenen Tagen.',
+  d900:'Lerne an 900 verschiedenen Tagen.',
+  d1000:'Lerne an 1000 verschiedenen Tagen.',
   at100:'Beantworte insgesamt 100 Fragen.',
+  at250:'Beantworte insgesamt 250 Fragen.',
+  at500:'Beantworte insgesamt 500 Fragen.',
   at1000:'Beantworte insgesamt 1.000 Fragen.',
+  at2500:'Beantworte insgesamt 2.500 Fragen.',
   at5000:'Beantworte insgesamt 5.000 Fragen.',
+  at7500:'Beantworte insgesamt 7.500 Fragen.',
   at10000:'Beantworte insgesamt 10.000 Fragen.',
+  at15000:'Beantworte insgesamt 15.000 Fragen.',
+  at20000:'Beantworte insgesamt 20.000 Fragen.',
   perfectDay1:'Ein Tag mit 50+ Antworten, ohne einen Fehler.',
   perfectDay5:'Sammle 5 perfekte Tage.',
   perfectDay10:'Sammle 10 perfekte Tage.',
   perfectDay25:'Sammle 25 perfekte Tage.',
+  perfectDay50:'Sammle 50 perfekte Tage.',
+  perfectDay75:'Sammle 75 perfekte Tage.',
+  perfectDay100:'Sammle 100 perfekte Tage.',
+  perfectDay150:'Sammle 150 perfekte Tage.',
+  perfectDay200:'Sammle 200 perfekte Tage.',
+  perfectDay250:'Sammle 250 perfekte Tage.',
+  perfectDay500:'Sammle 500 perfekte Tage.',
+  perfectDay750:'Sammle 750 perfekte Tage.',
+  perfectDay1000:'Sammle 1000 perfekte Tage.',
   ninja1:'Beantworte eine Frage mit dem Ninja richtig.',
-  ninja500:'2.500 richtige Antworten mit dem Ninja.',
+  ninja500:'500 richtige Antworten mit dem Ninja.',
+  ninja2500:'2.500 richtige Antworten mit dem Ninja.',
+  ninja10000:'10.000 richtige Antworten mit dem Ninja.',
   samurai1:'Beantworte eine Frage mit dem Samurai richtig.',
-  samurai500:'2.500 richtige Antworten mit dem Samurai.',
+  samurai500:'500 richtige Antworten mit dem Samurai.',
+  samurai2500:'2.500 richtige Antworten mit dem Samurai.',
+  samurai10000:'10.000 richtige Antworten mit dem Samurai.',
   geisha1:'Beantworte eine Frage mit der Geisha richtig.',
-  geisha500:'2.500 richtige Antworten mit der Geisha.',
+  geisha500:'500 richtige Antworten mit der Geisha.',
+  geisha2500:'2.500 richtige Antworten mit der Geisha.',
+  geisha10000:'10.000 richtige Antworten mit der Geisha.',
   sumo1:'Beantworte eine Frage mit dem Sumo richtig.',
-  sumo500:'2.500 richtige Antworten mit dem Sumo.',
+  sumo500:'500 richtige Antworten mit dem Sumo.',
+  sumo2500:'2.500 richtige Antworten mit dem Sumo.',
+  sumo10000:'10.000 richtige Antworten mit dem Sumo.',
   pro25:'25 richtige Antworten im Profimodus.',
+  pro50:'50 richtige Antworten im Profimodus.',
+  pro75:'75 richtige Antworten im Profimodus.',
   pro100:'100 richtige Antworten im Profimodus.',
+  pro250:'250 richtige Antworten im Profimodus.',
   pro500:'500 richtige Antworten im Profimodus.',
+  pro750:'750 richtige Antworten im Profimodus.',
+  pro1000:'1.000 richtige Antworten im Profimodus.',
+  pro2500:'2.500 richtige Antworten im Profimodus.',
+  pro5000:'5.000 richtige Antworten im Profimodus.',
+  pro10000:'10.000 richtige Antworten im Profimodus.',
   hira_all:'Schalte alle Hiragana-Reihen frei.',
   kata_all:'Schalte alle Katakana-Reihen frei.',
 };
@@ -975,7 +1065,7 @@ const MILESTONE_CFG={
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const SK='kana_dojo_v4';
-function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},charOk:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],missionsDone:[],rowRun:{},proDate:null,proHearts:3,proStats:{a:0,c:0},perfectDays:0,perfectEvalDate:null};}
+function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},charOk:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],proDate:null,proHearts:3,proStats:{a:0,c:0},perfectDays:0,perfectEvalDate:null};}
 
 let S=defaultState();
 (()=>{try{const d=localStorage.getItem(SK);if(d){const parsed=JSON.parse(d);S={...defaultState(),...parsed};}}catch(e){}
@@ -1365,9 +1455,7 @@ function handleAnswer(pick,btn){
   S.recent.push(isOk?1:0);
   if(S.recent.length>500)S.recent.splice(0,S.recent.length-500);
 
-  // Missionen fortschreiben: Serie pro Reihe (Fehler setzt zurück) + Tages-Bestkombo
-  if(!S.rowRun)S.rowRun={};
-  S.rowRun[q.group]=isOk?((S.rowRun[q.group]||0)+1):0;
+  // Tages-Bestkombo fortschreiben (Basis der Tagesquest)
   if(S.combo>(S.dailyBestCombo||0))S.dailyBestCombo=S.combo;
 
   // Profimodus: Statistik fortschreiben, bei Fehler/Timeout ein Herz abziehen
@@ -1382,7 +1470,7 @@ function handleAnswer(pick,btn){
   // Badges + Missionen prüfen (gemeinsamer Toast)
   const newB=BADGES.filter(b=>!S.badges.includes(b.id)&&b.cond(S));
   newB.forEach(b=>S.badges.push(b.id));
-  const toasts=[...newB,...checkMissions(q.group),...(levelUpToast?[levelUpToast]:[])];
+  const toasts=[...newB,...checkMissions(),...(levelUpToast?[levelUpToast]:[])];
   if(toasts.length>0){
     spawnParticles(20);
     showBadgeToast(toasts);
@@ -1514,21 +1602,18 @@ function renderMissionStrip(){
   const el=document.getElementById('mission-strip');
   if(!el)return;
   if(!currentQ){el.innerHTML='';return;}
-  const g=currentQ.q.group;
-  const rows=[];
-  const dq=DAILY_QUESTS.find(d=>!(S.dailyClaimed||[]).includes(d.id));
-  if(dq)rows.push({label:'🎯 '+dq.label,cur:Math.min(dq.val(S),dq.target),max:dq.target});
-  else rows.push({label:'🎯 Alle Tagesquests erfüllt!',cur:1,max:1});
-  const nextTier=ROW_TIERS.find(t=>!(S.missionsDone||[]).includes('row_'+g+'_'+t));
-  if(nextTier)rows.push({label:'🏹 '+g+': '+nextTier+' richtige in Folge',cur:Math.min((S.rowRun&&S.rowRun[g])||0,nextTier),max:nextTier});
-  else rows.push({label:'🏹 '+g+': alle Serien-Missionen erfüllt!',cur:1,max:1});
-  el.innerHTML=rows.map(r=>{
-    const p=Math.round(r.cur/r.max*100);
-    return `<div class="mission-row"><span class="mission-label">${r.label}</span><div class="progress-bar-wrap" style="flex:0 0 64px;width:auto"><div class="progress-bar" style="width:${p}%;background:${p>=100?'var(--green)':'var(--gold)'}"></div></div><span class="mission-count">${r.cur}/${r.max}</span></div>`;
+  // Seit Paket E: alle drei Tagesquests statt einer Quest plus Reihen-Serie
+  el.innerHTML=DAILY_QUESTS.map(dq=>{
+    const done=(S.dailyClaimed||[]).includes(dq.id);
+    const cur=done?dq.target:Math.min(dq.val(S),dq.target);
+    const p=Math.round(cur/dq.target*100);
+    return `<div class="mission-row"><span class="mission-label">${done?'✅':'🎯'} ${dq.label}</span><div class="progress-bar-wrap" style="flex:0 0 64px;width:auto"><div class="progress-bar" style="width:${p}%;background:${p>=100?'var(--green)':'var(--gold)'}"></div></div><span class="mission-count">${cur}/${dq.target}</span></div>`;
   }).join('');
 }
 
-// Missions-Übersicht im Fortschritt-Tab: Tagesquests, Schriftrollen, Serien-Zähler
+// Missions-Übersicht im Fortschritt-Tab: seit Paket E nur noch die Tagesquests.
+// Reihen-Serien und Schriftrollen sind entfallen – die Meisterschaft steht jetzt in
+// den Abzeichen (alle Zeichen einer Gruppe in Leitner-Box 5).
 function renderMissions(){
   const el=document.getElementById('mission-list');
   if(!el)return;
@@ -1542,24 +1627,10 @@ function renderMissions(){
       <div class="progress-bar-wrap" style="flex:0 0 64px;width:auto"><div class="progress-bar" style="width:${p}%;background:${p>=100?'var(--green)':'var(--gold)'}"></div></div>
       <span class="mission-count">${done?dq.target:cur}/${dq.target}</span></div>`;
   });
-  // Schriftrollen: gemeisterte Kana-Reihen (alle Zeichen Box 4+)
-  const kanaRows=GROUP_ORDER.filter(g=>!WORD_GROUPS.includes(g));
-  const hira=kanaRows.filter(g=>ALL_KANA.some(k=>k.group===g&&k.script==='h'));
-  const kata=kanaRows.filter(g=>ALL_KANA.some(k=>k.group===g&&k.script==='k'));
-  const pieces=list=>list.filter(g=>(S.missionsDone||[]).includes('scroll_'+g)||scrollPieceDone(g)).length;
-  const hp=pieces(hira),kp=pieces(kata);
-  html+='<div style="font-size:12px;color:var(--gold);margin:10px 0 6px;">Schriftrollen (Reihe komplett gemeistert = 1 Stück)</div>';
-  [['📜 Hiragana-Rolle',hp,hira.length],['📜 Katakana-Rolle',kp,kata.length]].forEach(([lbl,cur,max])=>{
-    const p=Math.round(cur/max*100);
-    html+=`<div class="mission-row" style="border:none;padding:3px 0;background:none">
-      <span class="mission-label">${lbl}</span>
-      <div class="progress-bar-wrap" style="flex:0 0 64px;width:auto"><div class="progress-bar" style="width:${p}%;background:${p>=100?'var(--green)':'var(--gold)'}"></div></div>
-      <span class="mission-count">${cur}/${max}</span></div>`;
-  });
-  // Serien-Missionen gesamt
-  const rowDone=(S.missionsDone||[]).filter(id=>id.startsWith('row_')).length;
-  const rowTotal=GROUP_ORDER.length*ROW_TIERS.length;
-  html+=`<div style="font-size:11px;color:var(--dim);margin-top:10px;">🏹 Serien-Missionen: ${rowDone} von ${rowTotal} erfüllt · aktive Ziele siehst du direkt unterm Quiz</div>`;
+  const mengen=masterySets();
+  const geschafft=BADGES.filter(x=>mengen[x.id]&&S.badges.includes(x.id)).length;
+  const gesamt=Object.keys(mengen).length;
+  html+=`<div style="font-size:11px;color:var(--dim);margin-top:10px;">🏆 Meisterschaft: ${geschafft} von ${gesamt} Gruppen komplett in Leitner-Box 5</div>`;
   el.innerHTML=html;
 }
 
@@ -1610,7 +1681,11 @@ function renderHistory(){
 }
 
 function renderBadges(){
-  document.getElementById('badge-sub').textContent=S.badges.length+' / '+BADGES.length+' freigeschaltet';
+  // Nur noch existierende Abzeichen zaehlen: In Altspielstaenden koennen IDs stehen,
+  // die es nach der Ueberarbeitung nicht mehr gibt (z. B. streak30) – die wuerden die
+  // Anzeige sonst zu hoch ausweisen.
+  const verdient=S.badges.filter(id=>BADGES.some(b=>b.id===id)).length;
+  document.getElementById('badge-sub').textContent=verdient+' / '+BADGES.length+' freigeschaltet';
   const bg=document.getElementById('badge-grid');
   bg.innerHTML='';
   BADGES.forEach(b=>{
