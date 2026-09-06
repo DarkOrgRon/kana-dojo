@@ -10,9 +10,9 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v17`. Letzter Commit: „Fix: Name und Stufe lagen
-über der Figur …" (`c6bb2df`). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026)
-sowie die Pakete A, B, C und D (21.08.2026). Badge-Gesamtzahl: **74**.
+Aktueller Service-Worker-Cache: `kana-dojo-v18`. Letzter Commit: „Paket E: 119 Abzeichen …"
+(`4c22006`). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026) sowie die Pakete A, B, C, D
+und E (21.08.2026). Badge-Gesamtzahl: **119**.
 Dateigröße `index.html`: ca. 261 KB (davon ~155 KB Sprite-Raster).
 
 ## ⏭️ WO WEITERMACHEN (Stand 21.08.2026, Abschluss des Tages)
@@ -42,9 +42,7 @@ Reihenfolge danach:
    (Shuriken, Fächer) sind noch die alten 7×7-Raster und passen stilistisch nicht ganz.
    Ronny kann `effekte.png` nachliefern (Vorgaben in `PROMPT_Bild-KI_Sprites.md`),
    dann Umrechnung über `tools/sprites_bauen.py`-Logik und Austausch von `SHURIKEN`/`FAN`.
-3. **Paket E – Abzeichen-Überarbeitung** (Ronnys Entscheidungen vom 21.08.2026 nach dem
-   Testlauf; Spezifikation im Abschnitt „📋 Paket E" weiter unten). **Freigegeben als Plan,
-   Umsetzung erst nach Ronnys Startsignal.**
+3. ~~Paket E – Abzeichen-Überarbeitung~~ ✅ erledigt 21.08.2026 (119 Abzeichen, Details unten)
 4. **Paket 7 – Tastatur-Eingabe bei Wörtern** (Ronnys Idee vom 08.08.2026, Details unten)
 5. **Paket 6 – iBj-Eigenwerbung** (Splash beim Start + dezent alle 50 Fragen, hart kodiert,
    kein Werbenetzwerk – bewusst zurückgestellt bis nach dem Testlauf)
@@ -57,7 +55,40 @@ mit Bonuspunkten als Shop-Rabattcodes – Registrierung läuft dann über Shopif
 liegt dort auch die E-Mail-Einwilligung (DSGVO: separate Checkbox + Double-Opt-in, keine
 Kopplung). Monetarisierungs-Ziel laut Ronny: primär Reichweite/Branding, Rabattcodes sekundär.
 
-## 📋 Paket E: Abzeichen-Überarbeitung (Spezifikation, 21.08.2026 – noch nicht umgesetzt)
+## ✅ Paket E: Abzeichen-Überarbeitung (umgesetzt 21.08.2026)
+Commit `4c22006`, Cache `kana-dojo-v18`, Backup vorher `index_v18_2026-08-21_pre-paketE.html`.
+Generator im Repo: `tools/badges_bauen.py` (erzeugt `BADGES` + `BADGE_DESC`; Schwellen dort
+ändern statt von Hand im HTML).
+
+**Ergebnis: 119 Abzeichen** – die Spezifikation nannte 118, dazu kam auf Ronnys Wunsch
+„3 Lerntage" als frühes Abzeichen.
+
+**Abweichungen und Funde beim Bauen:**
+- ⚠️ **Ladefehler:** Die Gruppenmengen wurden zunächst beim Laden aus `WORD_GROUPS` abgeleitet –
+  das ist aber erst 400 Zeilen weiter unten definiert, die App brach mit
+  „Cannot access 'WORD_GROUPS' before initialization" ab. Jetzt **verzögert** über
+  `masterySets()` mit Zwischenspeicher. Merke: Reihenfolge im Skript beachten, wenn neue
+  Konstanten weit oben auf weiter unten Definiertes zugreifen.
+- ⚠️ **Zählung korrigiert:** `badge-sub` zeigte „29 / 119", weil Altspielstände IDs enthalten,
+  die es nicht mehr gibt (`streak30`, `q1000`, `perfect30` …). Es werden jetzt nur noch
+  existierende Abzeichen gezählt (im Test danach korrekt „21 / 119").
+- `S.rowRun` und `S.missionsDone` bleiben in Altspielständen erhalten (werden nur nicht mehr
+  gelesen) – bewusst nicht gelöscht, spart Migrationscode und schadet nicht.
+- Neue Sektion im Fortschritt-Tab statt Schriftrollen: „🏆 Meisterschaft: X von 11 Gruppen".
+
+**Testnachweise (lokal im Browser, gegen den echten Code):**
+119 Badges = 119 Beschreibungen, keine verwaisten, keine doppelten IDs · Gruppenmengen
+korrekt aus `GROUP_ORDER` abgeleitet (10/5/1 je Schriftsystem) · Schwellen aller Leitern
+stimmen · Meisterschaft: eines auf Box 4 → nicht vergeben, alle auf Box 5 → vergeben, greift
+nicht auf Nachbargruppen über · Wort-Meisterschaft ohne Trefferquoten-Bedingung (mit
+absichtlich schlechter Quote geprüft) · Charakter 499→500: Stufe 2 und Abzeichen gemeinsam,
+„Weg des …" schon ab 1 · Tagesquest-Kombo erst bei 10 · Streifen zeigt 3 Tagesquests, keine
+Serien · Fortschritt-Tab ohne Schriftrollen/Serien, Perfekte-Tage-Kachel bleibt ·
+Altspielstand mit entfallenen Feldern und alten IDs lädt fehlerfrei · Meisterschafts-Abzeichen
+wird im echten Spielablauf vergeben · 119 Karten auf 375 px: größte Höhenabweichung beim
+Umdrehen **3 px**, kein seitlicher Überlauf.
+
+## Spezifikation Paket E (Referenz, wie umgesetzt)
 Grundlage: Ronnys Erfahrungen aus dem Testlauf plus seine Antworten auf die Rückfragen.
 **Design-Leitlinie (Ronny):** Möglichst viele Abzeichen, lange dichte Leitern, die Sammelseite
 darf lang werden – angelehnt an japanische Spiele mit „gefühlt unendlich vielen Belohnungen".
