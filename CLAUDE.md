@@ -42,10 +42,13 @@ Reihenfolge danach:
    (Shuriken, Fächer) sind noch die alten 7×7-Raster und passen stilistisch nicht ganz.
    Ronny kann `effekte.png` nachliefern (Vorgaben in `PROMPT_Bild-KI_Sprites.md`),
    dann Umrechnung über `tools/sprites_bauen.py`-Logik und Austausch von `SHURIKEN`/`FAN`.
-3. **Paket 7 – Tastatur-Eingabe bei Wörtern** (Ronnys Idee vom 08.08.2026, Details unten)
-4. **Paket 6 – iBj-Eigenwerbung** (Splash beim Start + dezent alle 50 Fragen, hart kodiert,
+3. **Paket E – Abzeichen-Überarbeitung** (Ronnys Entscheidungen vom 21.08.2026 nach dem
+   Testlauf; Spezifikation im Abschnitt „📋 Paket E" weiter unten). **Freigegeben als Plan,
+   Umsetzung erst nach Ronnys Startsignal.**
+4. **Paket 7 – Tastatur-Eingabe bei Wörtern** (Ronnys Idee vom 08.08.2026, Details unten)
+5. **Paket 6 – iBj-Eigenwerbung** (Splash beim Start + dezent alle 50 Fragen, hart kodiert,
    kein Werbenetzwerk – bewusst zurückgestellt bis nach dem Testlauf)
-5. **Play-Store-Veröffentlichung als TWA** (Trusted Web Activity; braucht Google Play
+6. **Play-Store-Veröffentlichung als TWA** (Trusted Web Activity; braucht Google Play
    Developer-Konto ~25 USD einmalig, Datenschutzerklärung, Store-Assets, Screenshots).
    Für die Store-Screenshots lassen sich die Sprites verlustfrei hochskalieren
    (`tools/vorschau_buehne.py` als Ausgangspunkt).
@@ -53,6 +56,97 @@ Fernziel (großes, eigenes Projekt, erst wenn die App etabliert ist): Registrier
 mit Bonuspunkten als Shop-Rabattcodes – Registrierung läuft dann über Shopify (iBj), damit
 liegt dort auch die E-Mail-Einwilligung (DSGVO: separate Checkbox + Double-Opt-in, keine
 Kopplung). Monetarisierungs-Ziel laut Ronny: primär Reichweite/Branding, Rabattcodes sekundär.
+
+## 📋 Paket E: Abzeichen-Überarbeitung (Spezifikation, 21.08.2026 – noch nicht umgesetzt)
+Grundlage: Ronnys Erfahrungen aus dem Testlauf plus seine Antworten auf die Rückfragen.
+**Design-Leitlinie (Ronny):** Möglichst viele Abzeichen, lange dichte Leitern, die Sammelseite
+darf lang werden – angelehnt an japanische Spiele mit „gefühlt unendlich vielen Belohnungen".
+Extrem hohe Stufen (1.000 Lerntage, 1.000 perfekte Tage) sind **bewusst** fast unerreichbar –
+für Hardcore-Spieler; mit künftig mehr Wörtern steigt die Erreichbarkeit von selbst.
+
+### Ergebnis: 118 Abzeichen (vorher 74)
+| Kategorie | Anzahl | Stufen / Bedingung |
+|---|---|---|
+| Erste Antwort | 1 | unverändert |
+| Kombo | 9 | unverändert: 5 · 10 · 25 · 50 · 75 · 100 · 150 · 200 · 500 in Folge |
+| Streak (Tage hintereinander) | 12 | **3 · 7 · 14 · 25 · 50 · 75 · 100 · 150 · 200 · 250 · 300 · 365** |
+| Genauigkeit | 5 | unverändert (alle Kana frei + 70/80/90/95/99 % der letzten 500) |
+| Fragen an einem Tag | 6 | **10 · 25 · 50 · 100 · 200 · 500** (1.000/2.500/5.000 entfallen) |
+| Freischaltungen | 2 | unverändert (カ行, が行) |
+| Wortstufen – freigeschaltet | 5 | unverändert (2/3/4/5 Silben, Gemischt) |
+| Wortstufen – gemeistert | 5 | **NEU: alle Wörter der Gruppe in Leitner-Box 5** (statt 30 Fragen/80 %) |
+| **Kana-Meisterschaft** | **6** | **NEU:** je Schriftsystem Grundreihen · Dakuten · Kombinationen – alle Zeichen in Box 5 |
+| Lerntage gesamt | 15 | **10 · 25 · 50 · 100 · 150 · 200 · 250 · 300 · 400 · 500 · 600 · 700 · 800 · 900 · 1.000** |
+| Gesamt-Antworten | 10 | **100 · 250 · 500 · 1.000 · 2.500 · 5.000 · 7.500 · 10.000 · 15.000 · 20.000** |
+| Perfekte Tage | 13 | 1 · 5 · 10 · 25 + **50 · 75 · 100 · 150 · 200 · 250 · 500 · 750 · 1.000** |
+| Charaktere | 16 | je Charakter: **1** („Weg des …", bleibt) · **500** · **2.500** · **10.000** richtige |
+| Profimodus | 11 | **25 · 50 · 75 · 100 · 250 · 500 · 750 · 1.000 · 2.500 · 5.000 · 10.000** richtige |
+| Schriftsysteme komplett | 2 | unverändert (alle Reihen freigeschaltet) |
+
+### Entfällt
+- **Reihen-Serien** (`ROW_TIERS`, `S.rowRun`, `row_*` in `missionsDone`, Teil von `checkMissions`,
+  Zeile im Missions-Streifen, Zeile „Serien-Missionen X von 111" im Fortschritt).
+- **Schriftrollen** (`scrollPieceDone`, `scroll_*` in `missionsDone`, Rollen-Zeilen im Fortschritt).
+  Ersatz sind die schärfer definierten Meisterschafts-Abzeichen.
+- Vorhandene `missionsDone`-Einträge in Altspielständen einfach ignorieren (verwaist, harmlos).
+
+### Geändert
+- **Tagesquest Kombo: 8 → 10** („Eine 10er-Kombo schaffen"), passend zum 10er-Kombo-Abzeichen.
+- **Missions-Streifen unter dem Quiz zeigt alle 3 Tagesquests** (vorher 1 Quest + 1 Serie).
+- Fortschritt-Sektion „Missionen" enthält nur noch die drei Tagesquests.
+
+### Kana-Meisterschaft – genaue Definition
+Bedingung je Abzeichen: **jedes** Zeichen der Gruppenmenge hat `S.box[char] === 5`.
+**Keine Prozent-Bedingung** (Ronnys Entscheidung; Begründung: Box 5 = fünfmal richtig ohne
+Rückfall ist bereits der härtere Beweis, und eine Lebenszeit-Trefferquote wäre für Nutzer mit
+holprigem Start nie mehr erreichbar – dieselbe Falle wie bei den alten Genauigkeits-Abzeichen).
+| Abzeichen | Gruppen |
+|---|---|
+| Hiragana-Grundreihen gemeistert | あ行 か行 さ行 た行 な行 は行 ま行 や行 ら行 わ行 |
+| Hiragana-Dakuten gemeistert | が行 ざ行 だ行 ば行 ぱ行 |
+| Hiragana-Kombinationen gemeistert | 組合 |
+| Katakana-Grundreihen gemeistert | ア行 カ行 サ行 タ行 ナ行 ハ行 マ行 ヤ行 ラ行 ワ行 |
+| Katakana-Dakuten gemeistert | ガ行 ザ行 ダ行 バ行 パ行 |
+| Katakana-Kombinationen gemeistert | カ組 |
+Die Gruppenmengen **aus `GROUP_ORDER` ableiten** (Position 0–9, 10–14, 15 bzw. 16–25, 26–30, 31),
+nicht als zweite Liste hart kodieren – sonst Sync-Pflicht bei jeder Reihenänderung.
+Wort-Meisterschaft analog: alle Einträge einer Wortgruppe (`2文字` usw.) in Box 5.
+Box 5 kann später wieder verloren gehen (Fehler → Box 1); das Abzeichen bleibt – es ist ein
+Meilenstein, keine Zustandsanzeige.
+
+### Umsetzungshinweise
+- **Neue IDs für geänderte Schwellen** (z. B. `streak25`, `perfectDay50`, `ninja10000`), damit
+  ein alter Eintrag in `S.badges` nicht plötzlich etwas anderes bedeutet. ⚠️ Konkret: die
+  heutige ID `ninja500` bedeutet 2.500 richtige → wird zu `ninja2500`; `ninja500` neu = 500.
+  Unveränderte Abzeichen behalten ihre ID.
+- **`BADGE_DESC` für alle 118 Einträge** pflegen und Vollständigkeit prüfen (Test aus Paket C
+  wiederverwenden: 118 Badges = 118 Beschreibungen, keine verwaisten).
+- **Beschreibungen ≤ ~46 Zeichen**, sonst wächst die Karte beim Umdrehen und verschiebt die
+  Nachbarkarten (Messung aus Paket C wiederholen: Abweichung ≤ 3 px auf 375 px Breite).
+- Stufenaufstieg + Charakter-Abzeichen fallen jetzt auf dieselbe Antwort → beide laufen über die
+  gemeinsame Toast-Liste in `handleAnswer`, kein Sonderfall nötig.
+- `defaultState()`: `rowRun` und `missionsDone` können entfallen; Altspielstände mit diesen
+  Feldern müssen weiterhin fehlerfrei laden.
+- Abzeichen-Seite: 118 Karten im 2-Spalten-Raster ≈ 59 Zeilen – **bewusst so**, keine
+  Zusammenfassung zu gestuften Karten (Ronny: Sammelseite darf lang sein).
+
+### Testfälle
+| # | Test | Erwartung |
+|---|---|---|
+| 1 | `BADGES.length` und `Object.keys(BADGE_DESC).length` | beide 118, keine verwaisten IDs |
+| 2 | Alle Zeichen von あ行…わ行 auf Box 5 setzen, eines auf Box 4 | Hiragana-Grundreihen **nicht** vergeben; nach Korrektur auf 5 → vergeben |
+| 3 | 組合 komplett Box 5 | nur „Hiragana-Kombinationen", nicht Dakuten/Grundreihen |
+| 4 | Alle 2文字-Wörter Box 5 | „2-Silben gemeistert" vergeben, ohne Trefferquoten-Bedingung |
+| 5 | `charOk.ninja` 499→500 | Stufe 2 **und** Abzeichen „500" gemeinsam; „Weg des Ninja" schon ab 1 |
+| 6 | Tagesquest Kombo bei 9 / 10 | erst bei 10 erfüllt |
+| 7 | Missions-Streifen | drei Zeilen (alle Tagesquests), keine Serien-Zeile |
+| 8 | Fortschritt-Tab | keine Schriftrollen, keine Serien-Zählung; Perfekte-Tage-Kachel bleibt |
+| 9 | Altspielstand mit `rowRun`, `missionsDone` (row_/scroll_), `streak30`, alter `ninja500` | lädt fehlerfrei, Fortschritt erhalten |
+| 10 | Karten-Umdrehen auf 375 px | Höhenabweichung ≤ 3 px bei allen 118 |
+
+### Optional (nicht bestellt)
+Ein frühes Lerntage-Abzeichen („3 Lerntage") behalten, damit die Kategorie in der ersten
+Woche nicht leer bleibt – Ronny hat sich dazu nicht geäußert; nur auf Wunsch ergänzen.
 
 ## 🧰 Werkzeuge und Konventionen (Kurzüberblick)
 - **Backups:** `index_vN_JJJJ-MM-TT_zweck.html` im Projektordner (per `.gitignore` nicht im Repo).
