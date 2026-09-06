@@ -1641,10 +1641,13 @@ function renderLeitner(){
   const kana=ALL_KANA.filter(k=>!WORD_GROUPS.includes(k.group));
   const counts=[0,0,0,0,0,0];
   kana.forEach(k=>{counts[(S.box&&S.box[k.char])||0]++;});
-  const mastered=counts[4]+counts[5];
+  // Seit Paket E gilt einheitlich Box 5 als "gemeistert" – so wie es auch die
+  // Meisterschafts-Abzeichen verlangen. Vorher stand hier Box 4, dadurch bedeutete
+  // dasselbe Wort an zwei Stellen der App etwas Unterschiedliches.
+  const mastered=counts[5];
   const names=['Neu','Box 1','Box 2','Box 3','Box 4','Box 5'];
   const colors=['rgba(255,255,255,0.25)','var(--danger)','#ff8c42','var(--gold)','var(--green)','#00d2d3'];
-  let html=`<div style="margin-bottom:10px;font-size:13px;">Gemeistert: <b style="color:var(--gold)">${mastered}</b> von ${kana.length} Zeichen <span style="color:var(--dim)">(ab Box 4)</span></div>`;
+  let html=`<div style="margin-bottom:10px;font-size:13px;">Gemeistert: <b style="color:var(--gold)">${mastered}</b> von ${kana.length} Zeichen <span style="color:var(--dim)">(Box 5)</span></div>`;
   const max=Math.max(1,...counts);
   names.forEach((n,i)=>{
     html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
