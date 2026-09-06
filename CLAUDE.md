@@ -10,8 +10,8 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v18`. Letzter Commit: „Paket E: 119 Abzeichen …"
-(`4c22006`). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026) sowie die Pakete A, B, C, D
+Aktueller Service-Worker-Cache: `kana-dojo-v19`. Letzter Commit: „Fix nach Durchspieltest …"
+(`6cb7b03`). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026) sowie die Pakete A, B, C, D
 und E (21.08.2026). Badge-Gesamtzahl: **119**.
 Dateigröße `index.html`: ca. 261 KB (davon ~155 KB Sprite-Raster).
 
@@ -87,6 +87,39 @@ Serien · Fortschritt-Tab ohne Schriftrollen/Serien, Perfekte-Tage-Kachel bleibt
 Altspielstand mit entfallenen Feldern und alten IDs lädt fehlerfrei · Meisterschafts-Abzeichen
 wird im echten Spielablauf vergeben · 119 Karten auf 375 px: größte Höhenabweichung beim
 Umdrehen **3 px**, kein seitlicher Überlauf.
+
+### Durchspieltest 21.08.2026 (nach Paket E)
+Vollständiger Test „als würde man die App heute spielen" – vier Ebenen:
+1. **Echte Spielsitzung über die Oberfläche:** ca. 3.800 Antworten mit realen Klicks auf die
+   Antwort-Buttons. Ergebnis: alle 37 Gruppen freigeschaltet, alle 336 Zeichen in Box 5,
+   Abzeichen kamen fortlaufend (first, ninja1, combo5/10/25/50/75/100/150/200/500, q10…q500,
+   kata, dak, at100…at5000, acc70…acc99, hira_all, kata_all). Übungsfragen wurden korrekt
+   nicht gewertet (z. B. 39 von 200 im ersten Block).
+2. **Alle 11 Meisterschafts-Abzeichen erspielt** (nicht gesetzt): Kana-Grundreihen, Dakuten,
+   Kombinationen je Schriftsystem sowie alle fünf Wortstufen.
+3. **Charaktere und Profimodus:** Wechsel über die echte Auswahl, je Figur „Weg des …" und
+   die 500er-Stufe erspielt; Profimodus über den Schalter, pro25/50/75/100/250 erspielt.
+   Herzverlust im kontrollierten Einzelversuch: 3 → 2 → 1 → 0, exakt ein Herz pro Fehler,
+   danach Selbstabschaltung und Sperr-Meldung beim Wiedereinschalten.
+4. **Systematisches Audit aller 119 Abzeichen:** je Abzeichen ein eigener Spielstand mit der
+   passenden Ausgangslage, dann eine echte gewertete Antwort über den DOM-Button →
+   **119 von 119 vergeben, 0 Fehler.** (Prüft den realen Vergabeweg in `handleAnswer`,
+   nicht nur die `cond`-Funktionen.)
+5. **Mehrtages-Simulation** (gefälschte Gerätezeit, 5 Tage): Streak zählt hoch, setzt bei
+   übersprungenem Tag korrekt zurück; Lerntage zählen lückenlos weiter; perfekte Tage werden
+   rückwirkend am Folgetag gewertet – ein Tag mit einem Fehler und ein Tag mit nur 40
+   Antworten wurden korrekt NICHT gezählt.
+
+**Gefundener und behobener Fehler:** Die Leitner-Übersicht zählte „Gemeistert" ab **Box 4**,
+die Meisterschafts-Abzeichen aus Paket E verlangen aber **Box 5** – dasselbe Wort bedeutete an
+zwei Stellen etwas Unterschiedliches. Vereinheitlicht auf Box 5 (Commit `6cb7b03`), mit
+Gegenprobe: 100 Zeichen in Box 5 und 50 in Box 4 → Anzeige meldet korrekt 100.
+
+**Kein Fehler, aber notiert:** Beim ersten Herzverlust-Test schien ein Fehler zwei Herzen zu
+kosten. Ursache war der Testaufbau – zwischen zwei Werkzeugaufrufen verging echte Zeit, der
+7-Sekunden-Countdown lief ab und kostete zusätzlich ein Herz. Der kontrollierte Einzelversuch
+mit angehaltenem Countdown zeigte das korrekte Verhalten. ⚠️ Merke für künftige Tests im
+Profimodus: `stopProTimer()` aufrufen, sonst verfälscht die reale Wartezeit das Ergebnis.
 
 ## Spezifikation Paket E (Referenz, wie umgesetzt)
 Grundlage: Ronnys Erfahrungen aus dem Testlauf plus seine Antworten auf die Rückfragen.
