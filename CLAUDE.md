@@ -15,216 +15,144 @@ Aktueller Service-Worker-Cache: `kana-dojo-v19`. Letzter Commit: „Fix nach Dur
 und E (21.08.2026). Badge-Gesamtzahl: **119**.
 Dateigröße `index.html`: ca. 261 KB (davon ~155 KB Sprite-Raster).
 
-## ⏭️ WO WEITERMACHEN (Stand 21.08.2026, Abschluss des Tages)
-**Alles Geplante dieses Tages ist umgesetzt, deployed und live verifiziert.**
-Cache `kana-dojo-v17`, letzter Commit `c6bb2df` (Code) bzw. `73cbbfd` (Doku).
+## ⏭️ WO WEITERMACHEN (Stand 15.09.2026)
+Code-Stand unverändert seit 21.08.2026 (Cache `kana-dojo-v19`, Commit `6cb7b03`). Ronny hat die App
+drei Wochen getestet: **„für das Erlernen der Kana sehr gut"**. Am 15.09.2026 wurden die nächsten
+Schritte entschieden – Spezifikation im Abschnitt „📋 Ausbauplan Herbst 2026" direkt unten.
 
-Heute erledigt: **A** Bugfixes (Ortszeit, Charakter-Badges) · **B** Wertungs-Fairness
-(Übungsfragen, Perfekter Tag) · **C** Badge-Erklärungen · **D** neue Charakter-Sprites
-inkl. Nachbesserung der Namenszeile. Nachweise jeweils in den Abschnitten unten.
+**Nächster Schritt:** Paket F (Puzzle-Bild) – wartet auf Ronnys Startsignal. Bild liegt bereits in
+`sprites-quelle/puzzle-collage.png`.
 
-**Aktuelle Phase:** Ronny testet im Alltag. Bis zu seiner Rückmeldung KEINE weiteren Features
-bauen („Testen vor Weiterentwicklung"). Ideen sammelt er auf einer Odoo-Karte und übergibt sie
-gebündelt – dann erst clustern, nicht sofort umsetzen.
+Reihenfolge:
+1. **Paket F – Puzzle-Bild** (16 Teile, eigene Schwellen 1.000/2.500/5.000/10.000 je Charakter)
+2. **Paket G – Kana-Wörter mit Bedeutung** (deutsche Bedeutung statt Romaji; 128 Bestandswörter
+   umstellen + Lehnwörter + Alltag)
+3. **Paket H – Schilder-Kanji** (erste Tranche 120–150 Wörter, zwei Fragetypen)
+4. **Paket 6 – iBj-Eigenwerbung**
+5. **Play Store als TWA** (bewusst NACH Kanji – Ronnys Entscheidung 15.09.)
+6. **Gott-Level** (mit Kanji in der Bedingung)
+Gestrichen: ~~Paket 7 Tastatur-Eingabe~~ (15.09.), ~~Effekt-Sprites~~ (15.09.).
+Fernziel unverändert: Registrierung/Accounts über Shopify mit Bonuspunkten als Shop-Rabattcodes.
 
-**Was sinnvoll zu beobachten ist** (Hinweise für den Testlauf, keine offenen Bugs):
-- **Perfekter Tag:** zeigt sich erst am Folgetag (Auswertung am Tagesende) – 50 gewertete
-  Antworten ohne Fehler nötig, und mindestens 8 von 16 Reihen eines Schriftsystems frei.
-- **Tageswechsel** sollte jetzt exakt um 00:00 Ortszeit greifen (vorher 02:00).
-- **Charakter-Stufen** brauchen 500 richtige Antworten für Stufe 2 – im Testlauf also
-  vermutlich noch alle auf „Schüler ★☆☆☆". Zum schnellen Prüfen der Optik höherer Stufen
-  kann man in der Browser-Konsole `S.charOk={ninja:10000};renderHero()` setzen.
-- **Samurai im Angriff:** Katana ragt bewusst ca. 80 px über die Kana-Karte (Ronnys Vorschlag 1).
+## 📋 Ausbauplan Herbst 2026: Puzzle, Wortschatz, Kanji (Stand 15.09.2026 – NICHT umgesetzt)
+Grundlage: Ronnys Testlauf 21.08.–15.09.2026 und seine Entscheidungen vom 15.09.2026.
+Umsetzung erst nach Startsignal, paketweise mit Test-Stopp.
 
-Reihenfolge danach:
-1. ~~Pakete A → B → C~~ ✅ erledigt 21.08.2026
-2. ~~Paket D – Charakter-Sprites~~ ✅ erledigt 21.08.2026. **Restpunkt:** Die Effekt-Sprites
-   (Shuriken, Fächer) sind noch die alten 7×7-Raster und passen stilistisch nicht ganz.
-   Ronny kann `effekte.png` nachliefern (Vorgaben in `PROMPT_Bild-KI_Sprites.md`),
-   dann Umrechnung über `tools/sprites_bauen.py`-Logik und Austausch von `SHURIKEN`/`FAN`.
-3. ~~Paket E – Abzeichen-Überarbeitung~~ ✅ erledigt 21.08.2026 (119 Abzeichen, Details unten)
-4. **Paket 7 – Tastatur-Eingabe bei Wörtern** (Ronnys Idee vom 08.08.2026, Details unten)
-5. **Paket 6 – iBj-Eigenwerbung** (Splash beim Start + dezent alle 50 Fragen, hart kodiert,
-   kein Werbenetzwerk – bewusst zurückgestellt bis nach dem Testlauf)
-6. **Play-Store-Veröffentlichung als TWA** (Trusted Web Activity; braucht Google Play
-   Developer-Konto ~25 USD einmalig, Datenschutzerklärung, Store-Assets, Screenshots).
-   Für die Store-Screenshots lassen sich die Sprites verlustfrei hochskalieren
-   (`tools/vorschau_buehne.py` als Ausgangspunkt).
-Fernziel (großes, eigenes Projekt, erst wenn die App etabliert ist): Registrierung/Accounts
-mit Bonuspunkten als Shop-Rabattcodes – Registrierung läuft dann über Shopify (iBj), damit
-liegt dort auch die E-Mail-Einwilligung (DSGVO: separate Checkbox + Double-Opt-in, keine
-Kopplung). Monetarisierungs-Ziel laut Ronny: primär Reichweite/Branding, Rabattcodes sekundär.
+### Entscheidungen vom 15.09.2026 (verbindlich)
+- **Tastatur-Eingabe (Paket 7) ist gestrichen.** Es bleibt bei der 4-Button-Auswahl – auch für
+  Wörter und Kanji. Begründung Ronny: Touch-Bedienung; und Kanji lassen sich ohnehin nicht tippen.
+- **Effekt-Sprites (Shuriken/Fächer) bleiben wie sie sind** – nicht weiter verfolgen.
+- **Kanji vor dem Store.** Reihenfolge: Puzzle (F) → Kana-Wörter mit Bedeutung (G) →
+  Schilder-Kanji (H) → iBj-Eigenwerbung (6) → Play Store → Gott-Level.
+- **Gott-Level zurückgestellt**, bis Kanji ausgebaut sind – die Kanji sollen in die Bedingung
+  einfließen (sonst verschiebt ein späterer Kanji-Ausbau das Ziel für Nutzer, die es schon haben).
+- **Wörter zuerst, Kanji über Wörter** – keine isolierten Kanji mit Lesungslisten. Der Tourist liest
+  Wörter (出口), nicht Einzelzeichen; Lesungen sind erst auf Wortebene eindeutig.
+- **Bestehende Wörter (128 Stück in 2文字…混合) werden auf Bedeutungs-Abfrage umgestellt:**
+  Frage = japanisches Wort, Antwort = **deutsche Bedeutung** (statt bisher Romaji-Lesung).
+  Bei Einzel-Kana bleibt die Romaji-Abfrage (Zeichen haben keine Bedeutung).
 
-## ✅ Paket E: Abzeichen-Überarbeitung (umgesetzt 21.08.2026)
-Commit `4c22006`, Cache `kana-dojo-v18`, Backup vorher `index_v18_2026-08-21_pre-paketE.html`.
-Generator im Repo: `tools/badges_bauen.py` (erzeugt `BADGES` + `BADGE_DESC`; Schwellen dort
-ändern statt von Hand im HTML).
+---
 
-**Ergebnis: 119 Abzeichen** – die Spezifikation nannte 118, dazu kam auf Ronnys Wunsch
-„3 Lerntage" als frühes Abzeichen.
+### Paket F – Puzzle-Bild (klein–mittel)
+**Ziel:** Alle vier Charaktere hochleveln lohnt sich sichtbar. Ein Bild mit allen vier Figuren wird
+in 16 gleich großen Teilen freigespielt.
+**Quelle:** `sprites-quelle/puzzle-collage.png` (941×1672, 3 MB, KI-generiert, Nutzungsrechte liegen
+vor, fiktive Figuren → kein EU-AI-Act-Hinweis nötig laut Ronnys Einordnung vom 21.08.).
+**Auslieferung:** `puzzle.jpg`, **900 px breit** (≈ 380 KB, gemessen), im App-Ordner, in `sw.js`
+zu `CORE` hinzufügen (offline verfügbar). NICHT als Base64 in die HTML (die hat 265 KB).
+**Schwellen (Option B, Ronny):** eigene Schwellen je Charakter auf `S.charOk[ch]`:
+`PUZZLE_TIERS=[1000,2500,5000,10000]` – unabhängig von den Charakterstufen (500/2500/10000),
+die bleiben unverändert. 2.500 und 10.000 fallen mit Stufenaufstiegen zusammen → gemeinsamer Toast.
+**Zellen-Zuordnung** (4×4, Zeile/Spalte 0-basiert; am 15.09. am Bild ausgemessen, Rastervorschau
+in der Sitzung geprüft). Regel: das **Gesicht** kommt zuletzt (10.000), die drei anderen Teile
+liegen räumlich beim Charakter → „wer den Ninja levelt, sieht den Ninja erscheinen".
+| Charakter | 1.000 | 2.500 | 5.000 | **10.000 = Gesicht** |
+|---|---|---|---|---|
+| Ninja | (1,0) Fuß | (0,0) | (0,2) | **(0,1)** |
+| Geisha | (2,1) Kimono | (2,0) | (1,2) Fächer | **(1,1)** |
+| Samurai | (3,3) | (2,3) Katana | (0,3) Banner | **(1,3)** |
+| Sumo | (3,0) | (3,1) | (3,2) | **(2,2)** |
+Alle 16 Zellen genau einmal vergeben (geprüft: je Charakter 4).
+**Darstellung (Ronny):** eigener Tab „🧩" in der Navigation. Gesperrte Teile **reines Schwarz,
+keine Umrandung, keine Lücken** – das Bild muss am Ende als Ganzes wirken. Freigespielte Teile
+zeigen den Bildausschnitt (CSS `background-image` + `background-size:400% 400%` +
+`background-position`, 16 Kacheln ohne `gap`). Oben „7 / 16", antippen → Vollbild-Overlay mit
+demselben Stand. Bei 16/16 kleine Feier (Partikel + Toast „Bild vollständig!").
+**Zustand:** Freischaltung wird **aus `charOk` berechnet**, kein eigener Fortschritt gespeichert
+(kann nie inkonsistent werden, charOk sinkt nie). Nur `S.puzzleShown` (Zahl bereits gemeldeter Teile)
+für den Toast „🧩 Neues Puzzle-Teil! 7 von 16" in `handleAnswer`.
+**Später:** Gott-Level setzt zusätzlich ein Flag, das alle 16 freischaltet.
+**Tests:** Zuordnung deckt 16 Zellen genau einmal · charOk 999→1000 gibt Teil, Toast einmalig ·
+Gesicht erst bei 10.000 · Layout 375 px ohne Lücken · Offline nach SW-Update · Altspielstand lädt.
 
-**Abweichungen und Funde beim Bauen:**
-- ⚠️ **Ladefehler:** Die Gruppenmengen wurden zunächst beim Laden aus `WORD_GROUPS` abgeleitet –
-  das ist aber erst 400 Zeilen weiter unten definiert, die App brach mit
-  „Cannot access 'WORD_GROUPS' before initialization" ab. Jetzt **verzögert** über
-  `masterySets()` mit Zwischenspeicher. Merke: Reihenfolge im Skript beachten, wenn neue
-  Konstanten weit oben auf weiter unten Definiertes zugreifen.
-- ⚠️ **Zählung korrigiert:** `badge-sub` zeigte „29 / 119", weil Altspielstände IDs enthalten,
-  die es nicht mehr gibt (`streak30`, `q1000`, `perfect30` …). Es werden jetzt nur noch
-  existierende Abzeichen gezählt (im Test danach korrekt „21 / 119").
-- `S.rowRun` und `S.missionsDone` bleiben in Altspielständen erhalten (werden nur nicht mehr
-  gelesen) – bewusst nicht gelöscht, spart Migrationscode und schadet nicht.
-- Neue Sektion im Fortschritt-Tab statt Schriftrollen: „🏆 Meisterschaft: X von 11 Gruppen".
+### Paket G – Kana-Wörter mit Bedeutung (mittel)
+**Ziel:** Nach den Zeichen echte Wörter – und zwar so, dass man versteht, was man liest.
+**Datenmodell:** Worteinträge bekommen `de` (deutsche Bedeutung). Bestehend:
+`{char:'すし',romaji:'sushi',group:'2文字',script:'h'}` → `+ de:'Sushi'`. Leitner-Schlüssel bleibt
+`char` → **Fortschritt der 128 bestehenden Wörter bleibt erhalten.**
+**Fragetyp Wörter:** Frage zeigt das Wort, die 4 Buttons zeigen **deutsche Bedeutungen**.
+Rückmeldung zeigt zusätzlich die Lesung („✓ Richtig! すし – sushi"). Später optional die Umkehrung
+(Bedeutung → Wort). Einzel-Kana unverändert (Romaji-Buttons).
+**Technik-Hinweise:** `handleAnswer` vergleicht heute `pick.romaji===currentQ.q.romaji` – braucht
+einen generischen Antwortschlüssel je Fragetyp. `pickDistractors` braucht einen Bedeutungs-Modus
+(andere Wörter, bevorzugt gleiche Gruppe, keine Bedeutungs-Dubletten). Antwort-Buttons müssen
+längere deutsche Texte tragen (Umbruch im 2-Spalten-Raster prüfen). `lang="ja"` auf
+`#char-display` setzen, damit japanische Glyphformen gerendert werden (relevant ab Kanji).
+**Vorstellungs-Karte für Wörter aktivieren** (heute für WORD_GROUPS übersprungen): Wort, Lesung,
+Bedeutung. Die erste Abfrage danach ist wie bei Kana eine ungewertete Übungsfrage.
+**Inhalt:**
+1. Deutsche Bedeutungen für die **128 bestehenden Wörter** nachtragen. ⚠️ Die Gruppe 混合
+   enthält konstruierte Mischwörter (さけバー, まちマップ, でんしゃルート) – beim Nachtragen prüfen,
+   ob sie als „Vokabel" tragfähig sind oder durch echte Wörter ersetzt werden.
+2. Neue Gruppe **カタカナ語 (Lehnwörter)**, ~80–100: カラオケ, コンビニ, ラーメン, ホテル, タクシー,
+   バス, トイレ, カメラ, スーパー, レストラン … – der Aha-Moment für deutsche Lerner.
+3. Neue Gruppe **Alltag/Reise (Hiragana)**, ~50–80: Grüße, Höflichkeit, Zahlen, Essen, Orientierung.
+Inhalte entwirft Claude (JLPT-N5-/Reise-Standardwortschatz), Ronny prüft mit seiner
+Japan-Erfahrung gegen. Datenqualität schlägt Menge: ein falsches „richtig" lehrt Falsches.
+**Einordnung in `GROUP_ORDER`:** neue Gruppen in `WORD_GROUPS` aufnehmen; Vorschlag: Lehnwörter
+direkt nach `2文字` (früher Erfolgsmoment), Alltag nach `3文字`. Freischaltung über die bestehende
+Kette (10 Antworten, 80 %). Meisterschafts-Abzeichen je neuer Gruppe (`MASTERY_SETS` erweitern,
+`tools/badges_bauen.py` anpassen).
+**Tests:** Wortfrage zeigt 4 verschiedene Bedeutungen, genau eine richtig · Leitner-Box der alten
+Wörter unverändert nach Migration · Vorstellungs-Karte + Übungsfrage bei Wörtern · Buttons mit
+langen Bedeutungen brechen sauber um (375 px) · Profimodus 10 s bleibt.
 
-**Testnachweise (lokal im Browser, gegen den echten Code):**
-119 Badges = 119 Beschreibungen, keine verwaisten, keine doppelten IDs · Gruppenmengen
-korrekt aus `GROUP_ORDER` abgeleitet (10/5/1 je Schriftsystem) · Schwellen aller Leitern
-stimmen · Meisterschaft: eines auf Box 4 → nicht vergeben, alle auf Box 5 → vergeben, greift
-nicht auf Nachbargruppen über · Wort-Meisterschaft ohne Trefferquoten-Bedingung (mit
-absichtlich schlechter Quote geprüft) · Charakter 499→500: Stufe 2 und Abzeichen gemeinsam,
-„Weg des …" schon ab 1 · Tagesquest-Kombo erst bei 10 · Streifen zeigt 3 Tagesquests, keine
-Serien · Fortschritt-Tab ohne Schriftrollen/Serien, Perfekte-Tage-Kachel bleibt ·
-Altspielstand mit entfallenen Feldern und alten IDs lädt fehlerfrei · Meisterschafts-Abzeichen
-wird im echten Spielablauf vergeben · 119 Karten auf 375 px: größte Höhenabweichung beim
-Umdrehen **3 px**, kein seitlicher Überlauf.
+### Paket H – Schilder-Kanji (mittel–groß, Inhalt ist der Hauptaufwand)
+**Ziel:** Die Kanji-Wörter, denen man in Japan täglich begegnet – als **Wörter**, nicht als Zeichen.
+**Umfang zum Start (Ronny): 120–150 Wörter**, thematisch gruppiert (~20 je Gruppe):
+Bahnhof/Verkehr (駅, 出口, 入口, 改札, 新幹線), Orientierung (右, 左, 北, 東京, 大阪, 京都),
+Geld/Zahlen (円, 一…十, 百, 千, 万), Zeit (月, 日, 曜日, 今日), Essen/Einkauf (食, 肉, 魚, 店, 無料),
+Hinweise/Verbote (禁煙, 注意, 危険, 営業中, 準備中), Orte (神社, 寺, 温泉, 空港, 病院).
+**Datenmodell:** `{char:'出口', reading:'でぐち', romaji:'deguchi', de:'Ausgang', group:'看板・駅', kanji:true}`.
+**Zwei Fragetypen, zufällig 50/50:** (a) Wort → Bedeutung (deutsche Buttons), (b) Wort → **Lesung
+in Kana** (Kana-Buttons, Distraktoren mit gleicher Silbenzahl) – Typ (b) übt Kanji **und** Kana
+zugleich. Leitner-Box je Wort, unabhängig vom Fragetyp.
+**Freischaltung:** Kanji-Gruppen werden an `GROUP_ORDER` angehängt und laufen über die bestehende
+Freischaltkette – damit erscheinen sie erst, wenn die Wortgruppen durch sind (Ronnys Vorgabe:
+Kana+Kanji-Kombinationen erst nach den Kana).
+**Vorstellungs-Karte:** Wort groß, Lesung, Bedeutung, ggf. Merkhilfe.
+**Inhalt:** Claude entwirft, Ronny prüft. Später Ausbau Richtung 500 Kanji / 500 Wörter in Tranchen –
+Datenstruktur so bauen, dass Nachliefern nur Einträge ergänzt.
+**Tests:** beide Fragetypen korrekt, Lesungs-Distraktoren gleiche Silbenzahl · Glyphen japanisch
+(`lang="ja"`) · Gruppen erst nach Wortgruppen freischaltbar · Meisterschaft je Gruppe.
 
-### Durchspieltest 21.08.2026 (nach Paket E)
-Vollständiger Test „als würde man die App heute spielen" – vier Ebenen:
-1. **Echte Spielsitzung über die Oberfläche:** ca. 3.800 Antworten mit realen Klicks auf die
-   Antwort-Buttons. Ergebnis: alle 37 Gruppen freigeschaltet, alle 336 Zeichen in Box 5,
-   Abzeichen kamen fortlaufend (first, ninja1, combo5/10/25/50/75/100/150/200/500, q10…q500,
-   kata, dak, at100…at5000, acc70…acc99, hira_all, kata_all). Übungsfragen wurden korrekt
-   nicht gewertet (z. B. 39 von 200 im ersten Block).
-2. **Alle 11 Meisterschafts-Abzeichen erspielt** (nicht gesetzt): Kana-Grundreihen, Dakuten,
-   Kombinationen je Schriftsystem sowie alle fünf Wortstufen.
-3. **Charaktere und Profimodus:** Wechsel über die echte Auswahl, je Figur „Weg des …" und
-   die 500er-Stufe erspielt; Profimodus über den Schalter, pro25/50/75/100/250 erspielt.
-   Herzverlust im kontrollierten Einzelversuch: 3 → 2 → 1 → 0, exakt ein Herz pro Fehler,
-   danach Selbstabschaltung und Sperr-Meldung beim Wiedereinschalten.
-4. **Systematisches Audit aller 119 Abzeichen:** je Abzeichen ein eigener Spielstand mit der
-   passenden Ausgangslage, dann eine echte gewertete Antwort über den DOM-Button →
-   **119 von 119 vergeben, 0 Fehler.** (Prüft den realen Vergabeweg in `handleAnswer`,
-   nicht nur die `cond`-Funktionen.)
-5. **Mehrtages-Simulation** (gefälschte Gerätezeit, 5 Tage): Streak zählt hoch, setzt bei
-   übersprungenem Tag korrekt zurück; Lerntage zählen lückenlos weiter; perfekte Tage werden
-   rückwirkend am Folgetag gewertet – ein Tag mit einem Fehler und ein Tag mit nur 40
-   Antworten wurden korrekt NICHT gezählt.
+### Gott-Level (zurückgestellt bis nach Paket H)
+Bedingung (mit Kanji): alle Gruppen freigeschaltet + **alle** Einträge (Kana, Wörter, Kanji) in Box 5 +
+≥ 99 % richtige in den **letzten 500** Antworten (`recentAcc`, keine Lebenszeit-Quote).
+Belohnung: alle vier Charaktere auf Stufe 4, alle 16 Puzzle-Teile, exklusives Abzeichen „Kana-Gott".
+**Nicht** die Zeit-Abzeichen (Streak, Lerntage, perfekte Tage) – die bleiben zu verdienen.
+Einmal erreicht, dauerhaft (Flag), auch wenn Boxen später wieder fallen.
 
-**Gefundener und behobener Fehler:** Die Leitner-Übersicht zählte „Gemeistert" ab **Box 4**,
-die Meisterschafts-Abzeichen aus Paket E verlangen aber **Box 5** – dasselbe Wort bedeutete an
-zwei Stellen etwas Unterschiedliches. Vereinheitlicht auf Box 5 (Commit `6cb7b03`), mit
-Gegenprobe: 100 Zeichen in Box 5 und 50 in Box 4 → Anzeige meldet korrekt 100.
-
-**Kein Fehler, aber notiert:** Beim ersten Herzverlust-Test schien ein Fehler zwei Herzen zu
-kosten. Ursache war der Testaufbau – zwischen zwei Werkzeugaufrufen verging echte Zeit, der
-7-Sekunden-Countdown lief ab und kostete zusätzlich ein Herz. Der kontrollierte Einzelversuch
-mit angehaltenem Countdown zeigte das korrekte Verhalten. ⚠️ Merke für künftige Tests im
-Profimodus: `stopProTimer()` aufrufen, sonst verfälscht die reale Wartezeit das Ergebnis.
-
-## Spezifikation Paket E (Referenz, wie umgesetzt)
-Grundlage: Ronnys Erfahrungen aus dem Testlauf plus seine Antworten auf die Rückfragen.
-**Design-Leitlinie (Ronny):** Möglichst viele Abzeichen, lange dichte Leitern, die Sammelseite
-darf lang werden – angelehnt an japanische Spiele mit „gefühlt unendlich vielen Belohnungen".
-Extrem hohe Stufen (1.000 Lerntage, 1.000 perfekte Tage) sind **bewusst** fast unerreichbar –
-für Hardcore-Spieler; mit künftig mehr Wörtern steigt die Erreichbarkeit von selbst.
-
-### Ergebnis: 118 Abzeichen (vorher 74)
-| Kategorie | Anzahl | Stufen / Bedingung |
+### Reihenfolge und Aufwand
+| Schritt | Paket | Aufwand |
 |---|---|---|
-| Erste Antwort | 1 | unverändert |
-| Kombo | 9 | unverändert: 5 · 10 · 25 · 50 · 75 · 100 · 150 · 200 · 500 in Folge |
-| Streak (Tage hintereinander) | 12 | **3 · 7 · 14 · 25 · 50 · 75 · 100 · 150 · 200 · 250 · 300 · 365** |
-| Genauigkeit | 5 | unverändert (alle Kana frei + 70/80/90/95/99 % der letzten 500) |
-| Fragen an einem Tag | 6 | **10 · 25 · 50 · 100 · 200 · 500** (1.000/2.500/5.000 entfallen) |
-| Freischaltungen | 2 | unverändert (カ行, が行) |
-| Wortstufen – freigeschaltet | 5 | unverändert (2/3/4/5 Silben, Gemischt) |
-| Wortstufen – gemeistert | 5 | **NEU: alle Wörter der Gruppe in Leitner-Box 5** (statt 30 Fragen/80 %) |
-| **Kana-Meisterschaft** | **6** | **NEU:** je Schriftsystem Grundreihen · Dakuten · Kombinationen – alle Zeichen in Box 5 |
-| Lerntage gesamt | 15 | **10 · 25 · 50 · 100 · 150 · 200 · 250 · 300 · 400 · 500 · 600 · 700 · 800 · 900 · 1.000** |
-| Gesamt-Antworten | 10 | **100 · 250 · 500 · 1.000 · 2.500 · 5.000 · 7.500 · 10.000 · 15.000 · 20.000** |
-| Perfekte Tage | 13 | 1 · 5 · 10 · 25 + **50 · 75 · 100 · 150 · 200 · 250 · 500 · 750 · 1.000** |
-| Charaktere | 16 | je Charakter: **1** („Weg des …", bleibt) · **500** · **2.500** · **10.000** richtige |
-| Profimodus | 11 | **25 · 50 · 75 · 100 · 250 · 500 · 750 · 1.000 · 2.500 · 5.000 · 10.000** richtige |
-| Schriftsysteme komplett | 2 | unverändert (alle Reihen freigeschaltet) |
-
-### Entfällt
-- **Reihen-Serien** (`ROW_TIERS`, `S.rowRun`, `row_*` in `missionsDone`, Teil von `checkMissions`,
-  Zeile im Missions-Streifen, Zeile „Serien-Missionen X von 111" im Fortschritt).
-- **Schriftrollen** (`scrollPieceDone`, `scroll_*` in `missionsDone`, Rollen-Zeilen im Fortschritt).
-  Ersatz sind die schärfer definierten Meisterschafts-Abzeichen.
-- Vorhandene `missionsDone`-Einträge in Altspielständen einfach ignorieren (verwaist, harmlos).
-
-### Geändert
-- **Tagesquest Kombo: 8 → 10** („Eine 10er-Kombo schaffen"), passend zum 10er-Kombo-Abzeichen.
-- **Missions-Streifen unter dem Quiz zeigt alle 3 Tagesquests** (vorher 1 Quest + 1 Serie).
-- Fortschritt-Sektion „Missionen" enthält nur noch die drei Tagesquests.
-
-### Kana-Meisterschaft – genaue Definition
-Bedingung je Abzeichen: **jedes** Zeichen der Gruppenmenge hat `S.box[char] === 5`.
-**Keine Prozent-Bedingung** (Ronnys Entscheidung; Begründung: Box 5 = fünfmal richtig ohne
-Rückfall ist bereits der härtere Beweis, und eine Lebenszeit-Trefferquote wäre für Nutzer mit
-holprigem Start nie mehr erreichbar – dieselbe Falle wie bei den alten Genauigkeits-Abzeichen).
-| Abzeichen | Gruppen |
-|---|---|
-| Hiragana-Grundreihen gemeistert | あ行 か行 さ行 た行 な行 は行 ま行 や行 ら行 わ行 |
-| Hiragana-Dakuten gemeistert | が行 ざ行 だ行 ば行 ぱ行 |
-| Hiragana-Kombinationen gemeistert | 組合 |
-| Katakana-Grundreihen gemeistert | ア行 カ行 サ行 タ行 ナ行 ハ行 マ行 ヤ行 ラ行 ワ行 |
-| Katakana-Dakuten gemeistert | ガ行 ザ行 ダ行 バ行 パ行 |
-| Katakana-Kombinationen gemeistert | カ組 |
-Die Gruppenmengen **aus `GROUP_ORDER` ableiten** (Position 0–9, 10–14, 15 bzw. 16–25, 26–30, 31),
-nicht als zweite Liste hart kodieren – sonst Sync-Pflicht bei jeder Reihenänderung.
-Wort-Meisterschaft analog: alle Einträge einer Wortgruppe (`2文字` usw.) in Box 5.
-Box 5 kann später wieder verloren gehen (Fehler → Box 1); das Abzeichen bleibt – es ist ein
-Meilenstein, keine Zustandsanzeige.
-
-### Umsetzungshinweise
-- **Neue IDs für geänderte Schwellen** (z. B. `streak25`, `perfectDay50`, `ninja10000`), damit
-  ein alter Eintrag in `S.badges` nicht plötzlich etwas anderes bedeutet. ⚠️ Konkret: die
-  heutige ID `ninja500` bedeutet 2.500 richtige → wird zu `ninja2500`; `ninja500` neu = 500.
-  Unveränderte Abzeichen behalten ihre ID.
-- **`BADGE_DESC` für alle 118 Einträge** pflegen und Vollständigkeit prüfen (Test aus Paket C
-  wiederverwenden: 118 Badges = 118 Beschreibungen, keine verwaisten).
-- **Beschreibungen ≤ ~46 Zeichen**, sonst wächst die Karte beim Umdrehen und verschiebt die
-  Nachbarkarten (Messung aus Paket C wiederholen: Abweichung ≤ 3 px auf 375 px Breite).
-- Stufenaufstieg + Charakter-Abzeichen fallen jetzt auf dieselbe Antwort → beide laufen über die
-  gemeinsame Toast-Liste in `handleAnswer`, kein Sonderfall nötig.
-- `defaultState()`: `rowRun` und `missionsDone` können entfallen; Altspielstände mit diesen
-  Feldern müssen weiterhin fehlerfrei laden.
-- Abzeichen-Seite: 118 Karten im 2-Spalten-Raster ≈ 59 Zeilen – **bewusst so**, keine
-  Zusammenfassung zu gestuften Karten (Ronny: Sammelseite darf lang sein).
-
-### Testfälle
-| # | Test | Erwartung |
-|---|---|---|
-| 1 | `BADGES.length` und `Object.keys(BADGE_DESC).length` | beide 118, keine verwaisten IDs |
-| 2 | Alle Zeichen von あ行…わ行 auf Box 5 setzen, eines auf Box 4 | Hiragana-Grundreihen **nicht** vergeben; nach Korrektur auf 5 → vergeben |
-| 3 | 組合 komplett Box 5 | nur „Hiragana-Kombinationen", nicht Dakuten/Grundreihen |
-| 4 | Alle 2文字-Wörter Box 5 | „2-Silben gemeistert" vergeben, ohne Trefferquoten-Bedingung |
-| 5 | `charOk.ninja` 499→500 | Stufe 2 **und** Abzeichen „500" gemeinsam; „Weg des Ninja" schon ab 1 |
-| 6 | Tagesquest Kombo bei 9 / 10 | erst bei 10 erfüllt |
-| 7 | Missions-Streifen | drei Zeilen (alle Tagesquests), keine Serien-Zeile |
-| 8 | Fortschritt-Tab | keine Schriftrollen, keine Serien-Zählung; Perfekte-Tage-Kachel bleibt |
-| 9 | Altspielstand mit `rowRun`, `missionsDone` (row_/scroll_), `streak30`, alter `ninja500` | lädt fehlerfrei, Fortschritt erhalten |
-| 10 | Karten-Umdrehen auf 375 px | Höhenabweichung ≤ 3 px bei allen 118 |
-
-### Optional (nicht bestellt)
-Ein frühes Lerntage-Abzeichen („3 Lerntage") behalten, damit die Kategorie in der ersten
-Woche nicht leer bleibt – Ronny hat sich dazu nicht geäußert; nur auf Wunsch ergänzen.
-
-## 🧰 Werkzeuge und Konventionen (Kurzüberblick)
-- **Backups:** `index_vN_JJJJ-MM-TT_zweck.html` im Projektordner (per `.gitignore` nicht im Repo).
-  Stand 21.08.2026: v13 (pre-A), v14 (pre-B), v15 (pre-C), v16 (pre-D), v17 (nach Namenszeile).
-- **Sprite-Werkzeuge im Repo:** `tools/sprites_bauen.py` (Mockup-Sheets → Raster + Paletten),
-  `tools/vorschau_buehne.py` (Quiz-Ansicht als Bild nachbauen – Browser-Screenshots waren in
-  der Entwicklungsumgebung nicht möglich).
-- **Sprite-Quellen:** `sprites-quelle/` – die vier Mockup-Sheets plus `ninja_l2.png`.
-  Bewusst **nicht im Repo** (7,4 MB, von der App nicht gebraucht, nur von
-  `tools/sprites_bauen.py`). Sie liegen im Projektordner auf Google Drive und sind
-  dadurch gesichert. Wer die Sprites neu erzeugen will, braucht diesen Ordner.
-- **Deploy-Ritual:** Backup → ändern → `CACHE` in `sw.js` hochzählen → Syntax-Check →
-  Browser-Test inkl. Migration mit Altspielstand → Push → Live-Dateien per `curl`+`cmp`
-  byte-genau gegen `git show origin/main:` prüfen.
+| 1 | **F** Puzzle | klein–mittel |
+| 2 | **G** Kana-Wörter mit Bedeutung (inkl. Umstellung der 128 Bestandswörter) | mittel |
+| 3 | **H** Schilder-Kanji, erste Tranche 120–150 | mittel–groß (Inhalt) |
+| 4 | **6** iBj-Eigenwerbung | klein |
+| 5 | **Play Store** (TWA) | mittel |
+| 6 | **Gott-Level** | klein |
 
 ## ✅ UMSETZUNGSPLAN Pakete A–C (freigegeben UND umgesetzt am 21.08.2026)
 Grundlage: 5 Befunde aus Ronnys Testlauf (09.–16.08.2026). Alle Ursachen wurden am
@@ -584,7 +512,13 @@ Code-Raster. Diese Kombination ist der Grund, warum beim ersten Versuch eine 150
 statt Pixel-Art entstand: Bild-KIs zeichnen gut, geben aber keine sauberen Raster aus;
 Text-KIs geben Raster aus, zeichnen dabei aber blind. Deshalb die Arbeitsteilung oben.
 
-## Paket 7 (geplant): Tastatur-Eingabe bei Wörtern
+## ~~Paket 7 (geplant): Tastatur-Eingabe bei Wörtern~~ – GESTRICHEN 15.09.2026
+**Ronnys Entscheidung:** bleibt bei der 4-Button-Auswahl (Touch), auch für Wörter und Kanji.
+Das Ratequoten-Problem wird stattdessen über Bedeutungs-Abfrage und Kanji-Lesungen adressiert
+(siehe Ausbauplan Herbst 2026). Der folgende Text bleibt nur als Historie stehen.
+
+<details><summary>Ursprüngliche Planung</summary>
+
 Ronnys Test-Befund: Wörter sind mit 4 Antwort-Buttons zu leicht zu erraten (Ratequote 25 %,
 plus Ausschluss über einzelne erkannte Zeichen). Buttons testen nur Wiedererkennen,
 Tippen testet aktives Lesen-Können.
@@ -600,6 +534,8 @@ Bei der Umsetzung beachten (Feedback-Notizen vom 08.08.2026):
 - **Profimodus:** Countdown für Wörter von 10 s auf ~15 s erhöhen (Tippzeit).
 - Mobile-Layout testen (aufklappende Tastatur verkleinert den Viewport).
 - Optionale Kür (NICHT Teil des Pakets): freiwilliger Tastatur-Modus auch für Einzelzeichen.
+
+</details>
 
 ## Ausbauplan 2026-08 (mit Ronny abgestimmt, 08.08.2026)
 Sechs Pakete, nach jedem Paket Push + Test durch Ronny auf dem Handy:
