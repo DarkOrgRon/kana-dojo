@@ -10,7 +10,7 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v20`. Letzter Commit: „Paket F: Puzzle-Bild …".
+Aktueller Service-Worker-Cache: `kana-dojo-v21`. Letzter Commit: „Fix: Puzzle-Hinweis einzeilig".
 Neu seit 15.09.2026: eigener Tab 🧩 mit dem 16-teiligen Puzzle-Bild (`puzzle.jpg`, 383 KB, offline). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026) sowie die Pakete A, B, C, D
 und E (21.08.2026). Badge-Gesamtzahl: **119**.
 Dateigröße `index.html`: ca. 261 KB (davon ~155 KB Sprite-Raster).
@@ -61,6 +61,12 @@ Backup vorher `index_v19_2026-09-15_pre-paketF.html`, Cache `kana-dojo-v20`.
   Navigationsleiste 402 px breit – auf 375 px wäre der Ton-Button abgeschnitten gewesen.
   Zusätzlich `.nav-btn` Innenabstand 10 → 8 px. Gemessen danach: 367 px, eine Zeile.
 - `puzzle.jpg` 900×1599 (Qualität 82, progressiv) = **383 KB**, in `sw.js` zu `CORE`.
+**Nachbesserung 15.09. (Ronnys Test):** Hinweistext unter dem Raster war zweizeilig. Gemessen: nur
+„Je Charakter ein Teil bei 1.000 · 2.500 · 5.000 · 10.000" (302 px) passt in die 343 px Textbreite;
+der Zusatz „… richtigen Antworten – das Gesicht kommt zuletzt" ist weg (Ronny wollte den Gesichts-
+Hinweis ohnehin nicht). `white-space:nowrap` als Schutz. Cache `kana-dojo-v21`.
+**Wortliste Paket G:** Entwurf zur Freigabe liegt als `WORTLISTE_Paket-G_Entwurf.md` im Projektordner
+(128 Bestandswörter bewertet, 80 Lehnwörter + 64 Alltagswörter neu, 4 Entscheidungsfragen).
 **Getestet (Browser, 375 px):** Zuordnung deckt 16 Zellen genau einmal (4 je Charakter) ·
 Ninja 999 → 0 Teile, 1.000 → 1 Teil (1,0), 9.999 → 3 Teile ohne Gesicht, 10.000 → 4 Teile mit
 Gesicht (0,1) · alle vier auf 10.000 → 16 · Toast genau einmal (`puzzleShown`) · Raster 343×609
