@@ -10,23 +10,26 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v21`. Letzter Commit: „Fix: Puzzle-Hinweis einzeilig".
-Neu seit 15.09.2026: eigener Tab 🧩 mit dem 16-teiligen Puzzle-Bild (`puzzle.jpg`, 383 KB, offline). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026) sowie die Pakete A, B, C, D
-und E (21.08.2026). Badge-Gesamtzahl: **119**.
-Dateigröße `index.html`: ca. 261 KB (davon ~155 KB Sprite-Raster).
+Aktueller Service-Worker-Cache: `kana-dojo-v22`. Letzter Commit: „Paket G: Kana-Woerter mit deutscher Bedeutung" (`6cade93`).
+Neu seit 15.09.2026: eigener Tab 🧩 mit dem 16-teiligen Puzzle-Bild (`puzzle.jpg`, 383 KB, offline) **und**
+Paket G: 256 Kana-Wörter in 9 Gruppen, abgefragt wird die **deutsche Bedeutung**. Deployed sind die
+Ausbau-Pakete 1–5 (08.08.2026), die Pakete A–E (21.08.2026) sowie F und G (15.09.2026). Badge-Gesamtzahl: **127**.
+Dateigröße `index.html`: ca. 285 KB (davon ~155 KB Sprite-Raster, ~25 KB Wortdaten).
 
 ## ⏭️ WO WEITERMACHEN (Stand 15.09.2026)
 Ronny hat die App drei Wochen getestet: **„für das Erlernen der Kana sehr gut"**. Am 15.09.2026
 wurden die nächsten Schritte entschieden (Abschnitt „📋 Ausbauplan Herbst 2026" unten) und
-**Paket F direkt umgesetzt** (Cache `kana-dojo-v20`).
+**Paket F und Paket G am selben Tag umgesetzt** (Cache `kana-dojo-v22`).
 
-**Nächster Schritt:** Ronny testet das Puzzle. Danach Paket G – dafür vorab die Frage der
-Bestandswörter klären (Abschnitt „Befund 混合" im Paket-F-Bericht).
+**Nächster Schritt:** Ronny testet die neuen Wortgruppen auf dem Handy (er war „fast mit den Kana
+durch"; die Gruppen 旅カナ/あいさつ/食カナ schalten sich bei seinem Spielstand über die bestehende
+Kette frei, sobald die jeweilige Vorgänger-Gruppe 10 Antworten mit 80 % hat). Danach **Paket H**.
+Kleiner offener Rest aus der G-Spezifikation: `lang="ja"` auf `#char-display` – wird mit Paket H
+gesetzt (dort wird es für die Kanji-Glyphen relevant).
 
 Reihenfolge:
 1. ~~Paket F – Puzzle-Bild~~ ✅ umgesetzt 15.09.2026
-2. **Paket G – Kana-Wörter mit Bedeutung** (deutsche Bedeutung statt Romaji; 128 Bestandswörter
-   umstellen + Lehnwörter + Alltag)
+2. ~~Paket G – Kana-Wörter mit Bedeutung~~ ✅ umgesetzt 15.09.2026 (Bericht im Abschnitt „✅ Paket G")
 3. **Paket H – Schilder-Kanji** (erste Tranche 120–150 Wörter, zwei Fragetypen)
 4. **Paket 6 – iBj-Eigenwerbung**
 5. **Play Store als TWA** (bewusst NACH Kanji – Ronnys Entscheidung 15.09.)
@@ -114,7 +117,37 @@ für den Toast „🧩 Neues Puzzle-Teil! 7 von 16" in `handleAnswer`.
 **Tests:** Zuordnung deckt 16 Zellen genau einmal · charOk 999→1000 gibt Teil, Toast einmalig ·
 Gesicht erst bei 10.000 · Layout 375 px ohne Lücken · Offline nach SW-Update · Altspielstand lädt.
 
-### Paket G – Kana-Wörter mit Bedeutung (mittel)
+### ✅ Paket G – Kana-Wörter mit Bedeutung (umgesetzt 15.09.2026)
+Backup vorher `index_v20_2026-09-15_pre-paketG.html`, Cache `kana-dojo-v22`, Commit `6cade93`.
+Wortliste: `WORTLISTE_Paket-G_Entwurf.md` – **von Ronny komplett freigegeben** (alle 128 Bestandswörter
+behalten, auch いぬ/サングラス/ジョギング; 混合 aufgelöst; alle neuen Wörter übernommen; おみず-Dublette
+zu みず gestrichen).
+**Daten (256 Wörter, 9 Gruppen):** 2文字 30 · 3文字 31 · 旅カナ 40 (Katakana, Unterwegs & Hotel) ·
+4文字 32 · あいさつ 22 (Redewendungen) · 5文字 20 · 食カナ 40 (Katakana, Essen & Einkaufen) ·
+たべもの 21 (Essen & Geschmack) · みちあんない 20 (Unterwegs, Hiragana). Jeder Eintrag hat jetzt `de`.
+`GROUP_ORDER`/`WORD_GROUPS` = `2文字,3文字,旅カナ,4文字,あいさつ,5文字,食カナ,たべもの,みちあんない`
+(neue Gruppen zwischen die alten geschoben, damit die Lehnwörter früh kommen).
+**Logik (im Code als „Paket G" kommentiert):** `istWort(k)`, `antwortText(k)` (Wort → `de`, Kana →
+`romaji`), `loesungText(k)` („Bahnhof (eki)"). `handleAnswer` vergleicht über `char` (eindeutig),
+Button-Färbung über `antwortText`. `pickDistractors`: bei Wörtern zuerst eigene Gruppe, dann andere
+freigeschaltete Wortgruppen, Dubletten-Schlüssel ist die Bedeutung. Rückmeldung richtig:
+„✓ Richtig! – choko", falsch: „✗ Tatami-Matte (tatami)". Vorstellungs-Karte jetzt auch für
+Wörter („✨ Neues Wort!", statt Eselsbrücke „📖 Bedeutung: …"), erste Frage danach ungewertet wie bei
+Kana; Schriftgröße auf der Karte nach Wortlänge (`min(84, 290/len)` px – コインランドリー passt).
+Antwort-Buttons: `.ans-btn.wort` 17 px ohne Sperrung, Umbruch erlaubt, `min-height` 56 px.
+**Badges 127** (statt 119): `mix_unlock`/`mix_box5` weg, je neue Gruppe ein Freischalt- und ein
+Meisterschafts-Abzeichen (`tabi_`, `aisatsu_`, `shoku_`, `tabemono_`, `michi_`). Generator
+`tools/badges_bauen.py` angepasst (Tabelle `WG`); `tools/badges_neu.js` ist Zwischenausgabe, nicht im Repo.
+**Altspielstand:** Leitner-Boxen der Bestandswörter bleiben (Schlüssel `char`). Ein altes `混合` in
+`S.unlocked`/`S.gStats` stört nicht (kommt in `GROUP_ORDER` nicht mehr vor). Zwei ggf. verdiente
+Abzeichen (`mix_unlock`, `mix_box5`) fallen aus der Zählung – der Zähler ignoriert verwaiste IDs.
+**Getestet (Browser, 375 px):** 300 gezogene Fragen → immer 4 verschiedene Button-Texte, Wort-Fragen
+nur mit Wort-Distraktoren und umgekehrt · Kette mit eingeschobenen Gruppen (5文字 19/20 → 食カナ frei) ·
+Intro-Karte über den echten Weg, Übungsfrage „zählt nicht" (`total` +0), gewertete Frage `charOk` +1
+und Box 1 · Fortschritt und Badge-Seite rendern (127 Karten) · kein horizontales Scrollen · keine
+Konsolenfehler · Live-Dateien nach Push byte-identisch mit `origin/main`.
+
+### Spezifikation Paket G (Referenz, wie geplant)
 **Ziel:** Nach den Zeichen echte Wörter – und zwar so, dass man versteht, was man liest.
 **Datenmodell:** Worteinträge bekommen `de` (deutsche Bedeutung). Bestehend:
 `{char:'すし',romaji:'sushi',group:'2文字',script:'h'}` → `+ de:'Sushi'`. Leitner-Schlüssel bleibt

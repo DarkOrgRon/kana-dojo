@@ -1,4 +1,9 @@
-# Wortliste Paket G – Entwurf zur Freigabe (15.09.2026)
+# Wortliste Paket G – FREIGEGEBEN und umgesetzt (15.09.2026)
+
+> **Status:** Ronny hat am 15.09.2026 alles freigegeben – auch die ❓/❌-Kandidaten (いぬ, サングラス,
+> ジョギング bleiben). Umgesetzt in `index.html` (Cache v22): 256 Wörter, 9 Gruppen, 混合 aufgelöst,
+> おみず als Dublette zu みず weggelassen. Die Empfehlungsspalten unten sind damit nur noch Historie.
+
 
 **Maßstab (Ronny):** Nur Wörter, die auf einer Japan-Reise helfen, sich zurechtzufinden –
 auf Schildern, Speisekarten, im Hotel, im Gespräch. Alles andere fliegt.
