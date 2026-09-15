@@ -125,6 +125,8 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 /* Paket G: deutsche Bedeutungen sind laenger als Romaji – Umbruch erlauben, gleiche Hoehe je Zeile */
 #answers .ans-btn{white-space:normal;overflow-wrap:anywhere;min-height:56px;line-height:1.25;padding-left:10px;padding-right:10px;}
 #answers .ans-btn.wort{font-size:17px;letter-spacing:0;}
+#answers .ans-btn.lesung{font-size:19px;letter-spacing:1px;}
+#answers .ans-btn.lesung.lang{font-size:16px;letter-spacing:0;}
 .ans-btn{
   border:2px solid rgba(255,255,255,0.1)!important;border-radius:14px;
   padding:20px 12px;font-size:20px;font-weight:700;color:var(--text);
@@ -239,7 +241,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 <div id="intro-card">
   <div class="intro-box">
     <div class="intro-label" id="intro-label">Neues Zeichen!</div>
-    <div class="intro-char" id="intro-char"></div>
+    <div class="intro-char" id="intro-char" lang="ja"></div>
     <div class="intro-romaji" id="intro-romaji"></div>
     <div class="intro-script" id="intro-script"></div>
     <div class="intro-mnemo" id="intro-mnemo"></div>
@@ -321,7 +323,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
       </div>
       <div id="char-card">
         <button id="char-info" title="Zeichen-Info & Merkhilfe" onclick="openIntroForCurrent()">💡</button>
-        <div id="char-display"></div>
+        <div id="char-display" lang="ja"></div>
         <div id="char-meta"></div>
       </div>
     </div>
@@ -695,6 +697,167 @@ const ALL_KANA=[
   {char:'ちず',romaji:'chizu',group:'みちあんない',script:'h',de:'Landkarte'},
   {char:'みなみ',romaji:'minami',group:'みちあんない',script:'h',de:'Süden'},
   {char:'きた',romaji:'kita',group:'みちあんない',script:'h',de:'Norden'},
+  // ── Paket H: Schilder-Kanji (Wörter, script j, zwei Fragetypen) ──
+  // ── 数 ──
+  {char:'一',reading:'いち',romaji:'ichi',group:'数',script:'j',kanji:true,de:'eins'},
+  {char:'二',reading:'に',romaji:'ni',group:'数',script:'j',kanji:true,de:'zwei'},
+  {char:'三',reading:'さん',romaji:'san',group:'数',script:'j',kanji:true,de:'drei'},
+  {char:'四',reading:'よん',romaji:'yon',group:'数',script:'j',kanji:true,de:'vier'},
+  {char:'五',reading:'ご',romaji:'go',group:'数',script:'j',kanji:true,de:'fünf'},
+  {char:'六',reading:'ろく',romaji:'roku',group:'数',script:'j',kanji:true,de:'sechs'},
+  {char:'七',reading:'なな',romaji:'nana',group:'数',script:'j',kanji:true,de:'sieben'},
+  {char:'八',reading:'はち',romaji:'hachi',group:'数',script:'j',kanji:true,de:'acht'},
+  {char:'九',reading:'きゅう',romaji:'kyuu',group:'数',script:'j',kanji:true,de:'neun'},
+  {char:'十',reading:'じゅう',romaji:'juu',group:'数',script:'j',kanji:true,de:'zehn'},
+  {char:'百',reading:'ひゃく',romaji:'hyaku',group:'数',script:'j',kanji:true,de:'hundert'},
+  {char:'千',reading:'せん',romaji:'sen',group:'数',script:'j',kanji:true,de:'tausend'},
+  {char:'万',reading:'まん',romaji:'man',group:'数',script:'j',kanji:true,de:'zehntausend'},
+  {char:'円',reading:'えん',romaji:'en',group:'数',script:'j',kanji:true,de:'Yen'},
+  {char:'一人',reading:'ひとり',romaji:'hitori',group:'数',script:'j',kanji:true,de:'eine Person'},
+  {char:'二人',reading:'ふたり',romaji:'futari',group:'数',script:'j',kanji:true,de:'zwei Personen'},
+  {char:'半',reading:'はん',romaji:'han',group:'数',script:'j',kanji:true,de:'halb'},
+  {char:'値段',reading:'ねだん',romaji:'nedan',group:'数',script:'j',kanji:true,de:'Preis'},
+  {char:'現金',reading:'げんきん',romaji:'genkin',group:'数',script:'j',kanji:true,de:'Bargeld'},
+  // ── 駅 ──
+  {char:'駅',reading:'えき',romaji:'eki',group:'駅',script:'j',kanji:true,de:'Bahnhof'},
+  {char:'出口',reading:'でぐち',romaji:'deguchi',group:'駅',script:'j',kanji:true,de:'Ausgang'},
+  {char:'入口',reading:'いりぐち',romaji:'iriguchi',group:'駅',script:'j',kanji:true,de:'Eingang'},
+  {char:'改札',reading:'かいさつ',romaji:'kaisatsu',group:'駅',script:'j',kanji:true,de:'Fahrkartensperre'},
+  {char:'新幹線',reading:'しんかんせん',romaji:'shinkansen',group:'駅',script:'j',kanji:true,de:'Shinkansen'},
+  {char:'電車',reading:'でんしゃ',romaji:'densha',group:'駅',script:'j',kanji:true,de:'Zug'},
+  {char:'地下鉄',reading:'ちかてつ',romaji:'chikatetsu',group:'駅',script:'j',kanji:true,de:'U-Bahn'},
+  {char:'切符',reading:'きっぷ',romaji:'kippu',group:'駅',script:'j',kanji:true,de:'Fahrkarte'},
+  {char:'乗り換え',reading:'のりかえ',romaji:'norikae',group:'駅',script:'j',kanji:true,de:'Umsteigen'},
+  {char:'番線',reading:'ばんせん',romaji:'bansen',group:'駅',script:'j',kanji:true,de:'Gleis (Nr.)'},
+  {char:'急行',reading:'きゅうこう',romaji:'kyuukou',group:'駅',script:'j',kanji:true,de:'Eilzug'},
+  {char:'特急',reading:'とっきゅう',romaji:'tokkyuu',group:'駅',script:'j',kanji:true,de:'Schnellzug (Express)'},
+  {char:'快速',reading:'かいそく',romaji:'kaisoku',group:'駅',script:'j',kanji:true,de:'Schnellzug (Rapid)'},
+  {char:'各駅停車',reading:'かくえきていしゃ',romaji:'kakuekiteisha',group:'駅',script:'j',kanji:true,de:'hält an jeder Station'},
+  {char:'終電',reading:'しゅうでん',romaji:'shuuden',group:'駅',script:'j',kanji:true,de:'letzter Zug'},
+  {char:'出発',reading:'しゅっぱつ',romaji:'shuppatsu',group:'駅',script:'j',kanji:true,de:'Abfahrt'},
+  {char:'到着',reading:'とうちゃく',romaji:'touchaku',group:'駅',script:'j',kanji:true,de:'Ankunft'},
+  {char:'自由席',reading:'じゆうせき',romaji:'jiyuuseki',group:'駅',script:'j',kanji:true,de:'freie Platzwahl'},
+  {char:'指定席',reading:'していせき',romaji:'shiteiseki',group:'駅',script:'j',kanji:true,de:'reservierter Platz'},
+  {char:'優先席',reading:'ゆうせんせき',romaji:'yuusenseki',group:'駅',script:'j',kanji:true,de:'Vorrangsitz'},
+  {char:'バス停',reading:'バスてい',romaji:'basutei',group:'駅',script:'j',kanji:true,de:'Bushaltestelle'},
+  // ── 道 ──
+  {char:'右',reading:'みぎ',romaji:'migi',group:'道',script:'j',kanji:true,de:'rechts'},
+  {char:'左',reading:'ひだり',romaji:'hidari',group:'道',script:'j',kanji:true,de:'links'},
+  {char:'北',reading:'きた',romaji:'kita',group:'道',script:'j',kanji:true,de:'Norden'},
+  {char:'南',reading:'みなみ',romaji:'minami',group:'道',script:'j',kanji:true,de:'Süden'},
+  {char:'東',reading:'ひがし',romaji:'higashi',group:'道',script:'j',kanji:true,de:'Osten'},
+  {char:'西',reading:'にし',romaji:'nishi',group:'道',script:'j',kanji:true,de:'Westen'},
+  {char:'東京',reading:'とうきょう',romaji:'toukyou',group:'道',script:'j',kanji:true,de:'Tokio'},
+  {char:'大阪',reading:'おおさか',romaji:'oosaka',group:'道',script:'j',kanji:true,de:'Osaka'},
+  {char:'京都',reading:'きょうと',romaji:'kyouto',group:'道',script:'j',kanji:true,de:'Kyoto'},
+  {char:'日本',reading:'にほん',romaji:'nihon',group:'道',script:'j',kanji:true,de:'Japan'},
+  {char:'山',reading:'やま',romaji:'yama',group:'道',script:'j',kanji:true,de:'Berg'},
+  {char:'川',reading:'かわ',romaji:'kawa',group:'道',script:'j',kanji:true,de:'Fluss'},
+  {char:'道',reading:'みち',romaji:'michi',group:'道',script:'j',kanji:true,de:'Weg / Straße'},
+  {char:'町',reading:'まち',romaji:'machi',group:'道',script:'j',kanji:true,de:'Stadt / Viertel'},
+  {char:'橋',reading:'はし',romaji:'hashi',group:'道',script:'j',kanji:true,de:'Brücke'},
+  {char:'城',reading:'しろ',romaji:'shiro',group:'道',script:'j',kanji:true,de:'Burg'},
+  {char:'神社',reading:'じんじゃ',romaji:'jinja',group:'道',script:'j',kanji:true,de:'Schrein'},
+  {char:'寺',reading:'てら',romaji:'tera',group:'道',script:'j',kanji:true,de:'Tempel'},
+  {char:'公園',reading:'こうえん',romaji:'kouen',group:'道',script:'j',kanji:true,de:'Park'},
+  {char:'交差点',reading:'こうさてん',romaji:'kousaten',group:'道',script:'j',kanji:true,de:'Kreuzung'},
+  {char:'案内',reading:'あんない',romaji:'annai',group:'道',script:'j',kanji:true,de:'Information / Auskunft'},
+  {char:'地図',reading:'ちず',romaji:'chizu',group:'道',script:'j',kanji:true,de:'Landkarte'},
+  // ── 看板 ──
+  {char:'禁煙',reading:'きんえん',romaji:'kin\'en',group:'看板',script:'j',kanji:true,de:'Rauchen verboten'},
+  {char:'禁止',reading:'きんし',romaji:'kinshi',group:'看板',script:'j',kanji:true,de:'verboten'},
+  {char:'注意',reading:'ちゅうい',romaji:'chuui',group:'看板',script:'j',kanji:true,de:'Achtung'},
+  {char:'危険',reading:'きけん',romaji:'kiken',group:'看板',script:'j',kanji:true,de:'Gefahr'},
+  {char:'営業中',reading:'えいぎょうちゅう',romaji:'eigyouchuu',group:'看板',script:'j',kanji:true,de:'geöffnet'},
+  {char:'準備中',reading:'じゅんびちゅう',romaji:'junbichuu',group:'看板',script:'j',kanji:true,de:'geschlossen (in Vorbereitung)'},
+  {char:'定休日',reading:'ていきゅうび',romaji:'teikyuubi',group:'看板',script:'j',kanji:true,de:'Ruhetag'},
+  {char:'押す',reading:'おす',romaji:'osu',group:'看板',script:'j',kanji:true,de:'drücken'},
+  {char:'引く',reading:'ひく',romaji:'hiku',group:'看板',script:'j',kanji:true,de:'ziehen'},
+  {char:'立入禁止',reading:'たちいりきんし',romaji:'tachiirikinshi',group:'看板',script:'j',kanji:true,de:'Betreten verboten'},
+  {char:'撮影禁止',reading:'さつえいきんし',romaji:'satsueikinshi',group:'看板',script:'j',kanji:true,de:'Fotografieren verboten'},
+  {char:'非常口',reading:'ひじょうぐち',romaji:'hijouguchi',group:'看板',script:'j',kanji:true,de:'Notausgang'},
+  {char:'男',reading:'おとこ',romaji:'otoko',group:'看板',script:'j',kanji:true,de:'Mann'},
+  {char:'女',reading:'おんな',romaji:'onna',group:'看板',script:'j',kanji:true,de:'Frau'},
+  {char:'お手洗い',reading:'おてあらい',romaji:'otearai',group:'看板',script:'j',kanji:true,de:'Toilette'},
+  {char:'化粧室',reading:'けしょうしつ',romaji:'keshoushitsu',group:'看板',script:'j',kanji:true,de:'Toilette (Waschraum)'},
+  {char:'無料',reading:'むりょう',romaji:'muryou',group:'看板',script:'j',kanji:true,de:'kostenlos'},
+  {char:'有料',reading:'ゆうりょう',romaji:'yuuryou',group:'看板',script:'j',kanji:true,de:'gebührenpflichtig'},
+  {char:'満席',reading:'まんせき',romaji:'manseki',group:'看板',script:'j',kanji:true,de:'voll besetzt'},
+  {char:'空席',reading:'くうせき',romaji:'kuuseki',group:'看板',script:'j',kanji:true,de:'freier Platz'},
+  {char:'受付',reading:'うけつけ',romaji:'uketsuke',group:'看板',script:'j',kanji:true,de:'Empfang / Anmeldung'},
+  {char:'警察',reading:'けいさつ',romaji:'keisatsu',group:'看板',script:'j',kanji:true,de:'Polizei'},
+  {char:'病院',reading:'びょういん',romaji:'byouin',group:'看板',script:'j',kanji:true,de:'Krankenhaus'},
+  {char:'薬局',reading:'やっきょく',romaji:'yakkyoku',group:'看板',script:'j',kanji:true,de:'Apotheke'},
+  // ── 食 ──
+  {char:'食堂',reading:'しょくどう',romaji:'shokudou',group:'食',script:'j',kanji:true,de:'Esslokal / Kantine'},
+  {char:'肉',reading:'にく',romaji:'niku',group:'食',script:'j',kanji:true,de:'Fleisch'},
+  {char:'魚',reading:'さかな',romaji:'sakana',group:'食',script:'j',kanji:true,de:'Fisch'},
+  {char:'牛肉',reading:'ぎゅうにく',romaji:'gyuuniku',group:'食',script:'j',kanji:true,de:'Rindfleisch'},
+  {char:'豚肉',reading:'ぶたにく',romaji:'butaniku',group:'食',script:'j',kanji:true,de:'Schweinefleisch'},
+  {char:'鶏肉',reading:'とりにく',romaji:'toriniku',group:'食',script:'j',kanji:true,de:'Hühnerfleisch'},
+  {char:'野菜',reading:'やさい',romaji:'yasai',group:'食',script:'j',kanji:true,de:'Gemüse'},
+  {char:'卵',reading:'たまご',romaji:'tamago',group:'食',script:'j',kanji:true,de:'Ei'},
+  {char:'米',reading:'こめ',romaji:'kome',group:'食',script:'j',kanji:true,de:'Reis (roh)'},
+  {char:'水',reading:'みず',romaji:'mizu',group:'食',script:'j',kanji:true,de:'Wasser'},
+  {char:'お茶',reading:'おちゃ',romaji:'ocha',group:'食',script:'j',kanji:true,de:'Tee'},
+  {char:'酒',reading:'さけ',romaji:'sake',group:'食',script:'j',kanji:true,de:'Sake / Alkohol'},
+  {char:'牛乳',reading:'ぎゅうにゅう',romaji:'gyuunyuu',group:'食',script:'j',kanji:true,de:'Milch'},
+  {char:'定食',reading:'ていしょく',romaji:'teishoku',group:'食',script:'j',kanji:true,de:'Menü (Set)'},
+  {char:'弁当',reading:'べんとう',romaji:'bentou',group:'食',script:'j',kanji:true,de:'Lunchbox'},
+  {char:'店',reading:'みせ',romaji:'mise',group:'食',script:'j',kanji:true,de:'Laden'},
+  {char:'会計',reading:'かいけい',romaji:'kaikei',group:'食',script:'j',kanji:true,de:'Rechnung / Bezahlen'},
+  {char:'税込',reading:'ぜいこみ',romaji:'zeikomi',group:'食',script:'j',kanji:true,de:'inkl. Steuer'},
+  {char:'税抜',reading:'ぜいぬき',romaji:'zeinuki',group:'食',script:'j',kanji:true,de:'exkl. Steuer'},
+  {char:'半額',reading:'はんがく',romaji:'hangaku',group:'食',script:'j',kanji:true,de:'halber Preis'},
+  {char:'割引',reading:'わりびき',romaji:'waribiki',group:'食',script:'j',kanji:true,de:'Rabatt'},
+  {char:'辛口',reading:'からくち',romaji:'karakuchi',group:'食',script:'j',kanji:true,de:'scharf / trocken'},
+  {char:'甘口',reading:'あまくち',romaji:'amakuchi',group:'食',script:'j',kanji:true,de:'mild / süß'},
+  {char:'持ち帰り',reading:'もちかえり',romaji:'mochikaeri',group:'食',script:'j',kanji:true,de:'zum Mitnehmen'},
+  // ── 宿 ──
+  {char:'温泉',reading:'おんせん',romaji:'onsen',group:'宿',script:'j',kanji:true,de:'heiße Quelle'},
+  {char:'旅館',reading:'りょかん',romaji:'ryokan',group:'宿',script:'j',kanji:true,de:'Gasthaus'},
+  {char:'部屋',reading:'へや',romaji:'heya',group:'宿',script:'j',kanji:true,de:'Zimmer'},
+  {char:'風呂',reading:'ふろ',romaji:'furo',group:'宿',script:'j',kanji:true,de:'Bad'},
+  {char:'湯',reading:'ゆ',romaji:'yu',group:'宿',script:'j',kanji:true,de:'heißes Wasser / Bad'},
+  {char:'男湯',reading:'おとこゆ',romaji:'otokoyu',group:'宿',script:'j',kanji:true,de:'Männerbad'},
+  {char:'女湯',reading:'おんなゆ',romaji:'onnayu',group:'宿',script:'j',kanji:true,de:'Frauenbad'},
+  {char:'鍵',reading:'かぎ',romaji:'kagi',group:'宿',script:'j',kanji:true,de:'Schlüssel'},
+  {char:'朝食',reading:'ちょうしょく',romaji:'choushoku',group:'宿',script:'j',kanji:true,de:'Frühstück'},
+  {char:'夕食',reading:'ゆうしょく',romaji:'yuushoku',group:'宿',script:'j',kanji:true,de:'Abendessen'},
+  {char:'予約',reading:'よやく',romaji:'yoyaku',group:'宿',script:'j',kanji:true,de:'Reservierung'},
+  {char:'玄関',reading:'げんかん',romaji:'genkan',group:'宿',script:'j',kanji:true,de:'Eingangsbereich'},
+  {char:'電話',reading:'でんわ',romaji:'denwa',group:'宿',script:'j',kanji:true,de:'Telefon'},
+  {char:'階',reading:'かい',romaji:'kai',group:'宿',script:'j',kanji:true,de:'Stockwerk'},
+  {char:'地下',reading:'ちか',romaji:'chika',group:'宿',script:'j',kanji:true,de:'Untergeschoss'},
+  {char:'屋上',reading:'おくじょう',romaji:'okujou',group:'宿',script:'j',kanji:true,de:'Dach(terrasse)'},
+  {char:'郵便局',reading:'ゆうびんきょく',romaji:'yuubinkyoku',group:'宿',script:'j',kanji:true,de:'Postamt'},
+  {char:'銀行',reading:'ぎんこう',romaji:'ginkou',group:'宿',script:'j',kanji:true,de:'Bank'},
+  {char:'両替',reading:'りょうがえ',romaji:'ryougae',group:'宿',script:'j',kanji:true,de:'Geldwechsel'},
+  {char:'荷物',reading:'にもつ',romaji:'nimotsu',group:'宿',script:'j',kanji:true,de:'Gepäck'},
+  {char:'忘れ物',reading:'わすれもの',romaji:'wasuremono',group:'宿',script:'j',kanji:true,de:'verlorene Sache'},
+  // ── 時 ──
+  {char:'今日',reading:'きょう',romaji:'kyou',group:'時',script:'j',kanji:true,de:'heute'},
+  {char:'明日',reading:'あした',romaji:'ashita',group:'時',script:'j',kanji:true,de:'morgen'},
+  {char:'昨日',reading:'きのう',romaji:'kinou',group:'時',script:'j',kanji:true,de:'gestern'},
+  {char:'今',reading:'いま',romaji:'ima',group:'時',script:'j',kanji:true,de:'jetzt'},
+  {char:'時間',reading:'じかん',romaji:'jikan',group:'時',script:'j',kanji:true,de:'Zeit / Stunde'},
+  {char:'午前',reading:'ごぜん',romaji:'gozen',group:'時',script:'j',kanji:true,de:'vormittags'},
+  {char:'午後',reading:'ごご',romaji:'gogo',group:'時',script:'j',kanji:true,de:'nachmittags'},
+  {char:'月曜日',reading:'げつようび',romaji:'getsuyoubi',group:'時',script:'j',kanji:true,de:'Montag'},
+  {char:'火曜日',reading:'かようび',romaji:'kayoubi',group:'時',script:'j',kanji:true,de:'Dienstag'},
+  {char:'水曜日',reading:'すいようび',romaji:'suiyoubi',group:'時',script:'j',kanji:true,de:'Mittwoch'},
+  {char:'木曜日',reading:'もくようび',romaji:'mokuyoubi',group:'時',script:'j',kanji:true,de:'Donnerstag'},
+  {char:'金曜日',reading:'きんようび',romaji:'kin\'youbi',group:'時',script:'j',kanji:true,de:'Freitag'},
+  {char:'土曜日',reading:'どようび',romaji:'doyoubi',group:'時',script:'j',kanji:true,de:'Samstag'},
+  {char:'日曜日',reading:'にちようび',romaji:'nichiyoubi',group:'時',script:'j',kanji:true,de:'Sonntag'},
+  {char:'祝日',reading:'しゅくじつ',romaji:'shukujitsu',group:'時',script:'j',kanji:true,de:'Feiertag'},
+  {char:'週末',reading:'しゅうまつ',romaji:'shuumatsu',group:'時',script:'j',kanji:true,de:'Wochenende'},
+  {char:'春',reading:'はる',romaji:'haru',group:'時',script:'j',kanji:true,de:'Frühling'},
+  {char:'夏',reading:'なつ',romaji:'natsu',group:'時',script:'j',kanji:true,de:'Sommer'},
+  {char:'秋',reading:'あき',romaji:'aki',group:'時',script:'j',kanji:true,de:'Herbst'},
+  {char:'冬',reading:'ふゆ',romaji:'fuyu',group:'時',script:'j',kanji:true,de:'Winter'},
+  {char:'朝',reading:'あさ',romaji:'asa',group:'時',script:'j',kanji:true,de:'Morgen'},
+  {char:'夜',reading:'よる',romaji:'yoru',group:'時',script:'j',kanji:true,de:'Nacht / Abend'},
 ];
 
 const GROUP_ORDER=[
@@ -703,6 +866,7 @@ const GROUP_ORDER=[
   'ア行','カ行','サ行','タ行','ナ行','ハ行','マ行','ヤ行','ラ行','ワ行',
   'ガ行','ザ行','ダ行','バ行','パ行','カ組',
   '2文字','3文字','旅カナ','4文字','あいさつ','5文字','食カナ','たべもの','みちあんない',
+  '数','駅','道','看板','食','宿','時',
 ];
 
 // ── ESELSBRÜCKEN (Anfänger-Lernpfad) ─────────────────────────────────────────
@@ -972,6 +1136,7 @@ function masterySets(){
     kata_base:kata.slice(0,10), kata_daku:kata.slice(10,15), kata_kombi:kata.slice(15),
     w2_box5:['2文字'], w3_box5:['3文字'], w4_box5:['4文字'], w5_box5:['5文字'],
     tabi_box5:['旅カナ'], aisatsu_box5:['あいさつ'], shoku_box5:['食カナ'], tabemono_box5:['たべもの'], michi_box5:['みちあんない'],
+    k_kazu_box5:['数'], k_eki_box5:['駅'], k_michi_box5:['道'], k_kanban_box5:['看板'], k_shoku_box5:['食'], k_yado_box5:['宿'], k_toki_box5:['時'],
   };
   return _masterySets;
 }
@@ -1055,6 +1220,22 @@ const BADGES=[
   {id:'shoku_box5',label:'Essen-Kana gemeistert',emoji:'🥢',cond:s=>masteryDone(s,'shoku_box5')},
   {id:'tabemono_box5',label:'Geschmack gemeistert',emoji:'🍣',cond:s=>masteryDone(s,'tabemono_box5')},
   {id:'michi_box5',label:'Unterwegs gemeistert',emoji:'🏯',cond:s=>masteryDone(s,'michi_box5')},
+  // ── Kanji freigeschaltet ────────────────────────────────────────────────────
+  {id:'k_kazu_unlock',label:'Zahlen-Kanji freigesch.',emoji:'💴',cond:s=>s.unlocked.includes('数')},
+  {id:'k_eki_unlock',label:'Bahnhofs-Kanji freigesch.',emoji:'🚉',cond:s=>s.unlocked.includes('駅')},
+  {id:'k_michi_unlock',label:'Wegweiser-Kanji freigesch.',emoji:'🚩',cond:s=>s.unlocked.includes('道')},
+  {id:'k_kanban_unlock',label:'Schilder-Kanji freigesch.',emoji:'🚧',cond:s=>s.unlocked.includes('看板')},
+  {id:'k_shoku_unlock',label:'Speisekarten-Kanji freigesch.',emoji:'🍜',cond:s=>s.unlocked.includes('食')},
+  {id:'k_yado_unlock',label:'Hotel-Kanji freigesch.',emoji:'🏨',cond:s=>s.unlocked.includes('宿')},
+  {id:'k_toki_unlock',label:'Kalender-Kanji freigesch.',emoji:'📆',cond:s=>s.unlocked.includes('時')},
+  // ── Kanji gemeistert ────────────────────────────────────────────────────────
+  {id:'k_kazu_box5',label:'Zahlen-Kanji gemeistert',emoji:'🧮',cond:s=>masteryDone(s,'k_kazu_box5')},
+  {id:'k_eki_box5',label:'Bahnhofs-Kanji gemeistert',emoji:'🚄',cond:s=>masteryDone(s,'k_eki_box5')},
+  {id:'k_michi_box5',label:'Wegweiser-Kanji gemeistert',emoji:'⛩️',cond:s=>masteryDone(s,'k_michi_box5')},
+  {id:'k_kanban_box5',label:'Schilder-Kanji gemeistert',emoji:'🏮',cond:s=>masteryDone(s,'k_kanban_box5')},
+  {id:'k_shoku_box5',label:'Speisekarten-Kanji gemeistert',emoji:'🍻',cond:s=>masteryDone(s,'k_shoku_box5')},
+  {id:'k_yado_box5',label:'Hotel-Kanji gemeistert',emoji:'♨️',cond:s=>masteryDone(s,'k_yado_box5')},
+  {id:'k_toki_box5',label:'Kalender-Kanji gemeistert',emoji:'⏰',cond:s=>masteryDone(s,'k_toki_box5')},
   // ── Kana-Meisterschaft ──────────────────────────────────────────────────────
   {id:'hira_base',label:'Hiragana-Reihen gemeistert',emoji:'🍡',cond:s=>masteryDone(s,'hira_base')},
   {id:'hira_daku',label:'Hiragana-Dakuten gemeistert',emoji:'🍶',cond:s=>masteryDone(s,'hira_daku')},
@@ -1196,6 +1377,20 @@ const BADGE_DESC={
   shoku_box5:'Alle Essen-Kana-Wörter in Leitner-Box 5.',
   tabemono_box5:'Alle Geschmacks-Wörter in Leitner-Box 5.',
   michi_box5:'Alle Unterwegs-Wörter in Leitner-Box 5.',
+  k_kazu_unlock:'Schalte die Kanji-Gruppe 数 frei.',
+  k_eki_unlock:'Schalte die Kanji-Gruppe 駅 frei.',
+  k_michi_unlock:'Schalte die Kanji-Gruppe 道 frei.',
+  k_kanban_unlock:'Schalte die Kanji-Gruppe 看板 frei.',
+  k_shoku_unlock:'Schalte die Kanji-Gruppe 食 frei.',
+  k_yado_unlock:'Schalte die Kanji-Gruppe 宿 frei.',
+  k_toki_unlock:'Schalte die Kanji-Gruppe 時 frei.',
+  k_kazu_box5:'Alle Zahlen-Kanji in Leitner-Box 5.',
+  k_eki_box5:'Alle Bahnhofs-Kanji in Leitner-Box 5.',
+  k_michi_box5:'Alle Wegweiser-Kanji in Leitner-Box 5.',
+  k_kanban_box5:'Alle Schilder-Kanji in Leitner-Box 5.',
+  k_shoku_box5:'Alle Speisekarten-Kanji in Leitner-Box 5.',
+  k_yado_box5:'Alle Hotel-Kanji in Leitner-Box 5.',
+  k_toki_box5:'Alle Kalender-Kanji in Leitner-Box 5.',
   hira_base:'Alle Hiragana-Grundreihen in Box 5.',
   hira_daku:'Alle Hiragana-Dakuten in Box 5.',
   hira_kombi:'Alle Hiragana-Kombinationen in Box 5.',
@@ -1352,9 +1547,14 @@ function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.fl
 // Paket G: Bei WOERTERN wird die deutsche Bedeutung abgefragt, bei Einzel-Kana die Lesung.
 // Ein Zeichen hat keine Bedeutung, nur einen Laut – ein Wort dagegen schon.
 const istWort=k=>WORD_GROUPS.includes(k.group);
-const antwortText=k=>istWort(k)?k.de:k.romaji;      // Text auf den vier Buttons
-// Loesungs-Anzeige in der Rueckmeldung: Wort -> "Bahnhof (eki)", Kana -> "ka"
-const loesungText=k=>istWort(k)?k.de+' ('+k.romaji+')':k.romaji;
+const istKanji=k=>!!k.kanji;
+// Paket H: Kanji-Woerter haben zwei Fragetypen. 'bedeutung' = deutsche Buttons (wie Kana-Woerter),
+// 'lesung' = Kana-Buttons (uebt Kanji UND Kana). Wird in pickQ je Frage gewuerfelt (50/50).
+let frageModus='bedeutung';
+const antwortText=k=>frageModus==='lesung'?k.reading:(istWort(k)?k.de:k.romaji);   // Text auf den vier Buttons
+// Loesungs-Anzeige in der Rueckmeldung: Kanji -> "Ausgang (でぐち)", Wort -> "Bahnhof (eki)", Kana -> "ka"
+const loesungText=k=>istKanji(k)?k.de+' ('+k.reading+')':istWort(k)?k.de+' ('+k.romaji+')':k.romaji;
+const schriftName=(k,jp)=>k.script==='j'?'漢字':k.script==='h'?(jp?'ひらがな':'Hiragana'):(jp?'カタカナ':'Katakana');
 
 let lastChar='';
 function pickQ(){
@@ -1363,6 +1563,7 @@ function pickQ(){
   const sc=S.script==='hiragana'?'h':S.script==='katakana'?'k':S.script;
   const pool=ALL_KANA.filter(k=>{
     if(!S.unlocked.includes(k.group))return false;
+    if(k.kanji)return true; // Kanji-Woerter sind von der Hiragana/Katakana-Auswahl unabhaengig
     if(sc==='h'&&k.script!=='h')return false;
     if(sc==='k'&&k.script!=='k')return false;
     return true;
@@ -1380,22 +1581,47 @@ function pickQ(){
   let chosen=src[src.length-1];
   for(let i=0;i<src.length;i++){r-=weights[i];if(r<=0){chosen=src[i];break;}}
   lastChar=chosen.char;
-  const distr=pickDistractors(chosen,pool);
-  return{q:chosen,answers:shuffle([chosen,...distr])};
+  frageModus=(istKanji(chosen)&&Math.random()<0.5)?'lesung':'bedeutung';
+  const distr=frageModus==='lesung'?pickLesungDistractors(chosen):pickDistractors(chosen,pool);
+  return{q:chosen,modus:frageModus,answers:shuffle([chosen,...distr])};
 }
 
 // Falsche Antworten gezielt aus ähnlichen Zeichen wählen (schwerer zu raten):
 // - Wörter (2-5 Silben, gemischt): nur Wörter mit gleicher Silbenzahl
 // - Einzel-Kana: gleiche Reihe (あ→a/i/u/e/o) + gleiche Vokal-Spalte (a→ka/ma/ta/ra)
-const WORD_GROUPS=['2文字','3文字','旅カナ','4文字','あいさつ','5文字','食カナ','たべもの','みちあんない'];
+// Paket H: Kanji-Gruppen zaehlen als Wortgruppen (Bedeutungs-Abfrage, Intro-Karte, 10 s Profimodus)
+const KANJI_GROUPS=['数','駅','道','看板','食','宿','時'];
+const WORD_GROUPS=['2文字','3文字','旅カナ','4文字','あいさつ','5文字','食カナ','たべもの','みちあんない',...KANJI_GROUPS];
+// Paket H, Fragetyp Lesung: drei falsche Kana-Lesungen mit GLEICHER Silbenzahl wie die richtige.
+// Quelle 1: Lesungen anderer Kanji-Woerter (alle, auch noch gesperrte – es sind nur Kana-Ketten).
+// Quelle 2: Kana-Woerter gleicher Laenge. Quelle 3: Einzel-Kana (fuer 1-silbige Lesungen wie に/ご).
+// Rueckfall: Kanji-Lesungen mit der aehnlichsten Silbenzahl. Die Ersatz-Objekte tragen die Lesung im Feld reading, damit
+// antwortText() sie wie echte Eintraege behandelt; char ist eindeutig, daher kein Treffer in handleAnswer.
+function pickLesungDistractors(chosen){
+  const len=chosen.reading.length;
+  const alsLesung=k=>({char:k.char,reading:k.char,de:k.de||'',group:k.group,ersatz:true});
+  const q1=shuffle(ALL_KANA.filter(k=>istKanji(k)&&k.char!==chosen.char&&k.reading.length===len));
+  const q2=shuffle(ALL_KANA.filter(k=>istWort(k)&&!istKanji(k)&&k.script==='h'&&k.char.length===len)).map(alsLesung);
+  const q3=shuffle(ALL_KANA.filter(k=>!istWort(k)&&k.script==='h'&&k.char.length===len)).map(alsLesung);
+  const q4=shuffle(ALL_KANA.filter(k=>istKanji(k)&&k.char!==chosen.char)).sort((a,b)=>Math.abs(a.reading.length-len)-Math.abs(b.reading.length-len));
+  const out=[];const used=new Set([chosen.reading]);
+  for(const k of [...q1,...q2,...q3,...q4]){
+    if(used.has(k.reading))continue;
+    out.push(k);used.add(k.reading);
+    if(out.length===3)break;
+  }
+  return out;
+}
 function pickDistractors(chosen,pool){
   const notSelf=k=>k.romaji!==chosen.romaji&&k.char!==chosen.char;
   let candidates;
   if(istWort(chosen)){
     // zuerst eigene Gruppe, dann alle anderen freigeschalteten Wortgruppen
     const eigene=shuffle(ALL_KANA.filter(k=>k.group===chosen.group&&notSelf(k)));
-    const andere=shuffle(ALL_KANA.filter(k=>istWort(k)&&k.group!==chosen.group&&S.unlocked.includes(k.group)&&notSelf(k)));
-    candidates=[...eigene,...andere];
+    const frei=k=>istWort(k)&&k.group!==chosen.group&&S.unlocked.includes(k.group)&&notSelf(k);
+    const gleicheArt=shuffle(ALL_KANA.filter(k=>frei(k)&&istKanji(k)===istKanji(chosen)));
+    const andereArt=shuffle(ALL_KANA.filter(k=>frei(k)&&istKanji(k)!==istKanji(chosen)));
+    candidates=[...eigene,...gleicheArt,...andereArt];
   }else{
     const sameRow=shuffle(pool.filter(k=>k.group===chosen.group&&notSelf(k)));
     const vowel=chosen.romaji.slice(-1);
@@ -1522,8 +1748,8 @@ function openIntro(q,review){
   document.getElementById('intro-char').textContent=q.char;
   // Lange Woerter (bis 8 Zeichen, z. B. コインランドリー) muessen in die 300 px breite Box passen
   document.getElementById('intro-char').style.fontSize=Math.min(84,Math.floor(290/q.char.length))+'px';
-  document.getElementById('intro-romaji').textContent=q.romaji;
-  document.getElementById('intro-script').textContent=(q.script==='h'?'Hiragana':'Katakana')+' · '+q.group;
+  document.getElementById('intro-romaji').textContent=istKanji(q)?q.reading+' · '+q.romaji:q.romaji;
+  document.getElementById('intro-script').textContent=schriftName(q,false)+' · '+q.group;
   // Woerter: statt Eselsbruecke die deutsche Bedeutung gross zeigen
   const m=wort?null:getDefaultMnemo(q);
   const mEl=document.getElementById('intro-mnemo');
@@ -1574,15 +1800,18 @@ function renderQuestion(){
   const cd=document.getElementById('char-display');
   cd.style.fontSize=fs+'px';
   cd.textContent=q.char;
-  document.getElementById('char-meta').textContent=(q.script==='h'?'ひらがな':'カタカナ')+' · '+q.group;
+  // Kanji: sagen, was gefragt ist – sonst weiss man bei Kana-Buttons nicht, ob Lesung oder Bedeutung
+  document.getElementById('char-meta').textContent=schriftName(q,true)+' · '+q.group+(istKanji(q)?(currentQ.modus==='lesung'?' · Wie liest man das?':' · Was bedeutet das?'):'');
   document.getElementById('feedback-line').textContent='';
   document.getElementById('feedback-line').style.color='';
 
   const answersEl=document.getElementById('answers');
   answersEl.innerHTML='';
+  const langeLesung=currentQ.modus==='lesung'&&currentQ.answers.some(a=>antwortText(a).length>=7);
   currentQ.answers.forEach((ans,i)=>{
     const btn=document.createElement('button');
-    btn.className='ans-btn'+(istWort(ans)?' wort':'');
+    btn.className='ans-btn'+(currentQ.modus==='lesung'?(langeLesung?' lesung lang':' lesung'):istWort(ans)?' wort':'');
+    if(currentQ.modus==='lesung')btn.lang='ja';
     btn.textContent=antwortText(ans);
     btn.style.animationDelay=(i*0.06)+'s';
     btn.onclick=()=>handleAnswer(ans,btn);
@@ -1621,7 +1850,7 @@ function handleAnswer(pick,btn){
 
   const fl=document.getElementById('feedback-line');
   // Bei Woertern die Lesung mitgeben – so uebt man Bedeutung UND Aussprache
-  if(isOk){fl.textContent='✓ Richtig!'+(istWort(currentQ.q)?' – '+currentQ.q.romaji:'');fl.style.color='var(--green)';spawnParticles(10);}
+  if(isOk){fl.textContent='✓ Richtig!'+(istKanji(currentQ.q)?' – '+currentQ.q.reading+' · '+currentQ.q.de:istWort(currentQ.q)?' – '+currentQ.q.romaji:'');fl.style.color='var(--green)';spawnParticles(10);}
   else{fl.textContent=(pick?'✗ ':'⏰ Zeit abgelaufen! → ')+loesungText(currentQ.q);fl.style.color='var(--danger)';}
 
   // Charakter-Animation + Sound

@@ -66,6 +66,21 @@ for g, pre, name, e_u, e_m, dname in WG:
     add('Wortstufen gemeistert', f'{pre}_box5', f'{name} gemeistert', e_m,
         f"masteryDone(s,'{pre}_box5')", f'Alle {dname} in Leitner-Box 5.')
 
+# ── Kanji-Gruppen (Paket H): freigeschaltet + gemeistert ─────────────────────
+KG = [('数','k_kazu','Zahlen-Kanji','\U0001f4b4','\U0001f9ee','Zahlen-Kanji'),
+      ('駅','k_eki','Bahnhofs-Kanji','\U0001f689','\U0001f684','Bahnhofs-Kanji'),
+      ('道','k_michi','Wegweiser-Kanji','\U0001f6a9','\u26e9\ufe0f','Wegweiser-Kanji'),
+      ('看板','k_kanban','Schilder-Kanji','\U0001f6a7','\U0001f3ee','Schilder-Kanji'),
+      ('食','k_shoku','Speisekarten-Kanji','\U0001f35c','\U0001f37b','Speisekarten-Kanji'),
+      ('宿','k_yado','Hotel-Kanji','\U0001f3e8','\u2668\ufe0f','Hotel-Kanji'),
+      ('時','k_toki','Kalender-Kanji','\U0001f4c6','\u23f0','Kalender-Kanji')]
+for g, pre, name, e_u, e_m, dname in KG:
+    add('Kanji freigeschaltet', f'{pre}_unlock', f'{name} freigesch.', e_u,
+        f"s.unlocked.includes('{g}')", f'Schalte die Kanji-Gruppe {g} frei.')
+for g, pre, name, e_u, e_m, dname in KG:
+    add('Kanji gemeistert', f'{pre}_box5', f'{name} gemeistert', e_m,
+        f"masteryDone(s,'{pre}_box5')", f'Alle {dname} in Leitner-Box 5.')
+
 # ── Kana-Meisterschaft (NEU) ─────────────────────────────────────────────────
 km = [('hira_base','Hiragana-Reihen','\U0001f361','Alle Hiragana-Grundreihen in Box 5.'),
       ('hira_daku','Hiragana-Dakuten','\U0001f376','Alle Hiragana-Dakuten in Box 5.'),
