@@ -54,7 +54,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 .combo-toast-lvl{font-size:10px;font-weight:700;letter-spacing:2px;opacity:0.85;}
 .combo-toast-lbl{font-size:18px;font-weight:700;line-height:1.2;}
 .nav{display:flex;gap:6px;}
-.nav-btn{border:1px solid rgba(232,200,122,0.2)!important;border-radius:8px;color:var(--muted);padding:6px 10px;font-size:12px;transition:all 0.2s;background:transparent!important;}
+.nav-btn{border:1px solid rgba(232,200,122,0.2)!important;border-radius:8px;color:var(--muted);padding:6px 8px;font-size:12px;transition:all 0.2s;background:transparent!important;}
 .nav-btn.active{background:var(--gold-dim)!important;border-color:var(--gold)!important;color:var(--gold)!important;}
 .nav-btn:hover:not(.active){background:rgba(255,255,255,0.06)!important;}
 
@@ -93,6 +93,14 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 .intro-own-label{display:block;font-size:11px;color:var(--dim);text-align:left;margin-bottom:4px;}
 #intro-own{width:100%;background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 10px;resize:none;font-family:inherit;box-sizing:border-box;}
 #intro-btn{margin-top:12px;width:100%;background:var(--gold);color:#1a1408;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;}
+/* Puzzle-Bild (Paket F): 4x4 ohne Lücken, gesperrte Teile reines Schwarz – das Bild soll
+   am Ende als Ganzes wirken. Bildausschnitt je Kachel über background-position. */
+#puzzle-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;width:100%;max-width:360px;aspect-ratio:941/1672;margin:0 auto;background:#000;border-radius:8px;overflow:hidden;cursor:pointer;box-shadow:0 0 24px rgba(0,0,0,0.5);}
+.pz{background-color:#000;background-repeat:no-repeat;background-size:400% 400%;}
+.pz.on{background-image:url(puzzle.jpg);}
+#puzzle-full{position:fixed;inset:0;z-index:21000;background:rgba(0,0,0,0.97);display:none;align-items:center;justify-content:center;padding:10px;cursor:pointer;}
+#puzzle-full.open{display:flex;}
+#puzzle-full-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;width:min(96vw,calc(96vh*941/1672));aspect-ratio:941/1672;background:#000;}
 /* Charakter-Level: Stufen-Zeile in der Auswahl */
 .cs-level{font-size:10px;color:var(--gold);letter-spacing:1px;margin-top:2px;}
 /* Profimodus: Herzen + Countdown-Balken, Toggle-Button */
@@ -281,6 +289,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
     <button class="nav-btn active" data-view="quiz" onclick="switchView('quiz')">📝 Quiz</button>
     <button class="nav-btn" data-view="progress" onclick="switchView('progress')">📊 Fortschritt</button>
     <button class="nav-btn" data-view="badges" onclick="switchView('badges')">🏅 Badges</button>
+    <button class="nav-btn" data-view="puzzle" onclick="switchView('puzzle')" title="Puzzle-Bild">🧩</button>
     <button class="nav-btn" id="char-switch-btn" onclick="openCharSelect()" title="Charakter wechseln">🥷</button>
     <button class="nav-btn" id="sound-btn" onclick="toggleSound()" title="Ton an/aus">🔊</button>
     <button class="nav-btn" onclick="resetAll()" style="color:#f87171;border-color:rgba(248,113,113,0.3)!important;" title="Alles zurücksetzen">↺</button>
@@ -346,7 +355,16 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
     <p class="view-sub" id="badge-sub"></p>
     <div class="badge-grid" id="badge-grid"></div>
   </div>
+
+  <!-- Puzzle-Bild (Paket F): 16 Teile, je Charakter 4, freigespielt über richtige Antworten -->
+  <div id="view-puzzle" style="display:none">
+    <h2 class="view-h">🧩 Das Bild</h2>
+    <p class="view-sub" id="puzzle-sub"></p>
+    <div id="puzzle-grid" onclick="openPuzzleFull()" title="Antippen für Vollbild"></div>
+    <p class="view-sub" style="margin-top:12px">Je Charakter ein Teil bei 1.000 · 2.500 · 5.000 · 10.000 richtigen Antworten – das Gesicht kommt zuletzt.</p>
+  </div>
 </div>
+<div id="puzzle-full" onclick="this.classList.remove('open')"><div id="puzzle-full-grid"></div></div>
 
 <script>
 'use strict';
@@ -722,6 +740,59 @@ function runPerfectDayCheck(){
   }
 }
 
+// ── PUZZLE-BILD (Paket F, 15.09.2026) ─────────────────────────────────────────
+// 16 Teile (4x4). Je Charakter vier Teile bei 1.000/2.500/5.000/10.000 RICHTIGEN Antworten
+// (S.charOk). Eigene Schwellen, unabhängig von den Charakterstufen (500/2500/10000).
+// Die Freischaltung wird immer aus charOk BERECHNET, nicht gespeichert – charOk sinkt nie,
+// also kann das Puzzle nie inkonsistent werden. Gespeichert wird nur S.puzzleShown (wie viele
+// Teile schon gemeldet wurden), damit der Toast genau einmal kommt.
+const PUZZLE_TIERS=[1000,2500,5000,10000];
+// Zellen [Zeile,Spalte] in Freischalt-Reihenfolge – das GESICHT steht jeweils an letzter Stelle.
+// Am Bild ausgemessen (15.09.2026); die drei anderen Teile liegen räumlich beim Charakter,
+// so erscheint die Figur Stück für Stück. Alle 16 Zellen genau einmal vergeben.
+const PUZZLE_MAP={
+  ninja:  [[1,0],[0,0],[0,2],[0,1]],
+  geisha: [[2,1],[2,0],[1,2],[1,1]],
+  samurai:[[3,3],[2,3],[0,3],[1,3]],
+  sumo:   [[3,0],[3,1],[3,2],[2,2]],
+};
+function puzzleUnlocked(){
+  const frei=new Set();
+  for(const ch in PUZZLE_MAP){
+    const n=(S.charOk&&S.charOk[ch])||0;
+    PUZZLE_TIERS.forEach((t,i)=>{if(n>=t)frei.add(PUZZLE_MAP[ch][i].join(','));});
+  }
+  return frei;
+}
+function renderPuzzleInto(el,frei){
+  el.innerHTML='';
+  for(let r=0;r<4;r++)for(let c=0;c<4;c++){
+    const d=document.createElement('div');
+    const offen=frei.has(r+','+c);
+    d.className='pz'+(offen?' on':'');
+    if(offen)d.style.backgroundPosition=(c*100/3)+'% '+(r*100/3)+'%';
+    el.appendChild(d);
+  }
+}
+function renderPuzzle(){
+  const frei=puzzleUnlocked();
+  renderPuzzleInto(document.getElementById('puzzle-grid'),frei);
+  document.getElementById('puzzle-sub').textContent=
+    frei.size+' / 16 Teile freigespielt'+(frei.size===16?' – das Bild ist vollständig!':'');
+}
+function openPuzzleFull(){
+  renderPuzzleInto(document.getElementById('puzzle-full-grid'),puzzleUnlocked());
+  document.getElementById('puzzle-full').classList.add('open');
+}
+// Nach jeder Antwort: neue Teile melden (gibt Toast-Einträge zurück)
+function checkPuzzle(){
+  const n=puzzleUnlocked().size;
+  const gemeldet=S.puzzleShown||0;
+  if(n<=gemeldet)return [];
+  S.puzzleShown=n;
+  return [{emoji:'🧩',head:n===16?'Bild vollständig!':'Neues Puzzle-Teil!',label:n+' von 16 Teilen freigespielt'}];
+}
+
 // ── MISSIONEN ─────────────────────────────────────────────────────────────────
 // Seit 21.08.2026 (Paket E) nur noch Tagesquests. Reihen-Serien und Schriftrollen
 // sind entfallen – ihre Rolle übernehmen die Meisterschafts-Abzeichen weiter unten,
@@ -1065,7 +1136,7 @@ const MILESTONE_CFG={
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const SK='kana_dojo_v4';
-function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},charOk:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],proDate:null,proHearts:3,proStats:{a:0,c:0},perfectDays:0,perfectEvalDate:null};}
+function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},charOk:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],proDate:null,proHearts:3,proStats:{a:0,c:0},perfectDays:0,perfectEvalDate:null,puzzleShown:0};}
 
 let S=defaultState();
 (()=>{try{const d=localStorage.getItem(SK);if(d){const parsed=JSON.parse(d);S={...defaultState(),...parsed};}}catch(e){}
@@ -1470,7 +1541,7 @@ function handleAnswer(pick,btn){
   // Badges + Missionen prüfen (gemeinsamer Toast)
   const newB=BADGES.filter(b=>!S.badges.includes(b.id)&&b.cond(S));
   newB.forEach(b=>S.badges.push(b.id));
-  const toasts=[...newB,...checkMissions(),...(levelUpToast?[levelUpToast]:[])];
+  const toasts=[...newB,...checkMissions(),...(levelUpToast?[levelUpToast]:[]),...checkPuzzle()];
   if(toasts.length>0){
     spawnParticles(20);
     showBadgeToast(toasts);
@@ -1552,13 +1623,14 @@ function showBadgeToast(badges){
 
 // ── VIEWS ─────────────────────────────────────────────────────────────────────
 function switchView(v){
-  ['quiz','progress','badges'].forEach(n=>{
+  ['quiz','progress','badges','puzzle'].forEach(n=>{
     document.getElementById('view-'+n).style.display=n===v?'block':'none';
   });
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
   document.getElementById('script-bar').style.display=v==='quiz'?'flex':'none';
   if(v==='progress')renderProgress();
   if(v==='badges')renderBadges();
+  if(v==='puzzle')renderPuzzle();
 }
 
 function renderProgress(){
