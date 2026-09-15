@@ -10,21 +10,21 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v19`. Letzter Commit: „Fix nach Durchspieltest …"
-(`6cb7b03`). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026) sowie die Pakete A, B, C, D
+Aktueller Service-Worker-Cache: `kana-dojo-v20`. Letzter Commit: „Paket F: Puzzle-Bild …".
+Neu seit 15.09.2026: eigener Tab 🧩 mit dem 16-teiligen Puzzle-Bild (`puzzle.jpg`, 383 KB, offline). Deployed sind die Ausbau-Pakete 1–5 (08.08.2026) sowie die Pakete A, B, C, D
 und E (21.08.2026). Badge-Gesamtzahl: **119**.
 Dateigröße `index.html`: ca. 261 KB (davon ~155 KB Sprite-Raster).
 
 ## ⏭️ WO WEITERMACHEN (Stand 15.09.2026)
-Code-Stand unverändert seit 21.08.2026 (Cache `kana-dojo-v19`, Commit `6cb7b03`). Ronny hat die App
-drei Wochen getestet: **„für das Erlernen der Kana sehr gut"**. Am 15.09.2026 wurden die nächsten
-Schritte entschieden – Spezifikation im Abschnitt „📋 Ausbauplan Herbst 2026" direkt unten.
+Ronny hat die App drei Wochen getestet: **„für das Erlernen der Kana sehr gut"**. Am 15.09.2026
+wurden die nächsten Schritte entschieden (Abschnitt „📋 Ausbauplan Herbst 2026" unten) und
+**Paket F direkt umgesetzt** (Cache `kana-dojo-v20`).
 
-**Nächster Schritt:** Paket F (Puzzle-Bild) – wartet auf Ronnys Startsignal. Bild liegt bereits in
-`sprites-quelle/puzzle-collage.png`.
+**Nächster Schritt:** Ronny testet das Puzzle. Danach Paket G – dafür vorab die Frage der
+Bestandswörter klären (Abschnitt „Befund 混合" im Paket-F-Bericht).
 
 Reihenfolge:
-1. **Paket F – Puzzle-Bild** (16 Teile, eigene Schwellen 1.000/2.500/5.000/10.000 je Charakter)
+1. ~~Paket F – Puzzle-Bild~~ ✅ umgesetzt 15.09.2026
 2. **Paket G – Kana-Wörter mit Bedeutung** (deutsche Bedeutung statt Romaji; 128 Bestandswörter
    umstellen + Lehnwörter + Alltag)
 3. **Paket H – Schilder-Kanji** (erste Tranche 120–150 Wörter, zwei Fragetypen)
@@ -54,7 +54,29 @@ Umsetzung erst nach Startsignal, paketweise mit Test-Stopp.
 
 ---
 
-### Paket F – Puzzle-Bild (klein–mittel)
+### ✅ Paket F – Puzzle-Bild (umgesetzt 15.09.2026)
+Backup vorher `index_v19_2026-09-15_pre-paketF.html`, Cache `kana-dojo-v20`.
+**So gebaut wie spezifiziert**, mit zwei Abweichungen beim Bauen:
+- **Tab heißt nur „🧩"** (Symbol, mit Tooltip „Puzzle-Bild"). Mit Text „🧩 Bild" wurde die
+  Navigationsleiste 402 px breit – auf 375 px wäre der Ton-Button abgeschnitten gewesen.
+  Zusätzlich `.nav-btn` Innenabstand 10 → 8 px. Gemessen danach: 367 px, eine Zeile.
+- `puzzle.jpg` 900×1599 (Qualität 82, progressiv) = **383 KB**, in `sw.js` zu `CORE`.
+**Getestet (Browser, 375 px):** Zuordnung deckt 16 Zellen genau einmal (4 je Charakter) ·
+Ninja 999 → 0 Teile, 1.000 → 1 Teil (1,0), 9.999 → 3 Teile ohne Gesicht, 10.000 → 4 Teile mit
+Gesicht (0,1) · alle vier auf 10.000 → 16 · Toast genau einmal (`puzzleShown`) · Raster 343×609
+im Verhältnis 0,563 = Bild, Kacheln ohne Lücken, gesperrte Kacheln `rgb(0,0,0)` · Bild lädt ·
+Vollbild 360×640 passt in den Viewport · keine Konsolenfehler.
+**Befund 混合 (für Paket G):** Alle 15 Wörter der Gruppe sind **konstruierte** Zusammensetzungen
+(さけバー, まちマップ, でんしゃルート, ゆかたパーティー …) – kein Schild, kein Speisekarten-Eintrag, kein
+Wörterbuch-Wort. Als Kana-Lese-Übung mit Schriftwechsel sinnvoll, als Vokabel mit deutscher
+Bedeutung nicht. **Ronnys Leitlinie (15.09.):** alles weglassen, was auf einer Reise nicht hilft.
+Vorschlag: 混合 in Paket G **auflösen** – die Schriftwechsel-Übung übernehmen echte Wörter, die es
+wirklich gibt und die Kana mit Kanji kombinieren (東京タワー, 新幹線ホーム, お土産, 駅ビル …);
+die kommen mit Paket H ohnehin. Leitner-Boxen der 15 Wörter verfallen dabei (unkritisch).
+Ebenfalls zu prüfen: die übrigen 113 Bestandswörter nach demselben Maßstab (Reise-Nutzen);
+Kandidaten zum Streichen z. B. reine Übungs-Wörter ohne Alltagsbezug.
+
+### Spezifikation Paket F (Referenz, wie umgesetzt)
 **Ziel:** Alle vier Charaktere hochleveln lohnt sich sichtbar. Ein Bild mit allen vier Figuren wird
 in 16 gleich großen Teilen freigespielt.
 **Quelle:** `sprites-quelle/puzzle-collage.png` (941×1672, 3 MB, KI-generiert, Nutzungsrechte liegen
