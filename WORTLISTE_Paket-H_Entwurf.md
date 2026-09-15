@@ -1,4 +1,9 @@
-# Wortliste Paket H – Schilder-Kanji – Entwurf zur Freigabe (15.09.2026)
+# Wortliste Paket H – Schilder-Kanji – FREIGEGEBEN und umgesetzt (15.09.2026)
+
+> **Status:** Ronny hat am 15.09.2026 alles freigegeben: alle ❓-Kandidaten bleiben, Zahlen zuerst,
+> Lesung von 四/七/九 = よん/なな/きゅう (Claudes Entscheidung). Umgesetzt in `index.html` (Cache v23):
+> **153 Wörter** (unten steht 152 – Zählfehler, Gruppe 時 hat 22), 7 Gruppen, 141 Abzeichen.
+
 
 **Maßstab (Ronny):** Kanji-**Wörter**, denen man in Japan täglich begegnet – auf Schildern, Anzeigen,
 Speisekarten, im Hotel. Keine Einzelzeichen um ihrer selbst willen, keine Schulbuch-Kanji ohne Reise-Nutzen.

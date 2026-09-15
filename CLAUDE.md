@@ -10,27 +10,27 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v22`. Letzter Commit: „Paket G: Kana-Woerter mit deutscher Bedeutung" (`6cade93`).
-Neu seit 15.09.2026: eigener Tab 🧩 mit dem 16-teiligen Puzzle-Bild (`puzzle.jpg`, 383 KB, offline) **und**
-Paket G: 256 Kana-Wörter in 9 Gruppen, abgefragt wird die **deutsche Bedeutung**. Deployed sind die
-Ausbau-Pakete 1–5 (08.08.2026), die Pakete A–E (21.08.2026) sowie F und G (15.09.2026). Badge-Gesamtzahl: **127**.
-Dateigröße `index.html`: ca. 285 KB (davon ~155 KB Sprite-Raster, ~25 KB Wortdaten).
+Aktueller Service-Worker-Cache: `kana-dojo-v23`. Letzter Commit: „Paket H: Schilder-Kanji" (`6998bdb`).
+Neu seit 15.09.2026: Tab 🧩 Puzzle-Bild (F), 256 Kana-Wörter mit **deutscher Bedeutung** in 9 Gruppen (G)
+und **153 Schilder-Kanji-Wörter in 7 Gruppen mit zwei Fragetypen** (H). Deployed sind die Ausbau-Pakete 1–5
+(08.08.2026), die Pakete A–E (21.08.2026) sowie F, G und H (15.09.2026). Badge-Gesamtzahl: **141**.
+Dateigröße `index.html`: ca. 307 KB (davon ~155 KB Sprite-Raster, ~40 KB Wort-/Kanji-Daten).
 
 ## ⏭️ WO WEITERMACHEN (Stand 15.09.2026)
 Ronny hat die App drei Wochen getestet: **„für das Erlernen der Kana sehr gut"**. Am 15.09.2026
 wurden die nächsten Schritte entschieden (Abschnitt „📋 Ausbauplan Herbst 2026" unten) und
-**Paket F und Paket G am selben Tag umgesetzt** (Cache `kana-dojo-v22`).
+**Pakete F, G und H am selben Tag umgesetzt** (Cache `kana-dojo-v23`).
 
-**Nächster Schritt:** Ronny testet die neuen Wortgruppen auf dem Handy (er war „fast mit den Kana
-durch"; die Gruppen 旅カナ/あいさつ/食カナ schalten sich bei seinem Spielstand über die bestehende
-Kette frei, sobald die jeweilige Vorgänger-Gruppe 10 Antworten mit 80 % hat). Danach **Paket H**.
-Kleiner offener Rest aus der G-Spezifikation: `lang="ja"` auf `#char-display` – wird mit Paket H
-gesetzt (dort wird es für die Kanji-Glyphen relevant).
+**Nächster Schritt:** Ronny testet Wortgruppen und Kanji auf dem Handy. Die Kanji-Gruppen hängen
+hinter den Wortgruppen an der Kette (erste Kanji-Gruppe 数 öffnet, wenn みちあんない 10 Antworten mit
+80 % hat). Danach laut Plan **Paket 6 iBj-Eigenwerbung**, dann Play Store (TWA), zuletzt Gott-Level.
+Kanji-Ausbau in Tranchen (Richtung 500) ist vorbereitet: neue Einträge einfach an den Datenblock
+anhängen, ggf. neue Gruppe in `KANJI_GROUPS`/`GROUP_ORDER`/`masterySets`/`badges_bauen.py` (Tabelle `KG`).
 
 Reihenfolge:
 1. ~~Paket F – Puzzle-Bild~~ ✅ umgesetzt 15.09.2026
 2. ~~Paket G – Kana-Wörter mit Bedeutung~~ ✅ umgesetzt 15.09.2026 (Bericht im Abschnitt „✅ Paket G")
-3. **Paket H – Schilder-Kanji** (erste Tranche 120–150 Wörter, zwei Fragetypen)
+3. ~~Paket H – Schilder-Kanji~~ ✅ umgesetzt 15.09.2026 (Bericht im Abschnitt „✅ Paket H")
 4. **Paket 6 – iBj-Eigenwerbung**
 5. **Play Store als TWA** (bewusst NACH Kanji – Ronnys Entscheidung 15.09.)
 6. **Gott-Level** (mit Kanji in der Bedingung)
@@ -179,7 +179,40 @@ Kette (10 Antworten, 80 %). Meisterschafts-Abzeichen je neuer Gruppe (`MASTERY_S
 Wörter unverändert nach Migration · Vorstellungs-Karte + Übungsfrage bei Wörtern · Buttons mit
 langen Bedeutungen brechen sauber um (375 px) · Profimodus 10 s bleibt.
 
-### Paket H – Schilder-Kanji (mittel–groß, Inhalt ist der Hauptaufwand)
+### ✅ Paket H – Schilder-Kanji (umgesetzt 15.09.2026)
+Backup vorher `index_v21_2026-09-15_pre-paketH.html`, Cache `kana-dojo-v23`, Commit `6998bdb`.
+Wortliste: `WORTLISTE_Paket-H_Entwurf.md` – **komplett freigegeben** (Ronny: alle ❓-Kandidaten behalten;
+Zahlen zuerst, „größter Nutzen"; Lesungs-Frage bei 四/七/九 mit Zähl-Lesung よん/なな/きゅう – meine
+Entscheidung, weil pro Wort nur eine richtige Antwort möglich ist und man diese Lesungen an Kasse und
+Gleis hört). **153 Wörter** (in der Liste stand 152 – Zählfehler, 時 hat 22).
+**Daten:** `{char:'出口',reading:'でぐち',romaji:'deguchi',group:'駅',script:'j',kanji:true,de:'Ausgang'}`.
+Gruppen/Reihenfolge (an `GROUP_ORDER` angehängt, Kette wie bisher): `数`19 · `駅`21 · `道`22 · `看板`24 ·
+`食`24 · `宿`21 · `時`22. `KANJI_GROUPS` ist Teil von `WORD_GROUPS` → Intro-Karte, Bedeutungs-Abfrage,
+10-s-Profimodus und Meisterschaft greifen automatisch. Kanji passieren den Hiragana/Katakana-Filter
+(`if(k.kanji)return true` in `pickQ`). ~45 Kanji-Wörter sind bewusst Kana-Wörter aus Paket G im
+Schriftbild (でぐち → 出口): eigener Leitner-Schlüssel, gewollter Aha-Moment.
+**Zwei Fragetypen (50/50, in `pickQ` gewürfelt, `currentQ.modus`, globales `frageModus`):**
+`bedeutung` = deutsche Buttons wie bei Kana-Wörtern (Distraktoren: eigene Gruppe → andere Kanji-Gruppen →
+Kana-Wortgruppen). `lesung` = Kana-Buttons (`pickLesungDistractors`: Lesungen anderer Kanji-Wörter mit
+**gleicher Silbenzahl** → Hiragana-Wörter gleicher Länge → Einzel-Kana (für に/ご/ゆ) → Kanji-Lesungen mit
+ähnlichster Silbenzahl). Ersatz-Objekte tragen die Lesung im Feld `reading`; `antwortText` liest im
+Lesungs-Modus `reading`. Nur 2 von 153 Wörtern (各駅停車, 営業中 – die einzigen 8-Silber) brauchen
+den ±1-Rückfall. Karten-Untertitel sagt, was gefragt ist: „漢字 · 看板 · Wie liest man das?" /
+„… Was bedeutet das?". Rückmeldung: „✓ Richtig! – きんし · verboten" / „✗ Ausgang (でぐち)".
+Intro-Karte: Wort, „でぐち · deguchi", „漢字 · 駅", „📖 Bedeutung: Ausgang". `lang="ja"` auf
+`#char-display`, `#intro-char` und Lesungs-Buttons. CSS `.ans-btn.lesung` 19 px, `.lesung.lang` 16 px
+(wenn eine Antwort ≥ 7 Silben hat – alle vier Buttons der Frage gleich klein).
+**Badges 141** (statt 127): je Kanji-Gruppe Freischaltung + Meisterschaft (`k_kazu_`, `k_eki_`, `k_michi_`,
+`k_kanban_`, `k_shoku_`, `k_yado_`, `k_toki_`), Generator-Tabelle `KG`.
+**Getestet (Browser, 375 px):** alle 153 Lesungs-Distraktoren-Sätze geprüft (4 verschiedene, Silbenzahl
+gleich, max. Abweichung 1 bei den zwei 8-Silbern) · 400 Fragen im Hiragana-Filter mit nur 数 offen:
+Kanji kommen dran, beide Modi, Buttons je Modus rein Kana bzw. rein Deutsch · Kette: みちあんない 18/20 →
+nur 数 frei · Intro über echten Weg („✨ Neues Wort!", 卵 · たまご · tamago · 漢字 · 食 · Bedeutung Ei),
+Übungsfrage ungewertet · je Modus eine gewertete richtige Antwort: `charOk` +2, `total` +2, Box 1 ·
+längste Lesung かくえきていしゃ passt ohne Überlauf · Fortschritt zeigt Kanji-Gruppen · 141 Badge-Karten ·
+kein horizontales Scrollen · keine Konsolenfehler · Live byte-identisch mit `origin/main`.
+
+### Spezifikation Paket H (Referenz, wie geplant)
 **Ziel:** Die Kanji-Wörter, denen man in Japan täglich begegnet – als **Wörter**, nicht als Zeichen.
 **Umfang zum Start (Ronny): 120–150 Wörter**, thematisch gruppiert (~20 je Gruppe):
 Bahnhof/Verkehr (駅, 出口, 入口, 改札, 新幹線), Orientierung (右, 左, 北, 東京, 大阪, 京都),
