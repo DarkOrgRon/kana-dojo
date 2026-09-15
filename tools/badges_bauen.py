@@ -46,24 +46,25 @@ add('Freischaltungen', 'kata', 'Katakana freigesch.', 'カ', "s.unlocked.include
 add('Freischaltungen', 'dak', 'Dakuten freigesch.', '゛', "s.unlocked.includes('が行')",
     'Schalte die Reihe が行 frei.')
 
-# ── Wortstufen: freigeschaltet ───────────────────────────────────────────────
-wu = [('2文字','2-Silben','\U0001f524'),('3文字','3-Silben','\U0001f521'),
-      ('4文字','4-Silben','\U0001f520'),('5文字','5-Silben','\U0001f4d6'),
-      ('混合','Gemischt','\U0001f4d4')]
-ids_u = ['w2_unlock','w3_unlock','w4_unlock','w5_unlock','mix_unlock']
-for (g, name, e), bid in zip(wu, ids_u):
-    txt = 'Schalte gemischte Wörter frei.' if g == '混合' else f'Schalte Wörter mit {name[0]} Silben frei.'
-    add('Wortstufen freigeschaltet', bid, f'{name} freigesch.', e, f"s.unlocked.includes('{g}')", txt)
+# ── Wortstufen: freigeschaltet (Paket G: 9 Gruppen, 混合 entfaellt) ─────────
+# (Gruppe, Badge-ID-Praefix, Label-Kurzname, Emoji freigeschaltet, Emoji gemeistert, Beschreibung-Name)
+WG = [('2文字','w2','2-Silben','🔤','⭐','2-Silben-Wörter'),
+      ('3文字','w3','3-Silben','🔡','💠','3-Silben-Wörter'),
+      ('旅カナ','tabi','Reise-Kana','🧳','🗼','Reise-Kana-Wörter'),
+      ('4文字','w4','4-Silben','🔠','💮','4-Silben-Wörter'),
+      ('あいさつ','aisatsu','Redewendungen','🙇','🎏','Redewendungen'),
+      ('5文字','w5','5-Silben','📖','👑','5-Silben-Wörter'),
+      ('食カナ','shoku','Essen-Kana','🍽️','🥢','Essen-Kana-Wörter'),
+      ('たべもの','tabemono','Geschmack','🍱','🍣','Geschmacks-Wörter'),
+      ('みちあんない','michi','Unterwegs','🧭','🏯','Unterwegs-Wörter')]
+for g, pre, name, e_u, e_m, dname in WG:
+    add('Wortstufen freigeschaltet', f'{pre}_unlock', f'{name} freigesch.', e_u,
+        f"s.unlocked.includes('{g}')", f'Schalte die Wortgruppe {g} frei.')
 
-# ── Wortstufen: gemeistert (NEU: Leitner-Box 5) ──────────────────────────────
-wm = [('w2_box5','2-Silben gemeistert','⭐'),('w3_box5','3-Silben gemeistert','\U0001f4a0'),
-      ('w4_box5','4-Silben gemeistert','\U0001f4ae'),('w5_box5','5-Silben gemeistert','\U0001f451'),
-      ('mix_box5','Gemischt gemeistert','\U0001f3ef')]
-namen = {'w2_box5':'2-Silben-Wörter','w3_box5':'3-Silben-Wörter','w4_box5':'4-Silben-Wörter',
-         'w5_box5':'5-Silben-Wörter','mix_box5':'gemischten Wörter'}
-for bid, lab, e in wm:
-    add('Wortstufen gemeistert', bid, lab, e, f"masteryDone(s,'{bid}')",
-        f'Alle {namen[bid]} in Leitner-Box 5.')
+# ── Wortstufen: gemeistert (Leitner-Box 5) ───────────────────────────────────
+for g, pre, name, e_u, e_m, dname in WG:
+    add('Wortstufen gemeistert', f'{pre}_box5', f'{name} gemeistert', e_m,
+        f"masteryDone(s,'{pre}_box5')", f'Alle {dname} in Leitner-Box 5.')
 
 # ── Kana-Meisterschaft (NEU) ─────────────────────────────────────────────────
 km = [('hira_base','Hiragana-Reihen','\U0001f361','Alle Hiragana-Grundreihen in Box 5.'),
