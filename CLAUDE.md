@@ -10,7 +10,9 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v23`. Letzter Commit: „Paket H: Schilder-Kanji" (`6998bdb`).
+Aktueller Service-Worker-Cache: `kana-dojo-v24`. Letzter Commit: „Lernpfad linear" (`66dfb88`, 18.09.2026).
+Seit 18.09.2026 gibt es **keinen Hiragana/Katakana-Filter mehr** – der Lernpfad ist linear
+Hiragana → Katakana → Wörter → Kanji (Abschnitt „✅ Lernpfad linear").
 Neu seit 15.09.2026: Tab 🧩 Puzzle-Bild (F), 256 Kana-Wörter mit **deutscher Bedeutung** in 9 Gruppen (G)
 und **153 Schilder-Kanji-Wörter in 7 Gruppen mit zwei Fragetypen** (H). Deployed sind die Ausbau-Pakete 1–5
 (08.08.2026), die Pakete A–E (21.08.2026) sowie F, G und H (15.09.2026). Badge-Gesamtzahl: **141**.
@@ -19,9 +21,10 @@ Dateigröße `index.html`: ca. 307 KB (davon ~155 KB Sprite-Raster, ~40 KB Wort-
 ## ⏭️ WO WEITERMACHEN (Stand 15.09.2026)
 Ronny hat die App drei Wochen getestet: **„für das Erlernen der Kana sehr gut"**. Am 15.09.2026
 wurden die nächsten Schritte entschieden (Abschnitt „📋 Ausbauplan Herbst 2026" unten) und
-**Pakete F, G und H am selben Tag umgesetzt** (Cache `kana-dojo-v23`).
+**Pakete F, G und H am 15.09. umgesetzt**, am 18.09.2026 nach Ronnys Test („macht wirklich viel Spaß,
+fühlt sich sehr rund an") der **Lernpfad linear** gemacht (Cache `kana-dojo-v24`).
 
-**Nächster Schritt:** Ronny testet Wortgruppen und Kanji auf dem Handy. Die Kanji-Gruppen hängen
+**Nächster Schritt:** Ronny testet weiter auf dem Handy. Die Kanji-Gruppen hängen
 hinter den Wortgruppen an der Kette (erste Kanji-Gruppe 数 öffnet, wenn みちあんない 10 Antworten mit
 80 % hat). Danach laut Plan **Paket 6 iBj-Eigenwerbung**, dann Play Store (TWA), zuletzt Gott-Level.
 Kanji-Ausbau in Tranchen (Richtung 500) ist vorbereitet: neue Einträge einfach an den Datenblock
@@ -178,6 +181,25 @@ Kette (10 Antworten, 80 %). Meisterschafts-Abzeichen je neuer Gruppe (`MASTERY_S
 **Tests:** Wortfrage zeigt 4 verschiedene Bedeutungen, genau eine richtig · Leitner-Box der alten
 Wörter unverändert nach Migration · Vorstellungs-Karte + Übungsfrage bei Wörtern · Buttons mit
 langen Bedeutungen brechen sauber um (375 px) · Profimodus 10 s bleibt.
+
+### ✅ Lernpfad linear – Filter entfernt (umgesetzt 18.09.2026)
+Backup vorher `index_v22_2026-09-18_pre-lernpfad.html`, Cache `kana-dojo-v24`, Commit `66dfb88`.
+**Anlass (Ronny):** Mit Kanji wirkt der Schalter „ひ Hiragana / カ Katakana / 両方 Beide" falsch – man
+soll sich von Hiragana über Katakana zu Kanji durcharbeiten. Entscheidung: Filter komplett weg, Zeile
+leer lassen (ruhiger), kein Lernpfad-Anzeiger.
+**Umgesetzt:** (1) Die drei Filter-Buttons sind aus `#script-bar` entfernt, nur „🔥 Profi" bleibt.
+(2) `pickQ` hat keinen Schriftfilter mehr – Pool = alles Freigeschaltete, Leitner gewichtet.
+`S.script` bleibt im Spielstand, wird aber ignoriert (`setScript` und die Button-Initialisierung sind
+gelöscht). (3) `defaultState().unlocked` = `['あ行']` statt `['あ行','ア行']` – **neue** Spieler starten
+nur mit Hiragana; ア行 öffnet über die normale Kette, sobald 組合 (letzte Hiragana-Gruppe) 10 Antworten
+mit 80 % hat. (4) Badge `kata` „Katakana freigeschaltet" prüft jetzt ア行 statt カ行 (Generator angepasst).
+**Altspielstände:** unverändert – `computeUnlocks` fügt nur hinzu, nimmt nie weg. Wer ア行 schon offen
+hatte, behält es (und hat das `kata`-Badge damit sofort).
+**Getestet (Browser, 375 px):** Zeile zeigt nur „🔥 Profi" · `setScript` existiert nicht mehr · neuer
+Spielstand: nur あ行; あ行 12/11 → か行 dazu, ア行 weiter zu; alle 16 Hiragana-Gruppen gut → ア行 offen,
+カ行 zu (17 Gruppen) · gespeicherter Filterwert `hiragana` wird ignoriert (200 Fragen: 97 h / 103 k) ·
+keine Konsolenfehler · Live byte-identisch mit `origin/main`.
+Der Bugfix-Eintrag zum Schriftfilter vom 08.08.2026 weiter unten ist damit Historie.
 
 ### ✅ Paket H – Schilder-Kanji (umgesetzt 15.09.2026)
 Backup vorher `index_v21_2026-09-15_pre-paketH.html`, Cache `kana-dojo-v23`, Commit `6998bdb`.
