@@ -301,10 +301,9 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
   </div>
 </div>
 
+<!-- Lernpfad linear (18.09.2026): Der Filter Hiragana/Katakana/Beide ist entfernt. Die Reihenfolge
+     Hiragana → Katakana → Wörter → Kanji ergibt sich allein aus der Freischalt-Kette (GROUP_ORDER). -->
 <div id="script-bar">
-  <button class="script-btn" data-script="hiragana" onclick="setScript('hiragana')">ひ Hiragana</button>
-  <button class="script-btn" data-script="katakana" onclick="setScript('katakana')">カ Katakana</button>
-  <button class="script-btn active" data-script="both" onclick="setScript('both')">両方 Beide</button>
   <button class="script-btn" id="pro-toggle" onclick="toggleProMode()">🔥 Profi</button>
 </div>
 
@@ -1198,7 +1197,7 @@ const BADGES=[
   {id:'q200',label:'200 Fragen',emoji:'💪',cond:s=>s.dailyTotal>=200},
   {id:'q500',label:'500 Fragen',emoji:'🌺',cond:s=>s.dailyTotal>=500},
   // ── Freischaltungen ─────────────────────────────────────────────────────────
-  {id:'kata',label:'Katakana freigesch.',emoji:'カ',cond:s=>s.unlocked.includes('カ行')},
+  {id:'kata',label:'Katakana freigesch.',emoji:'カ',cond:s=>s.unlocked.includes('ア行')},
   {id:'dak',label:'Dakuten freigesch.',emoji:'゛',cond:s=>s.unlocked.includes('が行')},
   // ── Wortstufen freigeschaltet ───────────────────────────────────────────────
   {id:'w2_unlock',label:'2-Silben freigesch.',emoji:'🔤',cond:s=>s.unlocked.includes('2文字')},
@@ -1357,7 +1356,7 @@ const BADGE_DESC={
   q100:'Beantworte 100 Fragen an einem Tag.',
   q200:'Beantworte 200 Fragen an einem Tag.',
   q500:'Beantworte 500 Fragen an einem Tag.',
-  kata:'Schalte die Reihe カ行 frei.',
+  kata:'Schalte die Reihe ア行 frei.',
   dak:'Schalte die Reihe が行 frei.',
   w2_unlock:'Schalte die Wortgruppe 2文字 frei.',
   w3_unlock:'Schalte die Wortgruppe 3文字 frei.',
@@ -1484,7 +1483,7 @@ const MILESTONE_CFG={
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const SK='kana_dojo_v4';
-function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行','ア行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},charOk:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],proDate:null,proHearts:3,proStats:{a:0,c:0},perfectDays:0,perfectEvalDate:null,puzzleShown:0};}
+function defaultState(){return{total:0,correct:0,streak:0,lastDate:null,combo:0,bestCombo:0,unlocked:['あ行'],gStats:{},cStats:{},badges:[],script:'both',dailyTotal:0,dailyDate:null,dailyCorrect:0,daysLearned:0,character:null,charStats:{},charOk:{},sound:true,history:{},box:{},recent:[],seen:{},myMnemo:{},dailyBestCombo:0,dailyClaimed:[],proDate:null,proHearts:3,proStats:{a:0,c:0},perfectDays:0,perfectEvalDate:null,puzzleShown:0};}
 
 let S=defaultState();
 (()=>{try{const d=localStorage.getItem(SK);if(d){const parsed=JSON.parse(d);S={...defaultState(),...parsed};}}catch(e){}
@@ -1558,16 +1557,9 @@ const schriftName=(k,jp)=>k.script==='j'?'漢字':k.script==='h'?(jp?'ひらが�
 
 let lastChar='';
 function pickQ(){
-  // Bugfix 08.08.2026: Buttons speichern 'hiragana'/'katakana', der Filter prüfte
-  // aber auf 'h'/'k' – dadurch hat der Schriftsystem-Filter nie gegriffen.
-  const sc=S.script==='hiragana'?'h':S.script==='katakana'?'k':S.script;
-  const pool=ALL_KANA.filter(k=>{
-    if(!S.unlocked.includes(k.group))return false;
-    if(k.kanji)return true; // Kanji-Woerter sind von der Hiragana/Katakana-Auswahl unabhaengig
-    if(sc==='h'&&k.script!=='h')return false;
-    if(sc==='k'&&k.script!=='k')return false;
-    return true;
-  });
+  // Seit 18.09.2026 ohne Schriftfilter: Der Pool ist alles Freigeschaltete, die Leitner-
+  // Gewichtung entscheidet, was dran kommt. (S.script bleibt im Spielstand, wird aber ignoriert.)
+  const pool=ALL_KANA.filter(k=>S.unlocked.includes(k.group));
   if(pool.length<4)return null;
   // weighted pick, avoid repeating same char
   const eligible=pool.filter(k=>k.char!==lastChar);
@@ -2183,12 +2175,6 @@ function renderBadges(){
 }
 
 // ── SCRIPT SELECTOR ───────────────────────────────────────────────────────────
-function setScript(sc){
-  S.script=sc;save();
-  document.querySelectorAll('.script-btn').forEach(b=>{if(b.id!=='pro-toggle')b.classList.toggle('active',b.dataset.script===sc);});
-  clearTimeout(nextTimer);
-  renderQuestion();
-}
 
 // ── SOUND (Web Audio, keine Dateien nötig) ────────────────────────────────────
 let _actx=null;
@@ -2503,10 +2489,6 @@ function resetAll(){
   openCharSelect();
 }
 
-// Set initial script button (null-sicher, falls ein unbekannter Wert gespeichert ist)
-const initSb=document.querySelector(`.script-btn[data-script="${S.script}"]`);
-if(initSb)initSb.classList.add('active');
-document.querySelectorAll('.script-btn').forEach(b=>{if(b.id!=='pro-toggle'&&b.dataset.script!==S.script)b.classList.remove('active');});
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 proResetIfNewDay();

@@ -41,8 +41,8 @@ for n, e, lab in fragen:
         f'Beantworte {n} Fragen an einem Tag.')
 
 # ── Freischaltungen ──────────────────────────────────────────────────────────
-add('Freischaltungen', 'kata', 'Katakana freigesch.', 'カ', "s.unlocked.includes('カ行')",
-    'Schalte die Reihe カ行 frei.')
+add('Freischaltungen', 'kata', 'Katakana freigesch.', 'カ', "s.unlocked.includes('ア行')",
+    'Schalte die Reihe ア行 frei.')  # seit 18.09.2026: Katakana startet nicht mehr frei
 add('Freischaltungen', 'dak', 'Dakuten freigesch.', '゛', "s.unlocked.includes('が行')",
     'Schalte die Reihe が行 frei.')
 
