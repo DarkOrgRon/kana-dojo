@@ -59,7 +59,14 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 .nav-btn:hover:not(.active){background:rgba(255,255,255,0.06)!important;}
 
 /* Script selector */
-#script-bar{display:flex;justify-content:center;gap:8px;padding:14px 16px 0;}
+#script-bar{display:flex;justify-content:center;align-items:center;gap:12px;padding:14px 16px 0;}
+/* Gesamt-Fortschrittsbalken: duenn und ruhig, zwei Fuelltoene uebereinander (Training unter Meister) */
+#gesamt-wrap{flex:1;min-width:0;cursor:pointer;display:flex;flex-direction:column;gap:5px;}
+#gesamt-bar{position:relative;height:6px;border-radius:3px;background:rgba(255,255,255,0.07);overflow:hidden;}
+#gesamt-training,#gesamt-meister{position:absolute;left:0;top:0;height:100%;border-radius:3px;transition:width 0.6s ease;}
+#gesamt-training{background:rgba(232,200,122,0.32);}
+#gesamt-meister{background:var(--gold);}
+#gesamt-text{font-size:11px;color:var(--muted);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .script-btn{border-radius:20px;padding:7px 16px;font-size:13px;transition:all 0.2s;border:1px solid rgba(255,255,255,0.1);color:var(--muted);background:rgba(255,255,255,0.05);}
 .script-btn.active{background:linear-gradient(135deg,#8b1a1a,#c0392b);border-color:var(--gold);color:#fff;}
 .script-btn:hover:not(.active){background:rgba(255,255,255,0.1);}
@@ -304,6 +311,12 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 <!-- Lernpfad linear (18.09.2026): Der Filter Hiragana/Katakana/Beide ist entfernt. Die Reihenfolge
      Hiragana → Katakana → Wörter → Kanji ergibt sich allein aus der Freischalt-Kette (GROUP_ORDER). -->
 <div id="script-bar">
+  <!-- Gesamt-Fortschritt (20.09.2026): ein Balken ueber ALLE Eintraege der App (fester Nenner).
+       Kraeftiges Gold = gemeistert (Leitner-Box 5), blasses Gold = im Training (Box 1-4). -->
+  <div id="gesamt-wrap" onclick="switchView('progress')" title="Zum Fortschritt">
+    <div id="gesamt-bar"><div id="gesamt-training"></div><div id="gesamt-meister"></div></div>
+    <div id="gesamt-text"></div>
+  </div>
   <button class="script-btn" id="pro-toggle" onclick="toggleProMode()">🔥 Profi</button>
 </div>
 
@@ -1092,6 +1105,24 @@ function checkPuzzle(){
   return [{emoji:'🧩',head:n===16?'Bild vollständig!':'Neues Puzzle-Teil!',label:n+' von 16 Teilen freigespielt'}];
 }
 
+// ── GESAMT-FORTSCHRITT (20.09.2026) ───────────────────────────────────────────
+// Ein Balken ueber alle Eintraege der App (Kana, Woerter, Kanji). Der Nenner ist fest
+// (ALL_KANA.length), damit der Balken beim Freischalten neuer Gruppen nie zurueckspringt.
+// gemeistert = Leitner-Box 5 (gleiche Schwelle wie die Meister-Abzeichen),
+// im Training = Box 1-4 (mindestens einmal richtig beantwortet).
+function gesamtFortschritt(){
+  let meister=0,training=0;
+  for(const k of ALL_KANA){const b=(S.box&&S.box[k.char])||0;if(b>=5)meister++;else if(b>=1)training++;}
+  return{meister,training,gesamt:ALL_KANA.length};
+}
+function renderGesamtBalken(){
+  const el=document.getElementById('gesamt-bar');if(!el)return;
+  const f=gesamtFortschritt();
+  document.getElementById('gesamt-meister').style.width=(f.meister/f.gesamt*100)+'%';
+  document.getElementById('gesamt-training').style.width=((f.meister+f.training)/f.gesamt*100)+'%';
+  document.getElementById('gesamt-text').textContent=f.meister+' / '+f.gesamt+' gemeistert';
+}
+
 // ── MISSIONEN ─────────────────────────────────────────────────────────────────
 // Seit 21.08.2026 (Paket E) nur noch Tagesquests. Reihen-Serien und Schriftrollen
 // sind entfallen – ihre Rolle übernehmen die Meisterschafts-Abzeichen weiter unten,
@@ -1815,6 +1846,7 @@ function renderQuestion(){
   const introShown=maybeShowIntro(q);
   practiceQ=introShown;
   renderMissionStrip();
+  renderGesamtBalken();
   if(!introShown)startProTimer();
 }
 
