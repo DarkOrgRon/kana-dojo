@@ -304,6 +304,14 @@ TWA im Play Store. Realistische Wege (Datenmenge minimal, eine Nachricht je Antw
 **Offene Regel:** Fairness bei unterschiedlichem Lernstand – gemeinsamer Pool (nur Gruppen, die
 beide freigeschaltet haben) oder jeder sein Stand als Handicap. Aufwand: Weg 3 klein, Weg 1/2
 mittel–groß (Verbindung, Abbruch, Ergebnis-Bildschirm, Abzeichen).
+**Entscheidungen Ronny (20.09.2026):** **Weg 2 (QR-Handschlag)** ist gesetzt – Absicht: Battle nur,
+wenn man wirklich beisammen sitzt (man muss den Bildschirm des anderen scannen); kein Raum-Code, kein
+Server, Verbindung lebt nur fuer die Session. **Jeder spielt mit eigenem Spielstand** (eigene
+Leitner-Fragen) = natuerliches Handicap, kein gemeinsamer Pool. Technik-Hinweise: gemeinsames WLAN
+oder Hotspot noetig (bewusst keine Internet-Vermittlung); SDP fuer den QR eindampfen; Scanner:
+BarcodeDetector (Android) + eingebetteter Fallback fuers iPhone. **Offen: Tempo.** Punkte nur aus
+Gegner-Fehlern belohnen langsames Antworten -> Claude-Vorschlag: Profimodus-Countdown im Battle Pflicht
+(Zeitablauf = Fehler) plus feste Rundenlaenge (z. B. 3 min / 30 Fragen) oder Zielpunktzahl.
 **Status:** Idee, bewusst erst nach Play-Store-Launch.
 
 ### Gott-Level (zurückgestellt bis nach Paket H)
