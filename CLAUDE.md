@@ -287,6 +287,25 @@ Datenstruktur so bauen, dass Nachliefern nur Einträge ergänzt.
 **Tests:** beide Fragetypen korrekt, Lesungs-Distraktoren gleiche Silbenzahl · Glyphen japanisch
 (`lang="ja"`) · Gruppen erst nach Wortgruppen freischaltbar · Meisterschaft je Gruppe.
 
+### 💡 Idee für NACH dem Live-Gang: Battle-Modus (Ronny, 20.09.2026)
+**Idee:** Zwei Spieler in der Nähe verbinden sich und spielen gleichzeitig; jeder Fehler des Gegners
+(falscher Button) gibt der Gegenseite einen Punkt. Sieger ab fester Punktzahl (Ronnys Präferenz)
+oder wenn die Herzen weg sind (wie Profimodus).
+**Machbarkeit (Claude, 20.09.2026):** **Nicht per Bluetooth** – Web Bluetooth erlaubt nur Browser →
+BLE-Zubehör, keine Handy-zu-Handy-Verbindung; iOS hat Web Bluetooth gar nicht. Gilt auch für die
+TWA im Play Store. Realistische Wege (Datenmenge minimal, eine Nachricht je Antwort):
+1. **Raum-Code + WebRTC** (Favorit): 4-stelliger Code, danach Peer-to-Peer-Datenkanal. Braucht
+   erstmals einen kleinen Signaling-Dienst (nur Handschlag, sieht keine Spieldaten) → Datenschutz
+   und Wartung bedenken.
+2. **QR-Code-Handschlag ohne Server:** Offer/Answer per QR gegenseitig scannen, dann WebRTC
+   (auch nur im WLAN). Kein Server, aber zwei Scans.
+3. **Hot-Seat an einem Gerät:** abwechselnd am selben Handy, Punkte zählen. Klein, kein Netz –
+   sinnvoll als erster Schritt, um den Spielmodus zu testen, bevor Verbindungstechnik gebaut wird.
+**Offene Regel:** Fairness bei unterschiedlichem Lernstand – gemeinsamer Pool (nur Gruppen, die
+beide freigeschaltet haben) oder jeder sein Stand als Handicap. Aufwand: Weg 3 klein, Weg 1/2
+mittel–groß (Verbindung, Abbruch, Ergebnis-Bildschirm, Abzeichen).
+**Status:** Idee, bewusst erst nach Play-Store-Launch.
+
 ### Gott-Level (zurückgestellt bis nach Paket H)
 Bedingung (mit Kanji): alle Gruppen freigeschaltet + **alle** Einträge (Kana, Wörter, Kanji) in Box 5 +
 ≥ 99 % richtige in den **letzten 500** Antworten (`recentAcc`, keine Lebenszeit-Quote).
