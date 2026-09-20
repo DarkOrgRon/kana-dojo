@@ -61,12 +61,21 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 /* Script selector */
 #script-bar{display:flex;justify-content:center;align-items:center;gap:12px;padding:14px 16px 0;}
 /* Gesamt-Fortschrittsbalken: duenn und ruhig, zwei Fuelltoene uebereinander (Training unter Meister) */
-#gesamt-wrap{flex:1;min-width:0;cursor:pointer;display:flex;flex-direction:column;gap:5px;}
+#gesamt-wrap{flex:1;min-width:0;height:35px;cursor:pointer;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);padding:0 14px;display:flex;align-items:center;transition:background 0.2s;}
+#gesamt-wrap:hover{background:rgba(255,255,255,0.1);}
+.gesamt-front{flex:1;min-width:0;}
 #gesamt-bar{position:relative;height:6px;border-radius:3px;background:rgba(255,255,255,0.07);overflow:hidden;}
 #gesamt-training,#gesamt-meister{position:absolute;left:0;top:0;height:100%;border-radius:3px;transition:width 0.6s ease;}
 #gesamt-training{background:rgba(232,200,122,0.32);}
 #gesamt-meister{background:var(--gold);}
-#gesamt-text{font-size:11px;color:var(--muted);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Rueckseite: drei Werte nebeneinander, Zahl gross, Label klein */
+.gesamt-back{display:none;flex:1;min-width:0;justify-content:space-between;gap:6px;}
+.gesamt-zahl{display:flex;flex-direction:column;align-items:center;line-height:1;min-width:0;}
+.gesamt-zahl b{font-size:13px;color:var(--gold);font-weight:700;}
+.gesamt-zahl span{font-size:9px;color:var(--muted);margin-top:3px;white-space:nowrap;}
+#gesamt-wrap.flipped .gesamt-front{display:none;}
+#gesamt-wrap.flipped .gesamt-back{display:flex;}
+#gesamt-wrap.flipping{animation:badgeFlip 0.3s ease;}
 .script-btn{border-radius:20px;padding:7px 16px;font-size:13px;transition:all 0.2s;border:1px solid rgba(255,255,255,0.1);color:var(--muted);background:rgba(255,255,255,0.05);}
 .script-btn.active{background:linear-gradient(135deg,#8b1a1a,#c0392b);border-color:var(--gold);color:#fff;}
 .script-btn:hover:not(.active){background:rgba(255,255,255,0.1);}
@@ -313,10 +322,14 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 <div id="script-bar">
   <!-- Gesamt-Fortschritt (20.09.2026): ein Balken ueber ALLE Eintraege der App (fester Nenner).
        Kraeftiges Gold = gemeistert (Leitner-Box 5), blasses Gold = im Training (Box 1-4). -->
-  <div id="gesamt-wrap" onclick="switchView('progress')" title="Zum Fortschritt">
-    <div id="gesamt-bar"><div id="gesamt-training"></div><div id="gesamt-meister"></div></div>
-    <div id="gesamt-text"></div>
-  </div>
+  <button id="gesamt-wrap" onclick="flipGesamt()" title="Antippen für Zahlen" aria-label="Gesamt-Fortschritt">
+    <div class="gesamt-front"><div id="gesamt-bar"><div id="gesamt-training"></div><div id="gesamt-meister"></div></div></div>
+    <div class="gesamt-back">
+      <div class="gesamt-zahl"><b id="gesamt-n-meister">0</b><span>gemeistert</span></div>
+      <div class="gesamt-zahl"><b id="gesamt-n-training">0</b><span>im Training</span></div>
+      <div class="gesamt-zahl"><b id="gesamt-n-gesamt">0</b><span>insgesamt</span></div>
+    </div>
+  </button>
   <button class="script-btn" id="pro-toggle" onclick="toggleProMode()">🔥 Profi</button>
 </div>
 
@@ -1120,7 +1133,19 @@ function renderGesamtBalken(){
   const f=gesamtFortschritt();
   document.getElementById('gesamt-meister').style.width=(f.meister/f.gesamt*100)+'%';
   document.getElementById('gesamt-training').style.width=((f.meister+f.training)/f.gesamt*100)+'%';
-  document.getElementById('gesamt-text').textContent=f.meister+' / '+f.gesamt+' gemeistert';
+  document.getElementById('gesamt-n-meister').textContent=f.meister;
+  document.getElementById('gesamt-n-training').textContent=f.training;
+  document.getElementById('gesamt-n-gesamt').textContent=f.gesamt;
+}
+// Tipp auf die Pille: umdrehen (gleiche Squeeze-Animation wie die Abzeichen). Nach 5 s oder
+// erneutem Tipp zurueck – der Balken bleibt die Ruheansicht.
+let gesamtTimer=null;
+function flipGesamt(){
+  const el=document.getElementById('gesamt-wrap');
+  el.classList.toggle('flipped');
+  el.classList.remove('flipping');void el.offsetWidth;el.classList.add('flipping');
+  clearTimeout(gesamtTimer);
+  if(el.classList.contains('flipped'))gesamtTimer=setTimeout(()=>{if(el.classList.contains('flipped'))flipGesamt();},5000);
 }
 
 // ── MISSIONEN ─────────────────────────────────────────────────────────────────
