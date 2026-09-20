@@ -10,9 +10,9 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v25`. Letzter Commit: „Gesamt-Fortschrittsbalken" (`21653d6`, 20.09.2026).
-Seit 20.09.2026 zeigt die Zeile über dem Quiz einen **Gesamt-Fortschrittsbalken** (alle 617 Einträge) neben
-dem Profi-Schalter (Abschnitt „✅ Gesamt-Fortschrittsbalken").
+Aktueller Service-Worker-Cache: `kana-dojo-v26`. Letzter Commit: „Fortschritts-Pille mit Flip" (`ebc9b04`, 20.09.2026).
+Seit 20.09.2026 zeigt die Zeile über dem Quiz eine **Fortschritts-Pille** (Balken über alle 617 Einträge,
+Tipp dreht sie um und zeigt drei Zahlen) neben dem Profi-Schalter (Abschnitt „✅ Gesamt-Fortschrittsbalken").
 Seit 18.09.2026 gibt es **keinen Hiragana/Katakana-Filter mehr** – der Lernpfad ist linear
 Hiragana → Katakana → Wörter → Kanji (Abschnitt „✅ Lernpfad linear").
 Neu seit 15.09.2026: Tab 🧩 Puzzle-Bild (F), 256 Kana-Wörter mit **deutscher Bedeutung** in 9 Gruppen (G)
@@ -204,6 +204,15 @@ blasses Gold (`rgba(232,200,122,0.32)`) = **im Training** (Box 1–4). Nenner fe
 Überlauf, Profi-Button 86 px (endet bei 359 px) · Simulation 120 gemeistert + 200 im Training →
 „120 / 617", Gold 19,4 %, blass bis 51,9 % · Tipp öffnet Fortschritt · kein horizontales Scrollen ·
 keine Konsolenfehler · Live byte-identisch mit `origin/main`.
+**Nachtrag gleicher Tag – Flip-Pille (Cache `kana-dojo-v26`, Backup `index_v24_2026-09-20_pre-flip.html`):**
+Ronnys Idee: Balken in einen runden Rahmen, als Button; Tipp dreht ihn um und zeigt die Zahlen –
+„Mini-Touch-Element" für mehr Interaktion. Umgesetzt: `#gesamt-wrap` ist ein `<button>` im Stil der
+`.script-btn` (35 px hoch, Radius 20 px, gleicher Rand/Hintergrund), vorne nur der Balken (die Zahl
+darunter ist weg), hinten drei Spalten `gemeistert · im Training · insgesamt` (Zahl 13 px Gold, Label
+9 px). Flip = dieselbe Squeeze-Animation wie die Abzeichen (`badgeFlip`), `flipGesamt()`; zurück per
+erneutem Tipp oder automatisch nach 5 s (`gesamtTimer`), damit der Balken die Ruheansicht bleibt.
+Der Sprung zum Fortschritt-Tab beim Tipp ist damit entfallen. Gemessen (375 px): Pille 245×35, Balken
+215×6, Rückseite ohne Überlauf (Spalten 47/52/44 px), Zeile weiterhin 49 px.
 ⚠️ Test-Falle: Der lokale Server `kana-trainer` liefert unter `/` die **alte v3-App** – immer
 `/kana-dojo-v4/index.html` aufrufen, sonst fehlen `istWort` & Co. („ReferenceError").
 
