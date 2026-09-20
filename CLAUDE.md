@@ -10,7 +10,9 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v24`. Letzter Commit: „Lernpfad linear" (`66dfb88`, 18.09.2026).
+Aktueller Service-Worker-Cache: `kana-dojo-v25`. Letzter Commit: „Gesamt-Fortschrittsbalken" (`21653d6`, 20.09.2026).
+Seit 20.09.2026 zeigt die Zeile über dem Quiz einen **Gesamt-Fortschrittsbalken** (alle 617 Einträge) neben
+dem Profi-Schalter (Abschnitt „✅ Gesamt-Fortschrittsbalken").
 Seit 18.09.2026 gibt es **keinen Hiragana/Katakana-Filter mehr** – der Lernpfad ist linear
 Hiragana → Katakana → Wörter → Kanji (Abschnitt „✅ Lernpfad linear").
 Neu seit 15.09.2026: Tab 🧩 Puzzle-Bild (F), 256 Kana-Wörter mit **deutscher Bedeutung** in 9 Gruppen (G)
@@ -23,6 +25,9 @@ Ronny hat die App drei Wochen getestet: **„für das Erlernen der Kana sehr gut
 wurden die nächsten Schritte entschieden (Abschnitt „📋 Ausbauplan Herbst 2026" unten) und
 **Pakete F, G und H am 15.09. umgesetzt**, am 18.09.2026 nach Ronnys Test („macht wirklich viel Spaß,
 fühlt sich sehr rund an") der **Lernpfad linear** gemacht (Cache `kana-dojo-v24`).
+
+Am 20.09.2026 kam auf Ronnys Idee der **Gesamt-Fortschrittsbalken** in die frei gewordene Zeile
+(Cache `kana-dojo-v25`).
 
 **Nächster Schritt:** Ronny testet weiter auf dem Handy. Die Kanji-Gruppen hängen
 hinter den Wortgruppen an der Kette (erste Kanji-Gruppe 数 öffnet, wenn みちあんない 10 Antworten mit
@@ -181,6 +186,26 @@ Kette (10 Antworten, 80 %). Meisterschafts-Abzeichen je neuer Gruppe (`MASTERY_S
 **Tests:** Wortfrage zeigt 4 verschiedene Bedeutungen, genau eine richtig · Leitner-Box der alten
 Wörter unverändert nach Migration · Vorstellungs-Karte + Übungsfrage bei Wörtern · Buttons mit
 langen Bedeutungen brechen sauber um (375 px) · Profimodus 10 s bleibt.
+
+### ✅ Gesamt-Fortschrittsbalken (umgesetzt 20.09.2026)
+Backup vorher `index_v23_2026-09-20_pre-balken.html`, Cache `kana-dojo-v25`.
+**Anlass (Ronny):** Der Profi-Schalter stand nach dem Filter-Ausbau allein in der Zeile. Zwei Ideen:
+(1) ein Balken über alle Einträge der App, (2) Stufen-Balken (Hiragana/Katakana/Kanji) übereinander,
+nur Freigeschaltetes. **Entscheidung:** Idee 1 mit zwei Fülltönen, keine Stufen-Trennstriche, Zahl ja.
+Begründung gegen (2): Nenner wächst beim Freischalten → Balken springt rückwärts; die 256 Wörter
+passen in keine der drei Stufen.
+**Umgesetzt:** `#gesamt-wrap` links (flex:1), Profi-Button rechts. Balken 6 px: kräftiges Gold
+(`var(--gold)`) = **gemeistert** (Leitner-Box 5, gleiche Schwelle wie die Meister-Abzeichen), darunter
+blasses Gold (`rgba(232,200,122,0.32)`) = **im Training** (Box 1–4). Nenner fest `ALL_KANA.length` = 617
+(208 Kana · 256 Wörter · 153 Kanji) – springt beim Freischalten nie zurück. Darunter 11-px-Zeile
+„n / 617 gemeistert". Tipp auf den Balken → Fortschritt-Tab. Aktualisierung in `renderQuestion`
+(`renderGesamtBalken()`, Funktionen `gesamtFortschritt`/`renderGesamtBalken` vor dem Missions-Block).
+**Getestet (Browser, 375 px):** Zeile weiterhin 49 px hoch (wie vorher) · Balken 245 px breit, Text ohne
+Überlauf, Profi-Button 86 px (endet bei 359 px) · Simulation 120 gemeistert + 200 im Training →
+„120 / 617", Gold 19,4 %, blass bis 51,9 % · Tipp öffnet Fortschritt · kein horizontales Scrollen ·
+keine Konsolenfehler · Live byte-identisch mit `origin/main`.
+⚠️ Test-Falle: Der lokale Server `kana-trainer` liefert unter `/` die **alte v3-App** – immer
+`/kana-dojo-v4/index.html` aufrufen, sonst fehlen `istWort` & Co. („ReferenceError").
 
 ### ✅ Lernpfad linear – Filter entfernt (umgesetzt 18.09.2026)
 Backup vorher `index_v22_2026-09-18_pre-lernpfad.html`, Cache `kana-dojo-v24`, Commit `66dfb88`.
