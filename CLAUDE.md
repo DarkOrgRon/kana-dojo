@@ -10,7 +10,7 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v26`. Letzter Commit: „Fortschritts-Pille mit Flip" (`ebc9b04`, 20.09.2026).
+Aktueller Service-Worker-Cache: `kana-dojo-v27`. Letzter Commit: „💡-Karte verrät keine Lösung" (`01f9b6e`, 24.09.2026).
 Seit 20.09.2026 zeigt die Zeile über dem Quiz eine **Fortschritts-Pille** (Balken über alle 617 Einträge,
 Tipp dreht sie um und zeigt drei Zahlen) neben dem Profi-Schalter (Abschnitt „✅ Gesamt-Fortschrittsbalken").
 Seit 18.09.2026 gibt es **keinen Hiragana/Katakana-Filter mehr** – der Lernpfad ist linear
@@ -28,6 +28,9 @@ fühlt sich sehr rund an") der **Lernpfad linear** gemacht (Cache `kana-dojo-v24
 
 Am 20.09.2026 kam auf Ronnys Idee der **Gesamt-Fortschrittsbalken** in die frei gewordene Zeile
 (Cache `kana-dojo-v25`).
+
+Am 24.09.2026 (Ronnys Testreihe 2–3-Zeichen-Wörter): die **💡-Karte verrät während einer offenen
+Frage nicht mehr die Lösung** (Cache `kana-dojo-v27`, Abschnitt „✅ 💡-Karte").
 
 **Nächster Schritt:** Ronny testet weiter auf dem Handy. Die Kanji-Gruppen hängen
 hinter den Wortgruppen an der Kette (erste Kanji-Gruppe 数 öffnet, wenn みちあんない 10 Antworten mit
@@ -186,6 +189,29 @@ Kette (10 Antworten, 80 %). Meisterschafts-Abzeichen je neuer Gruppe (`MASTERY_S
 **Tests:** Wortfrage zeigt 4 verschiedene Bedeutungen, genau eine richtig · Leitner-Box der alten
 Wörter unverändert nach Migration · Vorstellungs-Karte + Übungsfrage bei Wörtern · Buttons mit
 langen Bedeutungen brechen sauber um (375 px) · Profimodus 10 s bleibt.
+
+### ✅ 💡-Karte verrät keine Lösung (umgesetzt 24.09.2026)
+Backup vorher `index_v25_2026-09-24_pre-infokarte.html`, Cache `kana-dojo-v27`.
+**Befund (Ronny, Testreihe 2–3-Zeichen-Wörter):** Beim Nachschlagen per 💡 stand die Bedeutung – also
+die gesuchte Antwort – direkt auf der Karte. Beim Prüfen zeigte sich: Das galt für **alle** Fragetypen,
+auch Kana (Romaji = Lösung) und Kanji (je nach Modus Bedeutung oder Lesung) – bei Kana nur nie
+aufgefallen. Die Karte ist doppelt belegt: Erstvorstellung (muss alles zeigen, Frage danach ungewertet)
+und Nachschlagen während einer gewerteten Frage.
+**Regel:** „Die 💡-Karte zeigt nie das, was gerade gefragt ist – aber alles andere." In `openIntro`:
+`offen = review && !answering && currentQ.q.char===q.char`; `gefragt` = Kanji → `currentQ.modus`,
+Wort → `bedeutung`, Kana → `lesung`. Verdeckte Zeile zeigt „🔒 Lesung/Bedeutung wird gerade
+abgefragt" (CSS `.verdeckt`, gedämpft kursiv). Kana: Romaji weg, **Eselsbrücke bleibt** (bewusst –
+sie ist ein Hinweis, der zur Lösung führt, ohne sie hinzuschreiben). Eigene Notizen immer sichtbar.
+Nach der Antwort (`answering=true`) und bei der Erstvorstellung (`review=false`) zeigt die Karte alles.
+| Fragetyp | zeigt | verbirgt |
+|---|---|---|
+| Kana → Lesung | Zeichen, Eselsbrücke | Romaji |
+| Wort → Bedeutung | Wort, Lesung (Romaji) | Bedeutung |
+| Kanji → Bedeutung | Wort, Lesung (Kana · Romaji) | Bedeutung |
+| Kanji → Lesung | Wort, Bedeutung | Lesung |
+**Getestet (Browser):** alle vier Fragetypen über den echten Weg (`openIntroForCurrent`) · nach der
+Antwort alles sichtbar · Erstvorstellung („✨ Neues Wort!") zeigt Lesung + Bedeutung · direkt danach
+💡 auf dieselbe Frage → Bedeutung verdeckt · keine Konsolenfehler · Live byte-identisch.
 
 ### ✅ Gesamt-Fortschrittsbalken (umgesetzt 20.09.2026)
 Backup vorher `index_v23_2026-09-20_pre-balken.html`, Cache `kana-dojo-v25`.
