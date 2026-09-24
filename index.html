@@ -102,6 +102,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 #intro-card.open{display:flex;}
 .intro-box{background:linear-gradient(145deg,rgba(18,12,8,0.99),rgba(8,8,20,0.99));border:2px solid var(--gold);border-radius:16px;padding:22px 20px;max-width:340px;width:100%;text-align:center;margin:auto;box-shadow:0 0 40px rgba(232,200,122,0.15);}
 .intro-label{color:var(--gold);font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.intro-romaji.verdeckt,.intro-mnemo.verdeckt{color:var(--muted);font-style:italic;font-size:13px;}
 .intro-char{font-size:84px;line-height:1.15;color:#f5f0e8;text-shadow:0 2px 14px rgba(232,200,122,0.25);}
 .intro-romaji{font-size:26px;color:var(--gold);font-weight:700;margin-top:2px;}
 .intro-script{font-size:11px;color:var(--dim);letter-spacing:1px;margin:4px 0 12px;}
@@ -1796,12 +1797,23 @@ function openIntro(q,review){
   document.getElementById('intro-char').textContent=q.char;
   // Lange Woerter (bis 8 Zeichen, z. B. コインランドリー) muessen in die 300 px breite Box passen
   document.getElementById('intro-char').style.fontSize=Math.min(84,Math.floor(290/q.char.length))+'px';
-  document.getElementById('intro-romaji').textContent=istKanji(q)?q.reading+' · '+q.romaji:q.romaji;
+  // Regel (24.09.2026): Beim Nachschlagen per 💡 WAEHREND einer noch offenen, gewerteten Frage
+  // zeigt die Karte nie das, was gerade gefragt ist – Kana: die Lesung, Wort: die Bedeutung,
+  // Kanji: je nach Fragetyp Bedeutung oder Lesung. Alles andere (Hinweise, Eselsbruecke, eigene
+  // Notizen) bleibt sichtbar. Nach der Antwort und bei der Erstvorstellung zeigt sie alles.
+  const offen=review&&!answering&&currentQ&&currentQ.q&&currentQ.q.char===q.char;
+  const gefragt=!offen?null:istKanji(q)?currentQ.modus:wort?'bedeutung':'lesung';
+  const VERDECKT='wird gerade abgefragt';
+  const rEl=document.getElementById('intro-romaji');
+  if(gefragt==='lesung'){rEl.textContent='🔒 Lesung '+VERDECKT;rEl.classList.add('verdeckt');}
+  else{rEl.textContent=istKanji(q)?q.reading+' · '+q.romaji:q.romaji;rEl.classList.remove('verdeckt');}
   document.getElementById('intro-script').textContent=schriftName(q,false)+' · '+q.group;
   // Woerter: statt Eselsbruecke die deutsche Bedeutung gross zeigen
   const m=wort?null:getDefaultMnemo(q);
   const mEl=document.getElementById('intro-mnemo');
-  if(wort){mEl.textContent='📖 Bedeutung: '+q.de;mEl.style.display='block';}
+  mEl.classList.remove('verdeckt');
+  if(wort&&gefragt==='bedeutung'){mEl.textContent='🔒 Bedeutung '+VERDECKT;mEl.classList.add('verdeckt');mEl.style.display='block';}
+  else if(wort){mEl.textContent='📖 Bedeutung: '+q.de;mEl.style.display='block';}
   else{mEl.textContent=m?'💡 '+m:'';mEl.style.display=m?'block':'none';}
   document.getElementById('intro-own').value=(S.myMnemo&&S.myMnemo[q.char])||'';
   el.dataset.char=q.char;
