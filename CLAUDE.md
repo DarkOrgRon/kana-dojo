@@ -10,7 +10,7 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v27`. Letzter Commit: „💡-Karte verrät keine Lösung" (`01f9b6e`, 24.09.2026).
+Aktueller Service-Worker-Cache: `kana-dojo-v28`. Letzter Commit: „Weiter-Button nach Fehler" (`3b4c31a`, 16.10.2026).
 Seit 20.09.2026 zeigt die Zeile über dem Quiz eine **Fortschritts-Pille** (Balken über alle 617 Einträge,
 Tipp dreht sie um und zeigt drei Zahlen) neben dem Profi-Schalter (Abschnitt „✅ Gesamt-Fortschrittsbalken").
 Seit 18.09.2026 gibt es **keinen Hiragana/Katakana-Filter mehr** – der Lernpfad ist linear
@@ -31,6 +31,9 @@ Am 20.09.2026 kam auf Ronnys Idee der **Gesamt-Fortschrittsbalken** in die frei 
 
 Am 24.09.2026 (Ronnys Testreihe 2–3-Zeichen-Wörter): die **💡-Karte verrät während einer offenen
 Frage nicht mehr die Lösung** (Cache `kana-dojo-v27`, Abschnitt „✅ 💡-Karte").
+
+Am 16.10.2026: **Nach einer falschen Antwort hält die App an**, bis „Weiter →" getippt wird
+(Cache `kana-dojo-v28`, Abschnitt „✅ Weiter-Button nach Fehler").
 
 **Nächster Schritt:** Ronny testet weiter auf dem Handy. Die Kanji-Gruppen hängen
 hinter den Wortgruppen an der Kette (erste Kanji-Gruppe 数 öffnet, wenn みちあんない 10 Antworten mit
@@ -189,6 +192,29 @@ Kette (10 Antworten, 80 %). Meisterschafts-Abzeichen je neuer Gruppe (`MASTERY_S
 **Tests:** Wortfrage zeigt 4 verschiedene Bedeutungen, genau eine richtig · Leitner-Box der alten
 Wörter unverändert nach Migration · Vorstellungs-Karte + Übungsfrage bei Wörtern · Buttons mit
 langen Bedeutungen brechen sauber um (375 px) · Profimodus 10 s bleibt.
+
+### ✅ Weiter-Button nach Fehler (umgesetzt 16.10.2026)
+Backup vorher `index_v26_2026-10-16_pre-weiter.html`, Cache `kana-dojo-v28`, Commit `3b4c31a`.
+**Befund (Ronny):** Nach einer falschen Antwort – gerade bei Wörtern – kam die nächste Frage zu schnell,
+um Lösung und Aussprache zu lesen. Gemessen: nach **jeder** Antwort nur 950 ms.
+**Entscheidung:** richtig = automatisch weiter (950 ms, Spielfluss), falsch = **manuell** per Button.
+Begründung: jede feste Zeit ist für irgendwen falsch (ka vs. かくえきていしゃ); der Fehler ist der
+wertvollste Lernmoment. Ronny: „Das Ziel ist nicht, Zeit zu verplempern, sondern spielerisch
+Japanisch zu lernen."
+**Umgesetzt:** `#weiter-btn` unter `#answers` (volle Breite, 58 px hoch, Gold wie „Merken & los!").
+`nachAntwortWeiter(isOk)` ersetzt beide `setTimeout(renderQuestion,950)` in `handleAnswer`
+(gewertete Frage **und** Übungsfrage). Gilt für alle Fehler inkl. „⏰ Zeit abgelaufen".
+`weiterNachFehler()` blendet aus und rendert die nächste Frage; `renderQuestion` blendet den Button
+immer aus. Kleine Handys: Button per `scrollIntoView({block:'nearest'})` ins Bild (⚠️ `behavior:'smooth'`
+griff in der Testumgebung nicht – bewusst sofortiges Scrollen), Position wird gemerkt
+(`weiterScrollY`) und nach „Weiter" wiederhergestellt. `closeIntro` startet den Profi-Countdown nur
+noch bei offener Frage (`!answering`) – 💡 in der Pause wirft keinen Countdown an. Ansichtswechsel
+während der Pause behält die Pause (Rückkehr zeigt Fehler + Button).
+**Getestet (375×812 und 375×667):** richtig → kein Button, nach ~1 s neue Frage · falsch → Button
+sichtbar, nach 3 s unverändert in Pause · 💡 in der Pause zeigt Bedeutung, danach kein Countdown ·
+Übungsfrage falsch und Zeitablauf → Button · klein: in der Pause 128 px gescrollt, Button im Bild,
+nach „Weiter" wieder oben · 10 Runden abwechselnd falsch/richtig 15/15 Prüfpunkte · keine
+Konsolenfehler · Live byte-identisch mit `origin/main`.
 
 ### ✅ 💡-Karte verrät keine Lösung (umgesetzt 24.09.2026)
 Backup vorher `index_v25_2026-09-24_pre-infokarte.html`, Cache `kana-dojo-v27`.
