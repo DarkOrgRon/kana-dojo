@@ -139,6 +139,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
 
 /* Answers */
 #answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+#weiter-btn{display:block;width:100%;margin-top:14px;padding:16px;border:none;border-radius:14px;background:var(--gold);color:#1a1408;font-size:18px;font-weight:700;cursor:pointer;animation:fadeIn 0.25s ease both;}
 /* Paket G: deutsche Bedeutungen sind laenger als Romaji – Umbruch erlauben, gleiche Hoehe je Zeile */
 #answers .ans-btn{white-space:normal;overflow-wrap:anywhere;min-height:56px;line-height:1.25;padding-left:10px;padding-right:10px;}
 #answers .ans-btn.wort{font-size:17px;letter-spacing:0;}
@@ -355,6 +356,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
     </div>
     <div id="feedback-line"></div>
     <div id="answers"></div>
+    <button id="weiter-btn" hidden onclick="weiterNachFehler()">Weiter →</button>
     <div id="mission-strip"></div>
   </div>
 
@@ -1832,7 +1834,7 @@ function closeIntro(){
   // Profimodus: Countdown erst jetzt starten (lief er schon – z.B. 💡-Spick-Blick
   // während einer Frage – läuft er weiter, kein Zeit-Reset durchs Nachschauen).
   // Für Übungsfragen läuft KEIN Countdown: eine ungewertete Frage darf kein Herz kosten.
-  if(!proTimerId&&!practiceQ)startProTimer();
+  if(!proTimerId&&!practiceQ&&!answering)startProTimer();
 }
 // 💡-Button auf der Quiz-Karte: Info zum aktuellen Zeichen erneut ansehen
 function openIntroForCurrent(){
@@ -1840,6 +1842,7 @@ function openIntroForCurrent(){
 }
 
 function renderQuestion(){
+  document.getElementById('weiter-btn').hidden=true;
   currentQ=pickQ();
   answering=false;
   if(!currentQ){
@@ -1887,6 +1890,29 @@ function renderQuestion(){
   if(!introShown)startProTimer();
 }
 
+// Nach einer Antwort: richtig -> kurz bestaetigen und automatisch weiter (Spielfluss);
+// falsch (auch "Zeit abgelaufen") -> anhalten, bis "Weiter →" getippt wird. Jede feste
+// Wartezeit waere fuer irgendwen falsch (ka vs. かくえきていしゃ) – der Fehler ist der
+// wertvollste Lernmoment, also bestimmt der Spieler selbst, wie lange er hinschaut.
+// Waehrenddessen zeigt 💡 die komplette Karte (answering=true). Profimodus: Countdown
+// startet erst mit der naechsten Frage, die Pause kostet nichts.
+function nachAntwortWeiter(isOk){
+  if(isOk){nextTimer=setTimeout(renderQuestion,950);return;}
+  const w=document.getElementById('weiter-btn');
+  w.hidden=false;
+  // kleine Handys: Button notfalls ins Bild holen (auf dem Pixel bei 812 px Hoehe ohnehin sichtbar);
+  // die Position vorher merken und beim Weitertippen wiederherstellen, damit die neue Karte oben steht
+  weiterScrollY=window.scrollY;
+  w.scrollIntoView({block:'nearest'});
+}
+let weiterScrollY=0;
+function weiterNachFehler(){
+  document.getElementById('weiter-btn').hidden=true;
+  clearTimeout(nextTimer);
+  renderQuestion();
+  window.scrollTo(0,weiterScrollY);
+}
+
 function handleAnswer(pick,btn){
   if(answering)return;
   answering=true;
@@ -1928,7 +1954,7 @@ function handleAnswer(pick,btn){
     S.box[pq.char]=isOk?Math.min(5,(S.box[pq.char]||0)+1):1;
     fl.textContent+=' (Übungsfrage – zählt nicht)';
     save();
-    nextTimer=setTimeout(renderQuestion,950);
+    nachAntwortWeiter(isOk);
     return;
   }
 
@@ -2011,8 +2037,8 @@ function handleAnswer(pick,btn){
   save();
   updateHeader();
 
-  // Next question after delay
-  nextTimer=setTimeout(renderQuestion,950);
+  // Naechste Frage: richtig automatisch, falsch per "Weiter →"
+  nachAntwortWeiter(isOk);
 }
 
 function getComboColor(c){
