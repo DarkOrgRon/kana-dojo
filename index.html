@@ -394,7 +394,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;}
     <h2 class="view-h">🧩 Das Bild</h2>
     <p class="view-sub" id="puzzle-sub"></p>
     <div id="puzzle-grid" onclick="openPuzzleFull()" title="Antippen für Vollbild"></div>
-    <p class="view-sub" style="margin-top:12px;white-space:nowrap">Je Charakter ein Teil bei 1.000 · 2.500 · 5.000 · 10.000</p>
+    <p class="view-sub" style="margin-top:12px;white-space:nowrap">Je Charakter ein Teil bei 1.000 · 2.000 · 3.000 · 4.000</p>
   </div>
 </div>
 <div id="puzzle-full" onclick="this.classList.remove('open')"><div id="puzzle-full-grid"></div></div>
@@ -1069,12 +1069,13 @@ function runPerfectDayCheck(){
 }
 
 // ── PUZZLE-BILD (Paket F, 15.09.2026) ─────────────────────────────────────────
-// 16 Teile (4x4). Je Charakter vier Teile bei 1.000/2.500/5.000/10.000 RICHTIGEN Antworten
-// (S.charOk). Eigene Schwellen, unabhängig von den Charakterstufen (500/2500/10000).
+// 16 Teile (4x4). Je Charakter vier Teile bei 1.000/2.000/3.000/4.000 RICHTIGEN Antworten
+// (S.charOk, seit 24.10.2026; vorher 1.000/2.500/5.000/10.000). Eigene Schwellen, bewusst
+// versetzt zu den Charakterstufen (500/1.250/2.500), damit nie zwei Belohnungen zusammenfallen.
 // Die Freischaltung wird immer aus charOk BERECHNET, nicht gespeichert – charOk sinkt nie,
 // also kann das Puzzle nie inkonsistent werden. Gespeichert wird nur S.puzzleShown (wie viele
 // Teile schon gemeldet wurden), damit der Toast genau einmal kommt.
-const PUZZLE_TIERS=[1000,2500,5000,10000];
+const PUZZLE_TIERS=[1000,2000,3000,4000];
 // Zellen [Zeile,Spalte] in Freischalt-Reihenfolge – das GESICHT steht jeweils an letzter Stelle.
 // Am Bild ausgemessen (15.09.2026); die drei anderen Teile liegen räumlich beim Charakter,
 // so erscheint die Figur Stück für Stück. Alle 16 Zellen genau einmal vergeben.
@@ -1346,20 +1347,20 @@ const BADGES=[
   // ── Charaktere ──────────────────────────────────────────────────────────────
   {id:'ninja1',label:'Weg des Ninja',emoji:'🥷',cond:s=>charOkOf(s,'ninja')>=1},
   {id:'ninja500',label:'Ninja-Kämpfer',emoji:'🗡️',cond:s=>charOkOf(s,'ninja')>=500},
-  {id:'ninja2500',label:'Ninja-Meister',emoji:'🌑',cond:s=>charOkOf(s,'ninja')>=2500},
-  {id:'ninja10000',label:'Ninja-Legende',emoji:'🌠',cond:s=>charOkOf(s,'ninja')>=10000},
+  {id:'ninja2500',label:'Ninja-Meister',emoji:'🌑',cond:s=>charOkOf(s,'ninja')>=1250},
+  {id:'ninja10000',label:'Ninja-Legende',emoji:'🌠',cond:s=>charOkOf(s,'ninja')>=2500},
   {id:'samurai1',label:'Weg des Samurai',emoji:'⚔️',cond:s=>charOkOf(s,'samurai')>=1},
   {id:'samurai500',label:'Samurai-Kämpfer',emoji:'🛡️',cond:s=>charOkOf(s,'samurai')>=500},
-  {id:'samurai2500',label:'Samurai-Meister',emoji:'🎌',cond:s=>charOkOf(s,'samurai')>=2500},
-  {id:'samurai10000',label:'Samurai-Legende',emoji:'🐉',cond:s=>charOkOf(s,'samurai')>=10000},
+  {id:'samurai2500',label:'Samurai-Meister',emoji:'🎌',cond:s=>charOkOf(s,'samurai')>=1250},
+  {id:'samurai10000',label:'Samurai-Legende',emoji:'🐉',cond:s=>charOkOf(s,'samurai')>=2500},
   {id:'geisha1',label:'Weg der Geisha',emoji:'🎎',cond:s=>charOkOf(s,'geisha')>=1},
   {id:'geisha500',label:'Geisha-Kämpfer',emoji:'🪭',cond:s=>charOkOf(s,'geisha')>=500},
-  {id:'geisha2500',label:'Geisha-Meisterin',emoji:'🌸',cond:s=>charOkOf(s,'geisha')>=2500},
-  {id:'geisha10000',label:'Geisha-Legende',emoji:'🌺',cond:s=>charOkOf(s,'geisha')>=10000},
+  {id:'geisha2500',label:'Geisha-Meisterin',emoji:'🌸',cond:s=>charOkOf(s,'geisha')>=1250},
+  {id:'geisha10000',label:'Geisha-Legende',emoji:'🌺',cond:s=>charOkOf(s,'geisha')>=2500},
   {id:'sumo1',label:'Weg des Sumo',emoji:'🍙',cond:s=>charOkOf(s,'sumo')>=1},
   {id:'sumo500',label:'Sumo-Kämpfer',emoji:'🥋',cond:s=>charOkOf(s,'sumo')>=500},
-  {id:'sumo2500',label:'Sumo-Meister',emoji:'🏆',cond:s=>charOkOf(s,'sumo')>=2500},
-  {id:'sumo10000',label:'Sumo-Legende',emoji:'🗾',cond:s=>charOkOf(s,'sumo')>=10000},
+  {id:'sumo2500',label:'Sumo-Meister',emoji:'🏆',cond:s=>charOkOf(s,'sumo')>=1250},
+  {id:'sumo10000',label:'Sumo-Legende',emoji:'🗾',cond:s=>charOkOf(s,'sumo')>=2500},
   // ── Profimodus ──────────────────────────────────────────────────────────────
   {id:'pro25',label:'Profi 25',emoji:'🔥',cond:s=>((s.proStats&&s.proStats.c)||0)>=25},
   {id:'pro50',label:'Profi 50',emoji:'💢',cond:s=>((s.proStats&&s.proStats.c)||0)>=50},
@@ -1496,20 +1497,20 @@ const BADGE_DESC={
   perfectDay1000:'Sammle 1000 perfekte Tage.',
   ninja1:'Beantworte eine Frage mit dem Ninja richtig.',
   ninja500:'500 richtige Antworten mit dem Ninja.',
-  ninja2500:'2.500 richtige Antworten mit dem Ninja.',
-  ninja10000:'10.000 richtige Antworten mit dem Ninja.',
+  ninja2500:'1.250 richtige Antworten mit dem Ninja.',
+  ninja10000:'2.500 richtige Antworten mit dem Ninja.',
   samurai1:'Beantworte eine Frage mit dem Samurai richtig.',
   samurai500:'500 richtige Antworten mit dem Samurai.',
-  samurai2500:'2.500 richtige Antworten mit dem Samurai.',
-  samurai10000:'10.000 richtige Antworten mit dem Samurai.',
+  samurai2500:'1.250 richtige Antworten mit dem Samurai.',
+  samurai10000:'2.500 richtige Antworten mit dem Samurai.',
   geisha1:'Beantworte eine Frage mit der Geisha richtig.',
   geisha500:'500 richtige Antworten mit der Geisha.',
-  geisha2500:'2.500 richtige Antworten mit der Geisha.',
-  geisha10000:'10.000 richtige Antworten mit der Geisha.',
+  geisha2500:'1.250 richtige Antworten mit der Geisha.',
+  geisha10000:'2.500 richtige Antworten mit der Geisha.',
   sumo1:'Beantworte eine Frage mit dem Sumo richtig.',
   sumo500:'500 richtige Antworten mit dem Sumo.',
-  sumo2500:'2.500 richtige Antworten mit dem Sumo.',
-  sumo10000:'10.000 richtige Antworten mit dem Sumo.',
+  sumo2500:'1.250 richtige Antworten mit dem Sumo.',
+  sumo10000:'2.500 richtige Antworten mit dem Sumo.',
   pro25:'25 richtige Antworten im Profimodus.',
   pro50:'50 richtige Antworten im Profimodus.',
   pro75:'75 richtige Antworten im Profimodus.',
@@ -2407,9 +2408,10 @@ const FAN=[
 
 // ── CHARAKTER-LEVEL ───────────────────────────────────────────────────────────
 // 4 Stufen pro Charakter, gemessen an den RICHTIGEN Antworten mit diesem
-// Charakter (S.charOk). Seit 21.08.2026 hat JEDES Level eigene Sprite-Raster UND
+// Charakter (S.charOk). Seit 24.10.2026: 500 / 1.250 / 2.500 (vorher 500 / 2.500 / 10.000 –
+// nach Ronnys Testlauf nicht motivierend genug). Seit 21.08.2026 hat JEDES Level eigene Sprite-Raster UND
 // eine eigene 16-Farb-Palette (vorher: ein Basis-Sprite mit Farbtausch).
-const CHAR_LEVELS=[0,500,2500,10000];
+const CHAR_LEVELS=[0,500,1250,2500];
 const LEVEL_NAMES=['Schüler','Kämpfer','Meister','Legende'];
 function charLevel(ch){
   const n=(S.charOk&&S.charOk[ch])||0;

@@ -123,9 +123,11 @@ chars = [('ninja','Ninja','dem Ninja',['\U0001f977','\U0001f5e1️','\U0001f311'
          ('samurai','Samurai','dem Samurai',['⚔️','\U0001f6e1️','\U0001f38c','\U0001f409']),
          ('geisha','Geisha','der Geisha',['\U0001f38e','\U0001faad','\U0001f338','\U0001f33a']),
          ('sumo','Sumo','dem Sumo',['\U0001f359','\U0001f94b','\U0001f3c6','\U0001f5fe'])]
-stufen = [(1,'Weg'),(500,'Kämpfer'),(2500,'Meister'),(10000,'Legende')]
+# (Schwelle, Titel, ID-Suffix). Seit 24.10.2026 Meister 1.250 / Legende 2.500 (vorher 2.500 / 10.000).
+# Die ID-Suffixe bleiben die alten Zahlen, damit bereits verdiente Abzeichen gültig bleiben.
+stufen = [(1,'Weg',1),(500,'Kämpfer',500),(1250,'Meister',2500),(2500,'Legende',10000)]
 for key, name, dat, emojis in chars:
-    for (n, titel), e in zip(stufen, emojis):
+    for (n, titel, idn), e in zip(stufen, emojis):
         artikel = 'der' if key == 'geisha' else 'des'
         if n == 1:
             lab = f'Weg {artikel} {name}'
@@ -133,7 +135,7 @@ for key, name, dat, emojis in chars:
         else:
             lab = f'{name}-{titel}' + ('in' if key == 'geisha' and titel == 'Meister' else '')
             d = f'{n:,}'.replace(',', '.') + f' richtige Antworten mit {dat}.'
-        add('Charaktere', f'{key}{n}', lab, e, f"charOkOf(s,'{key}')>={n}", d)
+        add('Charaktere', f'{key}{idn}', lab, e, f"charOkOf(s,'{key}')>={n}", d)
 
 # ── Profimodus ───────────────────────────────────────────────────────────────
 pro = [(25,'\U0001f525'),(50,'\U0001f4a2'),(75,'⚡'),(100,'\U0001f32a️'),(250,'\U0001f531'),
