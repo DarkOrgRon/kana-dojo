@@ -10,7 +10,7 @@ eigenen Spielstand-Speicher (localStorage-Key `kana_dojo_v4`).
 
 ## IST-Stand (21.08.2026, aktuellste Version live)
 Alle Änderungen sind auf GitHub gepusht und live unter https://darkorgron.github.io/kana-dojo/.
-Aktueller Service-Worker-Cache: `kana-dojo-v28`. Letzter Commit: „Weiter-Button nach Fehler" (`3b4c31a`, 16.10.2026).
+Aktueller Service-Worker-Cache: `kana-dojo-v29`. Letzter Commit: „Neue Schwellen Stufen/Puzzle" (`73a3b5a`, 24.10.2026).
 Seit 20.09.2026 zeigt die Zeile über dem Quiz eine **Fortschritts-Pille** (Balken über alle 617 Einträge,
 Tipp dreht sie um und zeigt drei Zahlen) neben dem Profi-Schalter (Abschnitt „✅ Gesamt-Fortschrittsbalken").
 Seit 18.09.2026 gibt es **keinen Hiragana/Katakana-Filter mehr** – der Lernpfad ist linear
@@ -34,6 +34,9 @@ Frage nicht mehr die Lösung** (Cache `kana-dojo-v27`, Abschnitt „✅ 💡-Kar
 
 Am 16.10.2026: **Nach einer falschen Antwort hält die App an**, bis „Weiter →" getippt wird
 (Cache `kana-dojo-v28`, Abschnitt „✅ Weiter-Button nach Fehler").
+
+Am 24.10.2026: **Neue Schwellen** für Charakterstufen (500 / 1.250 / 2.500) und Puzzle-Teile
+(1.000 / 2.000 / 3.000 / 4.000), Cache `kana-dojo-v29`, Abschnitt „✅ Neue Schwellen".
 
 **Nächster Schritt:** Ronny testet weiter auf dem Handy. Die Kanji-Gruppen hängen
 hinter den Wortgruppen an der Kette (erste Kanji-Gruppe 数 öffnet, wenn みちあんない 10 Antworten mit
@@ -192,6 +195,35 @@ Kette (10 Antworten, 80 %). Meisterschafts-Abzeichen je neuer Gruppe (`MASTERY_S
 **Tests:** Wortfrage zeigt 4 verschiedene Bedeutungen, genau eine richtig · Leitner-Box der alten
 Wörter unverändert nach Migration · Vorstellungs-Karte + Übungsfrage bei Wörtern · Buttons mit
 langen Bedeutungen brechen sauber um (375 px) · Profimodus 10 s bleibt.
+
+### ✅ Neue Schwellen Stufen und Puzzle (umgesetzt 24.10.2026)
+Backup vorher `index_v27_2026-10-24_pre-schwellen.html`, Cache `kana-dojo-v29`, Commit `73a3b5a`.
+**Anlass (Ronny):** Im Testlauf waren die alten Schwellen nicht motivierend genug (ganzes Bild erst
+nach 40.000 richtigen Antworten, bei 2.500 und 10.000 fielen Stufe und Puzzle-Teil zusammen,
+zwischen 5.000 und 10.000 passierte nichts). **Gilt ab jetzt, ersetzt alle älteren Angaben in
+dieser Datei** (Pakete 1–5, Paket E, Paket F):
+| richtige Antworten je Charakter (`S.charOk`) | Ereignis |
+|---|---|
+| 1 | Abzeichen „Weg des …" |
+| 500 | Stufe 2 Kämpfer (unverändert) |
+| 1.000 | 1. Puzzle-Teil |
+| 1.250 | Stufe 3 Meister (vorher 2.500) |
+| 2.000 | 2. Puzzle-Teil (vorher 2.500) |
+| 2.500 | Stufe 4 Legende (vorher 10.000) |
+| 3.000 | 3. Puzzle-Teil (vorher 5.000) |
+| 4.000 | 4. Puzzle-Teil, Gesicht (vorher 10.000) |
+Stufen und Puzzle-Teile fallen nie mehr zusammen; ganzes Bild = 4 × 4.000 = 16.000 richtige Antworten.
+**Code:** `CHAR_LEVELS=[0,500,1250,2500]`, `PUZZLE_TIERS=[1000,2000,3000,4000]`, Hinweistext im Puzzle-Tab.
+Abzeichen: Bedingungen und Beschreibungen neu, **IDs bewusst unverändert** (`ninja2500` = Meister,
+`ninja10000` = Legende usw.), damit verdiente Abzeichen gültig bleiben. Generator `tools/badges_bauen.py`
+führt dafür ein ID-Suffix je Stufe (`stufen = [(Schwelle, Titel, ID-Suffix)]`). Bestehende Spielstände:
+Charaktere über den neuen Schwellen stehen beim nächsten Laden direkt auf der höheren Stufe (ohne
+Aufstieg-Toast); neue Puzzle-Teile meldet die App bei der nächsten richtigen Antwort.
+**Getestet (Browser):** alle Grenzen 0 bis 4.000 (499/500, 1.249/1.250, 1.999/2.000, 2.499/2.500,
+3.999/4.000) für Stufe und Teile · alle vier auf 4.000 → 16 Teile · über den echten Antwortweg: 1.249 → 1.250
+Abzeichen „Ninja-Meister" + Toast „Stufenaufstieg! Meister", 2.499 → 2.500 „Ninja-Legende" + Toast,
+1.999 → 2.000 und 3.999 → 4.000 je „Neues Puzzle-Teil!" · 141 Abzeichen · keine Konsolenfehler · Live
+byte-identisch mit `origin/main`.
 
 ### ✅ Weiter-Button nach Fehler (umgesetzt 16.10.2026)
 Backup vorher `index_v26_2026-10-16_pre-weiter.html`, Cache `kana-dojo-v28`, Commit `3b4c31a`.
