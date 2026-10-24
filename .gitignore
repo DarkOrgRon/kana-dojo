@@ -5,3 +5,7 @@ index_v*.html
 # Quellbilder der Sprites: liegen im Projektordner (Google Drive) und werden von der
 # App nicht gebraucht – nur von tools/sprites_bauen.py. 7,4 MB gehören nicht ins Repo.
 sprites-quelle/*.png
+
+# Zwischenausgabe des Abzeichen-Generators (tools/badges_bauen.py schreibt sie bei jedem Lauf neu,
+# der Inhalt wird von Hand in index.html uebernommen) – nicht versionieren.
+tools/badges_neu.js
